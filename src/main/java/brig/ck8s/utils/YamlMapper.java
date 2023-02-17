@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Map;
@@ -32,6 +34,10 @@ public final class YamlMapper {
         } catch (Exception e) {
             throw new RuntimeException("Error reading '" + url + "': " + e.getMessage());
         }
+    }
+
+    public static <T> T read(InputStream in, Class<T> clazz) throws IOException {
+        return objectMapper.readValue(in, clazz);
     }
 
     public static <T> T read(Path p, Class<T> clazz) {

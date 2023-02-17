@@ -4,6 +4,7 @@ import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.utils.CliCommand;
 import brig.ck8s.utils.LogUtils;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,6 +21,12 @@ public class ConcordCliFlowExecutor {
     }
 
     public int execute(Ck8sPayload payload) {
+        if (Files.notExists(cliPath)) {
+            LogUtils.error("Can't find concord cli at '" + cliPath + "'");
+            LogUtils.info("Try to install it with command: ck8s-cli concord install-cli");
+            throw new RuntimeException("concord-cli not found");
+        }
+
         if (verbose) {
             LogUtils.info("using concord cli: {}", cliPath);
             dumpCliVersion(cliPath);

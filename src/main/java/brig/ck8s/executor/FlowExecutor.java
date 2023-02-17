@@ -1,7 +1,6 @@
 package brig.ck8s.executor;
 
 import brig.ck8s.concord.Ck8sPayload;
-import brig.ck8s.concord.LocalConcordConfiguration;
 
 import java.nio.file.Path;
 
@@ -12,16 +11,17 @@ public class FlowExecutor {
         REMOTE
     }
 
-    public void execute(ExecutorType type, Ck8sPayload payload, boolean verbose) {
+    public int execute(ExecutorType type, Ck8sPayload payload, boolean verbose) {
         switch (type) {
             case REMOTE -> {
-                RemoteFlowExecutor executor = new RemoteFlowExecutor(new LocalConcordConfiguration());
+                RemoteFlowExecutor executor = new RemoteFlowExecutor(ConcordConfigurationProvider.get());
                 executor.execute(payload);
+                return 0;
             }
             case CONCORD_CLI -> {
                 Path cliPath = Path.of(System.getProperty("user.home")).resolve("bin").resolve("concord-cli");
                 ConcordCliFlowExecutor executor = new ConcordCliFlowExecutor(cliPath, verbose);
-                executor.execute(payload);
+                return executor.execute(payload);
             }
             default -> throw new IllegalArgumentException("Unknown type: " + type);
         }

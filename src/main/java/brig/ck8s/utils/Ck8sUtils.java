@@ -96,7 +96,7 @@ public class Ck8sUtils {
             throw new RuntimeException("Error copying ck8s components '" + sourceCk8sComponents + "' to '" + componentsDir + "': " + e.getMessage(), e);
         }
 
-        if (Files.isDirectory(sourceCk8sExtComponents)) {
+        if (sourceCk8sExtComponents != null && Files.isDirectory(sourceCk8sExtComponents)) {
             try {
                 copyComponentsYaml(sourceCk8sExtComponents, concordDir);
                 IOUtils.copy(sourceCk8sExtComponents, componentsDir, StandardCopyOption.REPLACE_EXISTING);

@@ -1,6 +1,7 @@
 package brig.ck8s.command.concord;
 
 import brig.ck8s.utils.LogUtils;
+import io.quarkus.logging.Log;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -43,7 +44,7 @@ public class InstallConcordCliAction {
 
             destChannel.transferFrom(sourceChannel, 0, Long.MAX_VALUE);
         } catch (Exception e) {
-            LogUtils.error("Error downloading concord-cli: " + e.getMessage());
+            throw new RuntimeException("Error downloading concord-cli: " + e.getMessage());
         }
 
         Set<PosixFilePermission> perms = new HashSet<>();
@@ -55,5 +56,7 @@ public class InstallConcordCliAction {
         } catch (Exception e) {
             LogUtils.error("Error setting permissions to concord-cli: " + e.getMessage());
         }
+        
+        Log.info("done");
     }
 }

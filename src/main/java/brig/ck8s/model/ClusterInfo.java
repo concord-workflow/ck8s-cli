@@ -27,8 +27,4 @@ public interface ClusterInfo {
 
     @Nullable
     String server();
-
-    static ImmutableClusterInfo.Builder builder() {
-        return ImmutableClusterInfo.builder();
-    }
 }

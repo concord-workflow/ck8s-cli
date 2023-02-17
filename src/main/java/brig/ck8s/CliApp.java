@@ -61,9 +61,13 @@ public class CliApp implements Runnable, QuarkusApplication {
     @Override
     public void run() {
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
-        LogUtils.info("Using ck8s path: {}", ck8s.ck8sDir());
-        if (ck8s.ck8sExtDir() != null) {
-            LogUtils.info("Using ck8s-ext path: {}", ck8s.ck8sExtDir());
+        if (verbose) {
+            LogUtils.info("Using ck8s path: {}", ck8s.ck8sDir());
+            if (ck8s.ck8sExtDir() != null) {
+                LogUtils.info("Using ck8s-ext path: {}", ck8s.ck8sExtDir());
+            }
+
+            LogUtils.info("Using target path: {}", targetPathOptions.getTargetRootPath());
         }
 
         if (clusterList) {

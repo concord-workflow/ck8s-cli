@@ -4,10 +4,11 @@ import picocli.CommandLine;
 
 import static picocli.CommandLine.Spec.Target.MIXEE;
 
-public abstract class BaseMixin<T extends BaseMixin> {
+public abstract class BaseMixin<T extends BaseMixin<?>> {
 
-    private @CommandLine.Spec(MIXEE) CommandLine.Model.CommandSpec mixee;
+    @CommandLine.Spec(MIXEE) CommandLine.Model.CommandSpec mixee;
 
+    @SuppressWarnings("unchecked")
     protected T rootMixin() {
         for (CommandLine.Model.CommandSpec mixinCommand : mixee.root().mixins().values()) {
             Object obj = mixinCommand.userObject();
@@ -15,6 +16,6 @@ public abstract class BaseMixin<T extends BaseMixin> {
                 return (T) obj;
             }
         }
-        throw new IllegalStateException("Root command does not have a @Mixin of type Ck8sPathOptionsMixin");
+        throw new IllegalStateException("Root command does not have a @Mixin of type" + this.getClass());
     }
 }

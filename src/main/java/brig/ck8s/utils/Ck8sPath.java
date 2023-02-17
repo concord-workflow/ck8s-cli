@@ -17,6 +17,7 @@ public class Ck8sPath {
 
     private final Path ck8s;
 
+    @Nullable
     private final Path ck8sExt;
 
     public Ck8sPath(Path ck8s, Path ck8sExt) {
@@ -56,11 +57,21 @@ public class Ck8sPath {
         return ck8s.resolve(CK8S_COMPONENTS_TESTS);
     }
 
+    @Nullable
     public Path ck8sExtComponents() {
+        if (ck8sExt == null) {
+            return null;
+        }
+
         return ck8sExt.resolve(CK8S_EXT_COMPONENTS);
     }
 
+    @Nullable
     public Path ck8sExtComponentsTests() {
+        if (ck8sExt == null) {
+            return null;
+        }
+
         return ck8sExt.resolve(CK8S_EXT_COMPONENTS_TESTS);
     }
 
