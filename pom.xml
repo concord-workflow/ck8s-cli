@@ -5,7 +5,7 @@
   <artifactId>ck8s-cli</artifactId>
   <version>0.0.2-SNAPSHOT</version>
   <properties>
-    <scm.connection>scm:git:https://github.com/brig/ck8s-cli.git</scm.connection>
+    <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
 
     <compiler-plugin.version>3.10.1</compiler-plugin.version>
     <maven.compiler.release>17</maven.compiler.release>
