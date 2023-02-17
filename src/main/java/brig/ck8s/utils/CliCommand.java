@@ -16,42 +16,38 @@ import java.util.concurrent.Future;
 
 public class CliCommand {
 
-    private final boolean saveOutput;
     private final Path workDir;
     private final List<String> args;
     private final Map<String, String> envars;
 
-    public CliCommand(String args, Path workDir, Map<String, String> envars, boolean saveOutput) {
-        this(Arrays.asList(args.split(" ")), workDir, envars, saveOutput);
+    public CliCommand(String args, Path workDir, Map<String, String> envars) {
+        this(Arrays.asList(args.split(" ")), workDir, envars);
     }
 
-    public CliCommand(List<String> args, Path workDir, Map<String, String> envars, boolean saveOutput) {
+    public CliCommand(List<String> args, Path workDir, Map<String, String> envars) {
         this.workDir = workDir;
         this.args = args;
         this.envars = envars;
-        this.saveOutput = saveOutput;
     }
 
-    public Result execute()
-            throws Exception {
+    public Result execute() throws Exception {
         return execute(Executors.newCachedThreadPool());
     }
 
-    public Result execute(ExecutorService executor)
-            throws Exception {
+    public Result execute(ExecutorService executor) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(args).directory(workDir.toFile());
         Map<String, String> combinedEnv = new HashMap<>(envars);
         pb.environment().putAll(combinedEnv);
         Process p = pb.start();
         Future<String> stderr = executor.submit(new StreamReader(true, p.getErrorStream()));
-        Future<String> stdout = executor.submit(new StreamReader(saveOutput, p.getInputStream()));
+        Future<String> stdout = executor.submit(new StreamReader(false, p.getInputStream()));
         int code = p.waitFor();
         executor.shutdown();
-        return new Result(code, stdout.get(), stderr.get());
+        stdout.get();
+        return new Result(code, stderr.get());
     }
 
-    private static class StreamReader
-            implements Callable<String> {
+    private static class StreamReader implements Callable<String> {
 
         private final boolean saveOutput;
         private final InputStream in;
@@ -62,8 +58,7 @@ public class CliCommand {
         }
 
         @Override
-        public String call()
-                throws Exception {
+        public String call() throws Exception {
             StringBuilder sb = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 String line;
@@ -85,21 +80,15 @@ public class CliCommand {
     public static class Result {
 
         private final int code;
-        private final String stdout;
         private final String stderr;
 
-        public Result(int code, String stdout, String stderr) {
+        public Result(int code, String stderr) {
             this.code = code;
-            this.stdout = stdout;
             this.stderr = stderr;
         }
 
         public int getCode() {
             return code;
-        }
-
-        public String getStdout() {
-            return stdout;
         }
 
         public String getStderr() {

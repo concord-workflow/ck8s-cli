@@ -54,7 +54,7 @@ public class ConcordCliFlowExecutor {
         }
 
         try {
-            CliCommand.Result result = new CliCommand(args, payload.location(), Collections.emptyMap(), false).execute();
+            CliCommand.Result result = new CliCommand(args, payload.location(), Collections.emptyMap()).execute();
             if (result.getCode() != 0) {
                 LogUtils.error(result.getStderr());
             }
@@ -76,7 +76,7 @@ public class ConcordCliFlowExecutor {
         args.add("--version");
 
         try {
-            CliCommand.Result result = new CliCommand(args, cliPath.getParent(), Collections.emptyMap(), false).execute();
+            CliCommand.Result result = new CliCommand(args, cliPath.getParent(), Collections.emptyMap()).execute();
             if (result.getCode() != 0) {
                 LogUtils.error(result.getStderr());
             }
@@ -91,7 +91,7 @@ public class ConcordCliFlowExecutor {
         args.add("--version");
 
         try {
-            CliCommand.Result result = new CliCommand(args, workDir, Collections.emptyMap(), false).execute();
+            CliCommand.Result result = new CliCommand(args, workDir, Collections.emptyMap()).execute();
             if (result.getCode() != 0) {
                 LogUtils.error(result.getStderr());
             }

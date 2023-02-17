@@ -12,6 +12,12 @@ public class EnumConverter<T extends Enum<T>> implements CommandLine.ITypeConver
 
     @Override
     public T convert(String value) {
+        try {
+            return Enum.valueOf(clazz, value);
+        } catch (IllegalArgumentException e) {
+            // ignore
+        }
+
         String name = value.toUpperCase();
         name = name.replace("-", "_");
         try {
