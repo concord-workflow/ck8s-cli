@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>brig.ck8s</groupId>
   <artifactId>ck8s-cli</artifactId>
-  <version>0.0.2</version>
+  <version>0.0.3-SNAPSHOT</version>
   <properties>
     <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
 
@@ -203,6 +203,6 @@
 
   <scm>
     <developerConnection>${scm.connection}</developerConnection>
-    <tag>ck8s-cli-0.0.2</tag>
+    <tag>HEAD</tag>
   </scm>
 </project>
