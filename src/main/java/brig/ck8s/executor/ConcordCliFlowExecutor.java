@@ -4,7 +4,6 @@ import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.utils.CliCommand;
 import brig.ck8s.utils.LogUtils;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,28 +12,20 @@ import java.util.List;
 public class ConcordCliFlowExecutor {
 
     private final boolean verbose;
-    private final Path cliPath;
 
-    public ConcordCliFlowExecutor(Path cliPath, boolean verbose) {
-        this.cliPath = cliPath;
+    public ConcordCliFlowExecutor(boolean verbose) {
         this.verbose = verbose;
     }
 
     public int execute(Ck8sPayload payload) {
-        if (Files.notExists(cliPath)) {
-            LogUtils.error("Can't find concord cli at '" + cliPath + "'");
-            LogUtils.info("Try to install it with command: ck8s-cli concord install-cli");
-            throw new RuntimeException("concord-cli not found");
-        }
-
         if (verbose) {
-            LogUtils.info("using concord cli: {}", cliPath);
-            dumpCliVersion(cliPath);
+            LogUtils.info("using concord cli");
+            dumpCliVersion(payload.location());
             dumpJavaVersion(payload.location());
         }
 
         List<String> args = new ArrayList<>();
-        args.add(cliPath.normalize().toAbsolutePath().toString());
+        args.add("concord-cli");
         args.add("run");
         args.add(".");
         args.add("-c");
@@ -70,13 +61,13 @@ public class ConcordCliFlowExecutor {
         args.add(key + "=" + value);
     }
 
-    private static void dumpCliVersion(Path cliPath) {
+    private static void dumpCliVersion(Path workDir) {
         List<String> args = new ArrayList<>();
-        args.add(cliPath.normalize().toAbsolutePath().toString());
+        args.add("concord-cli");
         args.add("--version");
 
         try {
-            CliCommand.Result result = new CliCommand(args, cliPath.getParent(), Collections.emptyMap()).execute();
+            CliCommand.Result result = new CliCommand(args, workDir, Collections.emptyMap()).execute();
             if (result.getCode() != 0) {
                 LogUtils.error(result.getStderr());
             }

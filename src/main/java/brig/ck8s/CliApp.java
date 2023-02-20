@@ -95,6 +95,8 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
         }
 
         spec.commandLine().usage(System.out);
+
+        return -1;
     }
 
     @Override

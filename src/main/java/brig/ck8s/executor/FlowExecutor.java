@@ -2,8 +2,6 @@ package brig.ck8s.executor;
 
 import brig.ck8s.concord.Ck8sPayload;
 
-import java.nio.file.Path;
-
 public class FlowExecutor {
 
     public enum ExecutorType {
@@ -19,8 +17,7 @@ public class FlowExecutor {
                 return 0;
             }
             case CONCORD_CLI -> {
-                Path cliPath = Path.of(System.getProperty("user.home")).resolve("bin").resolve("concord-cli");
-                ConcordCliFlowExecutor executor = new ConcordCliFlowExecutor(cliPath, verbose);
+                ConcordCliFlowExecutor executor = new ConcordCliFlowExecutor(verbose);
                 return executor.execute(payload);
             }
             default -> throw new IllegalArgumentException("Unknown type: " + type);
