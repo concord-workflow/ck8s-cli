@@ -2,7 +2,6 @@ package brig.ck8s;
 
 import brig.ck8s.actions.BootstrapLocalClusterAction;
 import brig.ck8s.actions.ClusterListAction;
-import brig.ck8s.command.concord.ConcordCommand;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
@@ -18,14 +17,15 @@ import javax.inject.Inject;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 @QuarkusMain
 @TopCommand
 @CommandLine.Command(name = "ck8s-cli",
         mixinStandardHelpOptions = true,
         versionProvider = VersionProvider.class,
-        subcommands = {AutoComplete.GenerateCompletion.class, ConcordCommand.class})
-public class CliApp implements Runnable, QuarkusApplication {
+        subcommands = {AutoComplete.GenerateCompletion.class})
+public class CliApp implements Callable<Integer>, QuarkusApplication {
 
     @CommandLine.Spec
     CommandLine.Model.CommandSpec spec;
@@ -61,7 +61,7 @@ public class CliApp implements Runnable, QuarkusApplication {
     boolean verbose = false;
 
     @Override
-    public void run() {
+    public Integer call() {
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
         if (verbose) {
             LogUtils.info("Using ck8s path: {}", ck8s.ck8sDir());
@@ -73,14 +73,12 @@ public class CliApp implements Runnable, QuarkusApplication {
         }
 
         if (clusterList) {
-            new ClusterListAction(ck8s).perform();
-            return;
+            return new ClusterListAction(ck8s).perform();
         }
 
         if (clusterAlias != null) {
             if ("local".equals(clusterAlias) && "cluster".equals(flow)) {
-                new BootstrapLocalClusterAction().perform();
-                return;
+                return new BootstrapLocalClusterAction().perform();
             }
 
             Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath())
@@ -93,9 +91,7 @@ public class CliApp implements Runnable, QuarkusApplication {
                     .flow(flow)
                     .build();
 
-            new FlowExecutor().execute(flowExecutorType.getType(), payload, verbose);
-
-            return;
+            return new FlowExecutor().execute(flowExecutorType.getType(), payload, verbose);
         }
 
         spec.commandLine().usage(System.out);

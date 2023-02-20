@@ -2,7 +2,8 @@ package brig.ck8s.actions;
 
 public class BootstrapLocalClusterAction {
 
-    public void perform() {
+    public int perform() {
         System.out.println("!!!NOT IMPLEMENTED!!!");
+        return -1;
     }
 }

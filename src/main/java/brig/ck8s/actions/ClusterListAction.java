@@ -23,7 +23,7 @@ public class ClusterListAction {
         this.ck8sPath = ck8sPath;
     }
 
-    public void perform() {
+    public int perform() {
         Map<Path, ClusterInfo> clusters = getInfo();
 
         String[] caption = new String[] {"Alias", "Name", "Region", "Server", "Path"};
@@ -32,6 +32,7 @@ public class ClusterListAction {
                 .map(this::toTableRow);
 
         logAsTable(Stream.concat(Stream.<String[]>of(caption), rows).collect(Collectors.toList()));
+        return 0;
     }
 
     private Map<Path, ClusterInfo> getInfo() {
