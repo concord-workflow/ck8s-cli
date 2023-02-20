@@ -3,7 +3,6 @@ package brig.ck8s;
 import brig.ck8s.actions.BootstrapLocalClusterAction;
 import brig.ck8s.actions.ClusterListAction;
 import brig.ck8s.command.concord.ConcordCommand;
-import brig.ck8s.command.test.TestCommand;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
@@ -25,7 +24,7 @@ import java.util.Map;
 @CommandLine.Command(name = "ck8s-cli",
         mixinStandardHelpOptions = true,
         versionProvider = VersionProvider.class,
-        subcommands = {AutoComplete.GenerateCompletion.class, TestCommand.class, ConcordCommand.class})
+        subcommands = {AutoComplete.GenerateCompletion.class, ConcordCommand.class})
 public class CliApp implements Runnable, QuarkusApplication {
 
     @CommandLine.Spec
@@ -55,6 +54,9 @@ public class CliApp implements Runnable, QuarkusApplication {
     @CommandLine.Option(names = {"-l", "--list"}, description = "list cluster names/aliases")
     boolean clusterList = false;
 
+    @CommandLine.Option(names = {"--withTests"}, description = "include test flows to concord payload")
+    boolean withTests = false;
+
     @CommandLine.Option(names = {"--verbose"}, description = "verbose output")
     boolean verbose = false;
 
@@ -81,7 +83,9 @@ public class CliApp implements Runnable, QuarkusApplication {
                 return;
             }
 
-            Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath()).build(clusterAlias);
+            Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath())
+                    .includeTests(withTests)
+                    .build(clusterAlias);
 
             Ck8sPayload payload = Ck8sPayload.builder()
                     .location(payloadLocation)

@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.Map;
 
 @Value.Immutable
+@Value.Style(
+        jdkOnly = true,
+        passAnnotations = RegisterForReflection.class)
 @RegisterForReflection(ignoreNested = false)
 public interface Ck8sPayload {
 

@@ -25,8 +25,8 @@ public class Ck8sFlowBuilder {
         this.target = target;
     }
 
-    public Ck8sFlowBuilder includeTests() {
-        this.includeTests = true;
+    public Ck8sFlowBuilder includeTests(boolean include) {
+        this.includeTests = include;
         return this;
     }
 
