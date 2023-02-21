@@ -16,18 +16,25 @@ import java.util.concurrent.Future;
 
 public class CliCommand {
 
+    public interface StreamReaderFactory {
+
+        StreamReader create(InputStream in);
+    }
+
     private final Path workDir;
     private final List<String> args;
     private final Map<String, String> envars;
-
-    public CliCommand(String args, Path workDir, Map<String, String> envars) {
-        this(Arrays.asList(args.split(" ")), workDir, envars);
-    }
+    private final StreamReaderFactory stdoutReaderFactory;
 
     public CliCommand(List<String> args, Path workDir, Map<String, String> envars) {
+        this(args, workDir, envars, in -> new StreamReader(false, in));
+    }
+
+    public CliCommand(List<String> args, Path workDir, Map<String, String> envars, StreamReaderFactory stdoutReaderFactory) {
         this.workDir = workDir;
         this.args = args;
         this.envars = envars;
+        this.stdoutReaderFactory = stdoutReaderFactory;
     }
 
     public Result execute() throws Exception {
@@ -40,19 +47,19 @@ public class CliCommand {
         pb.environment().putAll(combinedEnv);
         Process p = pb.start();
         Future<String> stderr = executor.submit(new StreamReader(true, p.getErrorStream()));
-        Future<String> stdout = executor.submit(new StreamReader(false, p.getInputStream()));
+        Future<String> stdout = executor.submit(stdoutReaderFactory.create(p.getInputStream()));
         int code = p.waitFor();
         executor.shutdown();
         stdout.get();
         return new Result(code, stderr.get());
     }
 
-    private static class StreamReader implements Callable<String> {
+    public static class StreamReader implements Callable<String> {
 
         private final boolean saveOutput;
         private final InputStream in;
 
-        private StreamReader(boolean saveOutput, InputStream in) {
+        public StreamReader(boolean saveOutput, InputStream in) {
             this.saveOutput = saveOutput;
             this.in = in;
         }

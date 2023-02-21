@@ -5,8 +5,11 @@ import brig.ck8s.utils.CliCommand;
 import brig.ck8s.utils.LogUtils;
 import com.walmartlabs.concord.common.IOUtils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -61,7 +64,13 @@ public class ExecuteScriptAction {
         args.addAll(scriptArgs);
 
         try {
-            CliCommand.Result result = new CliCommand(args, path.getParent(), env).execute();
+            CliCommand.Result result = new CliCommand(args, path.getParent(), env, in -> new CliCommand.StreamReader(false, in) {
+                @Override
+                public String call() throws Exception {
+                    in.transferTo(System.out);
+                    return "";
+                }
+            }).execute();
             if (result.getCode() != 0) {
                 LogUtils.error(result.getStderr());
             }
