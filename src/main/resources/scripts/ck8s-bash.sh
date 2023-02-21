@@ -363,6 +363,21 @@ function installConcord() {
   installConcordAgentPool
 }
 
+function concordProcess() {
+  processId="${1}"
+  flowName="${2}"
+  if [ -z "${flowName}" ]; then
+    flowName="Concord"
+  fi
+
+  echo -n ">>> Waiting for the ${flowName} flow ${processId} to finish ..."
+  while [ "$(curl --silent -H "Authorization: ${concordAdminApiToken}" ${concordUrl}/api/v1/process/${processId} | jq -r .status)" != "FINISHED" ]; do
+    printf '.'
+    sleep 5
+  done
+  echo " FINISHED!"
+}
+
 function testConcord() {
 
   echo -n ">>> Submitting test process ... "
