@@ -114,7 +114,7 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
 
         if (clusterAlias != null) {
             if ("local".equals(clusterAlias) && "cluster".equals(flow)) {
-                return new BootstrapLocalClusterAction().perform();
+                return new BootstrapLocalClusterAction(ck8s, targetPathOptions.getTargetRootPath()).perform();
             }
 
             Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath())

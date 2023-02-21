@@ -315,12 +315,22 @@ function installConcordAgentPool() {
     curl -s ${concordUrl}/metrics | grep ^agent_workers_available | sed 's/^agent_workers_available //' | tr -d '\n' | tr -d '\r'
   }
 
-  echo ">>> Waiting for Concord agents to be available "
+  echo -n ">>> Waiting for Concord agents to be available "
   while [ "$(agentsAvailable)" = "0.0" ]; do
     stdbuf -o0 printf '.'
     sleep 5
   done
   echo " READY!"
+}
+
+function uninstallConcordAgentPool() {
+  kubectl delete -f ${CK8S_COMPONENTS}/concord/agentpool.yaml -n concord
+}
+
+function reinstallConcordAgentPool {
+  uninstallConcordAgentPool
+  sleep 10
+  installConcordAgentPool
 }
 
 function installConcord() {
@@ -433,4 +443,29 @@ function dnsmasqSetup() {
 function dnsmasqRestart() {
   brew services stop dnsmasq
   brew services start dnsmasq
+}
+
+function assertLocalCluster() {
+  # Wait for polaris certificaterequest to be ready
+  echo -n ">>> Waiting for Polaris certificate request to be ready ... "
+  certRequestName=$(kubectl get certificaterequests -n polaris -o jsonpath={.items[0].metadata.name})
+  kubectl wait certificaterequest/${certRequestName} -n polaris --for=condition=ready=true > /dev/null 2>&1
+  echo "READY!"
+
+  # kubectl wait doesn't support jsonpath yet
+  echo -n ">>> Waiting for Polaris ingress to be available ..."
+  while [ "$(kubectl get ingress/polaris -n polaris -o jsonpath={.status.loadBalancer.ingress[0].hostname})" != "localhost" ]; do
+    printf '.'
+    sleep 5
+  done
+  echo " READY!"
+
+  # Check that Polaris deployed correctly and we can access it's health endpoint
+  echo -n ">>> Testing deployed application is healthy ..."
+  response=`curl -s https://polaris.${domain}/health`
+  if [ "${response}" = "OK" ]; then
+    echo " SUCCESS!"
+  else
+    echo " FAILURE :("
+  fi
 }

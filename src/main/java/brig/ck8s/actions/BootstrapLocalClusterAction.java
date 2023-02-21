@@ -1,15 +1,53 @@
 package brig.ck8s.actions;
 
+import brig.ck8s.concord.Ck8sFlowBuilder;
+import brig.ck8s.concord.Ck8sPayload;
+import brig.ck8s.concord.ConcordProcess;
+import brig.ck8s.executor.ConcordConfigurationProvider;
+import brig.ck8s.executor.RemoteFlowExecutor;
+import brig.ck8s.utils.Ck8sPath;
+
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BootstrapLocalClusterAction {
 
-    private static final String kindName = "ck8s-local";
+    private final Ck8sPath ck8s;
+    private final Path targetRoot;
 
-    private final Path kindKubeconfig = Path.of(System.getProperty("user.home")).resolve(".kube").resolve("ck8s-config-local");
+    public BootstrapLocalClusterAction(Ck8sPath ck8s, Path targetRoot) {
+        this.ck8s = ck8s;
+        this.targetRoot = targetRoot;
+    }
 
     public int perform() {
-        System.out.println("!!!NOT IMPLEMENTED!!!");
-        return -1;
+        ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
+
+        scriptAction.perform("ck8sDown");
+        scriptAction.perform("ck8sUp");
+
+        Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRoot)
+                .build("local");
+
+        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(ConcordConfigurationProvider.get());
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+        
+        ConcordProcess process = flowExecutor.execute(Ck8sPayload.builder()
+                .location(payloadLocation)
+                .flow("cert-manager-local")
+                .build());
+        process.streamLogs(executor);
+
+        process = flowExecutor.execute(Ck8sPayload.builder()
+                .location(payloadLocation)
+                .flow("polaris")
+                .build());
+        process.streamLogs(executor);
+
+        scriptAction.perform("assertLocalCluster");
+
+        return 0;
     }
 }
