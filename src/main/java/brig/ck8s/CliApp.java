@@ -1,11 +1,15 @@
 package brig.ck8s;
 
+import brig.ck8s.actions.ActionType;
 import brig.ck8s.actions.BootstrapLocalClusterAction;
 import brig.ck8s.actions.ClusterListAction;
+import brig.ck8s.actions.ExecuteScriptAction;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
 import brig.ck8s.utils.Ck8sPath;
+import brig.ck8s.utils.EnumCompletionCandidates;
+import brig.ck8s.utils.EnumConverter;
 import brig.ck8s.utils.LogUtils;
 import io.quarkus.picocli.runtime.annotations.TopCommand;
 import io.quarkus.runtime.QuarkusApplication;
@@ -57,6 +61,9 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
     @CommandLine.Option(names = {"--withTests"}, description = "include test flows to concord payload")
     boolean withTests = false;
 
+    @CommandLine.Option(names = {"-a"},description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
+    ActionType actionType;
+
     @CommandLine.Option(names = {"--verbose"}, description = "verbose output")
     boolean verbose = false;
 
@@ -70,6 +77,35 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
             }
 
             LogUtils.info("Using target path: {}", targetPathOptions.getTargetRootPath());
+        }
+
+        if (actionType != null) {
+            ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
+
+            switch (actionType) {
+                case UP -> {
+                    return scriptAction.perform("ck8sUp");
+                }
+                case DOWN -> {
+                    return scriptAction.perform("ck8sDown");
+                }
+                case DNSMASQ_SETUP -> {
+                    return scriptAction.perform("dnsmasqSetup");
+                }
+                case DNSMASQ_RESTART -> {
+                    return scriptAction.perform("dnsmasqRestart");
+                }
+                case DOCKER_REGISTRY -> {
+                    return scriptAction.perform("ck8sDockerRegistry");
+                }
+                case INSTALL_CONCORD -> {
+                    return scriptAction.perform("installConcord");
+                }
+                case REINSTALL_CONCORD_AGENT_POOL -> {
+                    return scriptAction.perform("reinstallConcordAgentPool");
+                }
+                default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
+            }
         }
 
         if (clusterList) {
@@ -110,4 +146,19 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
 
         return cmd.execute(args);
     }
+
+    static class ActionTypeCompletionCandidates extends EnumCompletionCandidates<ActionType> {
+
+        public ActionTypeCompletionCandidates() {
+            super(ActionType.class);
+        }
+    }
+
+    static class ActionTypeConverter extends EnumConverter<ActionType> {
+
+        public ActionTypeConverter() {
+            super(ActionType.class);
+        }
+    }
+
 }
