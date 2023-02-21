@@ -38,7 +38,7 @@ export KUBECONFIG="${kindKubeconfig}"
 function installCertToTrustStore() {
   if [ "$(uname)" == "Darwin" ]; then
     echo ">>> Installing cert to trust store"
-#    sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" ${1}
+    sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" ${1}
   elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     sudo trust anchor --store "${1}"
   else
