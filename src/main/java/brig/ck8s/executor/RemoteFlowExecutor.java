@@ -60,7 +60,7 @@ public class RemoteFlowExecutor {
 
     private static ApiClient createClient(ConcordConfiguration cfg) {
         return new ConcordApiClient(cfg.baseUrl())
-                .setVerifyingSsl(true)
+                .setVerifyingSsl(false)
                 .setApiKey(cfg.apiKey());
     }
 
