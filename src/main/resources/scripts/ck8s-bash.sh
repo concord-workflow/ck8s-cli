@@ -349,7 +349,7 @@ function installConcord() {
     chartVersion="--version ${concordChartVersion}"
   fi
 
-  helm delete concord --namespace concord || true
+  helm delete concord --namespace concord > /dev/null 2>&1
 
   helm upgrade concord \
     --install \

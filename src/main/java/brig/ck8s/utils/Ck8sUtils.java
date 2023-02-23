@@ -17,7 +17,7 @@ import static brig.ck8s.utils.YamlMapper.readMap;
 
 public class Ck8sUtils {
 
-    private static final String CK8S_CLUSTER_YAML_NAME="cluster.yaml";
+    private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
     public static Stream<Path> streamClusterYaml(Ck8sPath ck8sPath) {
         return Stream.concat(
