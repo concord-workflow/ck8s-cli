@@ -1,0 +1,1 @@
+./mvnw install -Dnative -DskipTests -Dquarkus.native.container-build=true

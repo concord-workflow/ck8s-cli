@@ -9,31 +9,35 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 public final class IOUtils {
 
-    public static boolean deleteRecursively(Path p) throws IOException {
+    public static boolean deleteRecursively(Path p) {
         if (!Files.exists(p)) {
             return false;
         }
 
-        if (!Files.isDirectory(p)) {
-            Files.delete(p);
+        try {
+            if (!Files.isDirectory(p)) {
+                Files.delete(p);
+                return true;
+            }
+
+            Files.walkFileTree(p, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+
             return true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        Files.walkFileTree(p, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
-        return true;
     }
 
     private IOUtils() {

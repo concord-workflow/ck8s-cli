@@ -1,105 +1,114 @@
 package brig.ck8s.utils;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class CliCommand {
 
-    public interface StreamReaderFactory {
+    public static CliCommand withRedirectStd(List<String> args, Path workDir) {
+        return new CliCommand(args, workDir, Collections.emptyMap(), RedirectStreamReader.toStdout(), RedirectStreamReader.toStderr());
+    }
 
-        StreamReader create(InputStream in);
+    public static CliCommand saveOut(List<String> args, Path workDir) {
+        return new CliCommand(args, workDir, Collections.emptyMap(), SaveStreamReader.instance(), SaveStreamReader.instance());
+    }
+
+    public static String grabOut(List<String> args, Path workDir) throws Exception {
+        CliCommand cmd = saveOut(args, workDir);
+        Result result = cmd.execute();
+        if (result.code() != 0) {
+            throw new ExecutionException(result.stderr(), null);
+        }
+        return result.stdout();
+    }
+
+    public interface StreamReader {
+
+        String read(InputStream is) throws IOException;
     }
 
     private final Path workDir;
     private final List<String> args;
     private final Map<String, String> envars;
-    private final StreamReaderFactory stdoutReaderFactory;
+    private final StreamReader stdoutReader;
+    private final StreamReader stderrReader;
 
-    public CliCommand(List<String> args, Path workDir, Map<String, String> envars) {
-        this(args, workDir, envars, in -> new StreamReader(false, in));
-    }
-
-    public CliCommand(List<String> args, Path workDir, Map<String, String> envars, StreamReaderFactory stdoutReaderFactory) {
+    public CliCommand(List<String> args, Path workDir, Map<String, String> envars, StreamReader stdoutReader, StreamReader stderrReader) {
         this.workDir = workDir;
         this.args = args;
         this.envars = envars;
-        this.stdoutReaderFactory = stdoutReaderFactory;
+        this.stdoutReader = stdoutReader;
+        this.stderrReader = stderrReader;
     }
 
     public Result execute() throws Exception {
-        return execute(Executors.newCachedThreadPool());
+        return execute(stdoutReader, stderrReader, Executors.newCachedThreadPool());
     }
 
-    public Result execute(ExecutorService executor) throws Exception {
+    public Result execute(StreamReader stdoutReader, StreamReader stderrReader, ExecutorService executor) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(args).directory(workDir.toFile());
-        Map<String, String> combinedEnv = new HashMap<>(envars);
-        pb.environment().putAll(combinedEnv);
+        pb.environment().putAll(envars);
+
         Process p = pb.start();
-        Future<String> stderr = executor.submit(new StreamReader(true, p.getErrorStream()));
-        Future<String> stdout = executor.submit(stdoutReaderFactory.create(p.getInputStream()));
+        Future<String> stdout = executor.submit(() -> stdoutReader.read(p.getInputStream()));
+        Future<String> stderr = executor.submit(() -> stderrReader.read(p.getErrorStream()));
         int code = p.waitFor();
         executor.shutdown();
-        stdout.get();
-        return new Result(code, stderr.get());
+        return new Result(code, stdout.get(), stderr.get());
     }
 
-    public static class StreamReader implements Callable<String> {
+    public static class RedirectStreamReader implements StreamReader {
 
-        private final boolean saveOutput;
-        private final InputStream in;
+        public static StreamReader toStdout() {
+            return new RedirectStreamReader(System.out);
+        }
 
-        public StreamReader(boolean saveOutput, InputStream in) {
-            this.saveOutput = saveOutput;
-            this.in = in;
+        public static StreamReader toStderr() {
+            return new RedirectStreamReader(System.err);
+        }
+
+        private final OutputStream outputStream;
+
+        public RedirectStreamReader(OutputStream outputStream) {
+            this.outputStream = outputStream;
         }
 
         @Override
-        public String call() throws Exception {
+        public String read(InputStream is) throws IOException {
+            is.transferTo(outputStream);
+            return null;
+        }
+    }
+
+    public static class SaveStreamReader implements StreamReader {
+
+        private static final StreamReader INSTANCE = new SaveStreamReader();
+
+        public static StreamReader instance() {
+            return INSTANCE;
+        }
+
+        @Override
+        public String read(InputStream in) throws IOException {
             StringBuilder sb = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (saveOutput) {
-                        sb.append(line).append(System.lineSeparator());
-                    }
-                    log(line);
+                    sb.append(line).append(System.lineSeparator());
                 }
             }
             return sb.toString();
         }
     }
 
-    private static void log(String line) {
-        System.out.println(line);
-    }
-
-    public static class Result {
-
-        private final int code;
-        private final String stderr;
-
-        public Result(int code, String stderr) {
-            this.code = code;
-            this.stderr = stderr;
-        }
-
-        public int getCode() {
-            return code;
-        }
-
-        public String getStderr() {
-            return stderr;
-        }
+    public record Result(int code, String stdout, String stderr) {
     }
 }

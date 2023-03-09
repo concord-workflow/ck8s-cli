@@ -2,14 +2,10 @@ package brig.ck8s.actions;
 
 import brig.ck8s.utils.Ck8sPath;
 import brig.ck8s.utils.CliCommand;
-import brig.ck8s.utils.LogUtils;
-import com.walmartlabs.concord.common.IOUtils;
+import brig.ck8s.utils.TempPath;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -25,20 +21,20 @@ public class ExecuteScriptAction {
     }
 
     public int perform(String functionName) {
-        try (TempFile script = TempFile.create("main");
-             TempFile call = TempFile.create("call")) {
+        try (TempPath script = TempPath.createFile("main");
+             TempPath call = TempPath.createFile("call")) {
 
-            createScript("/scripts/ck8s-bash.sh", script.path);
-            createScript("/scripts/call.sh", call.path);
+            createScript("/scripts/ck8s-bash.sh", script.path());
+            createScript("/scripts/call.sh", call.path());
 
             Map<String, String> env = new HashMap<>();
             env.put("CK8S_COMPONENTS", ck8s.ck8sComponents().toString());
 
             List<String> scriptArgs = new ArrayList<>();
-            scriptArgs.add(script.path.toAbsolutePath().toString());
+            scriptArgs.add(script.path().toAbsolutePath().toString());
             scriptArgs.add(functionName);
 
-            return executeScript(call.path, scriptArgs, env);
+            return executeScript(call.path(), scriptArgs, env);
         } catch (IOException e) {
             throw new RuntimeException("Can't read script for " + functionName + ". This is most likely a bug: " + e.getMessage());
         }
@@ -64,18 +60,8 @@ public class ExecuteScriptAction {
         args.addAll(scriptArgs);
 
         try {
-            CliCommand.Result result = new CliCommand(args, path.getParent(), env, in -> new CliCommand.StreamReader(false, in) {
-                @Override
-                public String call() throws Exception {
-                    in.transferTo(System.out);
-                    return "";
-                }
-            }).execute();
-            if (result.getCode() != 0) {
-                LogUtils.error(result.getStderr());
-            }
-
-            return result.getCode();
+            CliCommand.Result result = CliCommand.withRedirectStd(args, path.getParent()).execute();
+            return result.code();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -85,35 +71,5 @@ public class ExecuteScriptAction {
         Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
         permissions.add(PosixFilePermission.OWNER_EXECUTE);
         Files.setPosixFilePermissions(path, permissions);
-    }
-
-    static class TempFile implements AutoCloseable {
-
-        static TempFile create(String prefix) throws IOException {
-            return new TempFile(Files.createTempFile("ck8s-cli-script", null));
-        }
-
-        private final Path path;
-
-        TempFile(Path path) {
-            this.path = path;
-        }
-
-        @Override
-        public void close() {
-            if (path == null) {
-                return;
-            }
-
-            try {
-                if (Files.isDirectory(path)) {
-                    IOUtils.deleteRecursively(path);
-                } else {
-                    Files.deleteIfExists(path);
-                }
-            } catch (IOException e) {
-                LogUtils.warn("cleanup ['{}'] -> error: {}", path, e.getMessage());
-            }
-        }
     }
 }

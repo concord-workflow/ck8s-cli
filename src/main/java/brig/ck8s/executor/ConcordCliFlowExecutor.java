@@ -1,13 +1,18 @@
 package brig.ck8s.executor;
 
+import brig.ck8s.JavaVersionAssert;
+import brig.ck8s.actions.InstallConcordCliAction;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.utils.CliCommand;
 import brig.ck8s.utils.LogUtils;
+import brig.ck8s.utils.MapUtils;
+import brig.ck8s.utils.YamlMapper;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class ConcordCliFlowExecutor {
 
@@ -19,13 +24,12 @@ public class ConcordCliFlowExecutor {
 
     public int execute(Ck8sPayload payload) {
         if (verbose) {
-            LogUtils.info("using concord cli");
-            dumpCliVersion(payload.location());
-            dumpJavaVersion(payload.location());
+            LogUtils.info("Using concord cli: {}", getCliVersion(payload.location()));
+            LogUtils.info("Using java version: {}", JavaVersionAssert.getJavaVersion(payload.location()));
         }
 
         List<String> args = new ArrayList<>();
-        args.add("concord-cli");
+        args.add(InstallConcordCliAction.getCliPath().toString());
         args.add("run");
         args.add(".");
         args.add("-c");
@@ -34,8 +38,12 @@ public class ConcordCliFlowExecutor {
         if (verbose) {
             args.add("--verbose");
         }
+
+        addArg("AWS_PROFILE", MapUtils.getString(clusterRequest(payload), "account"), args);
         payload.args().forEach((k, v) -> addArg(k, v, args));
         addArg("concordUrl", "https://localhost", args);
+        addArg("processInfo.sessionToken", "concord-cli-session-token", args);
+        addArg("projectInfo.orgName", "Default", args);
         addArg("clusterRequest.localCluster", "true", args);
         addArg("clusterRequest.localConcord", "true", args);
 
@@ -45,12 +53,8 @@ public class ConcordCliFlowExecutor {
         }
 
         try {
-            CliCommand.Result result = new CliCommand(args, payload.location(), Collections.emptyMap()).execute();
-            if (result.getCode() != 0) {
-                LogUtils.error(result.getStderr());
-            }
-
-            return result.getCode();
+            CliCommand.Result result = CliCommand.withRedirectStd(args, payload.location()).execute();
+            return result.code();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -61,33 +65,20 @@ public class ConcordCliFlowExecutor {
         args.add(key + "=" + value);
     }
 
-    private static void dumpCliVersion(Path workDir) {
+    private static String getCliVersion(Path workDir) {
         List<String> args = new ArrayList<>();
         args.add("concord-cli");
         args.add("--version");
 
         try {
-            CliCommand.Result result = new CliCommand(args, workDir, Collections.emptyMap()).execute();
-            if (result.getCode() != 0) {
-                LogUtils.error(result.getStderr());
-            }
+            return CliCommand.grabOut(args, workDir).trim();
         } catch (Exception e) {
-            LogUtils.error("Error getting cli version: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
-    private static void dumpJavaVersion(Path workDir) {
-        List<String> args = new ArrayList<>();
-        args.add("java");
-        args.add("--version");
-
-        try {
-            CliCommand.Result result = new CliCommand(args, workDir, Collections.emptyMap()).execute();
-            if (result.getCode() != 0) {
-                LogUtils.error(result.getStderr());
-            }
-        } catch (Exception e) {
-            LogUtils.error("Error getting java version: " + e.getMessage());
-        }
+    private static Map<String, Object> clusterRequest(Ck8sPayload payload) {
+        Map<String, Object> yaml = YamlMapper.readMap(payload.location().resolve("concord.yml"));
+        return MapUtils.getMap(yaml, "configuration.arguments.clusterRequest", Collections.emptyMap());
     }
 }

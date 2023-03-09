@@ -1,0 +1,1 @@
+java -jar target/quarkus-app/quarkus-run.jar --target-root /tmp/ck8s --ck8s-root /Users/brig/prj/github/concord-workflow/ck8s --ck8s-ext-root /Users/brig/prj/github/aetion/ck8s-ext --flow-executor concord-cli $@

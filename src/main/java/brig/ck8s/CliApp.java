@@ -1,9 +1,6 @@
 package brig.ck8s;
 
-import brig.ck8s.actions.ActionType;
-import brig.ck8s.actions.BootstrapLocalClusterAction;
-import brig.ck8s.actions.ClusterListAction;
-import brig.ck8s.actions.ExecuteScriptAction;
+import brig.ck8s.actions.*;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
@@ -103,6 +100,9 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
                 }
                 case REINSTALL_CONCORD_AGENT_POOL -> {
                     return scriptAction.perform("reinstallConcordAgentPool");
+                }
+                case INSTALL_CONCORD_CLI -> {
+                    return new InstallConcordCliAction().perform();
                 }
                 default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
             }

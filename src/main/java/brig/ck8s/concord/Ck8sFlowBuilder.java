@@ -62,7 +62,7 @@ public class Ck8sFlowBuilder {
     }
 
     private static Map<String, Object> concordYamlTemplate() {
-        URL url = RemoteFlowExecutor.class.getResource("/template.concord.yaml");
+        URL url = RemoteFlowExecutor.class.getResource("/templates/concord.yaml");
         if (url == null) {
             throw new RuntimeException("Can't find concord.yml template. This is most likely a bug.");
         }

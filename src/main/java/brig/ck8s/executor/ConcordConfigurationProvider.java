@@ -13,7 +13,7 @@ public class ConcordConfigurationProvider {
     public static ConcordConfiguration get() {
         Path cfgPath = Path.of(System.getProperty("user.home")).resolve(".ck8s-cli").resolve("concord-config.yaml");
         if (!Files.exists(cfgPath)) {
-            try (InputStream in = ConcordConfigurationProvider.class.getResourceAsStream("/default-concord-config.yaml")) {
+            try (InputStream in = ConcordConfigurationProvider.class.getResourceAsStream("/templates/default-concord-config.yaml")) {
                 return YamlMapper.read(in, ConcordConfiguration.class);
             } catch (IOException e) {
                 throw new RuntimeException("Can't load default concord config. This is most likely a bug.");

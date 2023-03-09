@@ -1,0 +1,16 @@
+{
+  "repositories": [
+    {
+      "id": "local",
+      "url": "file://<USER_HOME>/.m2/repository"
+    },
+    {
+      "id": "central",
+      "url": "https://repo.maven.apache.org/maven2/"
+    },
+    {
+      "id": "oss-snapshots",
+      "url": "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+  ]
+}
