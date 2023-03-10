@@ -9,10 +9,7 @@ import brig.ck8s.utils.MapUtils;
 import brig.ck8s.utils.Mapper;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ConcordCliFlowExecutor {
 
@@ -52,8 +49,11 @@ public class ConcordCliFlowExecutor {
             LogUtils.info("concord-cli cmd: {}", args);
         }
 
+        Map<String, String> env = new HashMap<>();
+        env.put("AWS_PROFILE", MapUtils.getString(clusterRequest(payload), "account"));
+
         try {
-            CliCommand.Result result = CliCommand.withRedirectStd(args, payload.location()).execute();
+            CliCommand.Result result = CliCommand.withRedirectStd(args, payload.location(), env).execute();
             return result.code();
         } catch (Exception e) {
             throw new RuntimeException(e);

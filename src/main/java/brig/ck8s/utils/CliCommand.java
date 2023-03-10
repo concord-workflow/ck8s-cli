@@ -14,7 +14,11 @@ import java.util.concurrent.Future;
 public class CliCommand {
 
     public static CliCommand withRedirectStd(List<String> args, Path workDir) {
-        return new CliCommand(args, workDir, Collections.emptyMap(), RedirectStreamReader.toStdout(), RedirectStreamReader.toStderr());
+        return withRedirectStd(args, workDir, Collections.emptyMap());
+    }
+
+    public static CliCommand withRedirectStd(List<String> args, Path workDir, Map<String, String> env) {
+        return new CliCommand(args, workDir, env, RedirectStreamReader.toStdout(), RedirectStreamReader.toStderr());
     }
 
     public static CliCommand saveOut(List<String> args, Path workDir) {
