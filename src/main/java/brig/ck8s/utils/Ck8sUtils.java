@@ -13,7 +13,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static brig.ck8s.utils.MapUtils.getString;
-import static brig.ck8s.utils.YamlMapper.readMap;
 
 public class Ck8sUtils {
 
@@ -46,7 +45,7 @@ public class Ck8sUtils {
 
     public static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<Map<String, Object>> filter) {
         return streamClusterYaml(ck8sPath)
-                .filter(p -> filter.test(readMap(p)))
+                .filter(p -> filter.test(Mapper.yamlMapper().readMap(p)))
                 .findFirst()
                 .orElse(null);
     }
@@ -110,7 +109,7 @@ public class Ck8sUtils {
         Map<String, Object> merged = null;
         for (Path p : yamls) {
             if (Files.exists(p)) {
-                merged = MapUtils.merge(merged, YamlMapper.readMap(p));
+                merged = MapUtils.merge(merged, Mapper.yamlMapper().readMap(p));
             }
         }
         return merged;

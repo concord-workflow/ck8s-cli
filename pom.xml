@@ -19,7 +19,7 @@
     <immutables.version>2.9.2</immutables.version>
     <jsr305.version>3.0.2</jsr305.version>
     <errorproneannotations.version>2.18.0</errorproneannotations.version>
-    <concord.version>1.98.1</concord.version>
+    <concord.version>1.100.0</concord.version>
     <commons.compress.version>1.21</commons.compress.version>
   </properties>
   <dependencyManagement>
@@ -76,6 +76,10 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
     </dependency>
 
     <!-- Immutables -->

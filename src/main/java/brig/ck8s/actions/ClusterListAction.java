@@ -5,7 +5,7 @@ import brig.ck8s.model.MandatoryValuesMissing;
 import brig.ck8s.utils.Ck8sPath;
 import brig.ck8s.utils.Ck8sUtils;
 import brig.ck8s.utils.LogUtils;
-import brig.ck8s.utils.YamlMapper;
+import brig.ck8s.utils.Mapper;
 
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -49,7 +49,7 @@ public class ClusterListAction {
 
     private static ClusterInfo toClusterInfo(Path clusterYaml) {
         try {
-            return YamlMapper.read(clusterYaml, ClusterInfo.class);
+            return Mapper.yamlMapper().read(clusterYaml, ClusterInfo.class);
         } catch (MandatoryValuesMissing e) {
             LogUtils.warn("cluster definition '{}' ignored: {}", clusterYaml, e.getMessage());
         }

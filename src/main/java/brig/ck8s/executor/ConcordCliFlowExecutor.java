@@ -6,7 +6,7 @@ import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.utils.CliCommand;
 import brig.ck8s.utils.LogUtils;
 import brig.ck8s.utils.MapUtils;
-import brig.ck8s.utils.YamlMapper;
+import brig.ck8s.utils.Mapper;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -78,7 +78,7 @@ public class ConcordCliFlowExecutor {
     }
 
     private static Map<String, Object> clusterRequest(Ck8sPayload payload) {
-        Map<String, Object> yaml = YamlMapper.readMap(payload.location().resolve("concord.yml"));
+        Map<String, Object> yaml = Mapper.yamlMapper().readMap(payload.location().resolve("concord.yml"));
         return MapUtils.getMap(yaml, "configuration.arguments.clusterRequest", Collections.emptyMap());
     }
 }

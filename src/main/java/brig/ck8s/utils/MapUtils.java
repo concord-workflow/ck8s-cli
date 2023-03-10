@@ -2,9 +2,16 @@ package brig.ck8s.utils;
 
 import com.walmartlabs.concord.common.ConfigurationUtils;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public final class MapUtils {
+
+    @SuppressWarnings("unchecked")
+    public static List<Map<String, Object>> getList(Map<String, Object> m, String path) {
+        return get(m, path, Collections.emptyList(), List.class);
+    }
 
     @SuppressWarnings("unchecked")
     public static Map<String, Object> getMap(Map<String, Object> m, String path, Map<String, Object> defaultValue) {

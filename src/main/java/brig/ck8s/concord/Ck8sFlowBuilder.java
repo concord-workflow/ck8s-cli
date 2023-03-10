@@ -4,7 +4,7 @@ import brig.ck8s.executor.RemoteFlowExecutor;
 import brig.ck8s.utils.Ck8sPath;
 import brig.ck8s.utils.Ck8sUtils;
 import brig.ck8s.utils.IOUtils;
-import brig.ck8s.utils.YamlMapper;
+import brig.ck8s.utils.Mapper;
 
 import java.net.URL;
 import java.nio.file.Files;
@@ -51,7 +51,7 @@ public class Ck8sFlowBuilder {
         }
 
         Map<String, Object> concordYaml = Ck8sUtils.buildConcordYaml(ck8sPath, clusterYaml, concordYamlTemplate());
-        YamlMapper.write(flows.resolve("concord.yml"), concordYaml);
+        Mapper.yamlMapper().write(flows.resolve("concord.yml"), concordYaml);
 
         copyComponents(ck8sPath, flows);
         if (includeTests) {
@@ -68,7 +68,7 @@ public class Ck8sFlowBuilder {
         }
 
         try {
-            return YamlMapper.readMap(url);
+            return Mapper.yamlMapper().readMap(url);
         } catch (Exception e) {
             throw new RuntimeException("Error reading concord template. This is most likely a bug.", e);
         }
