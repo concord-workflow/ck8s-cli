@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
+import static brig.ck8s.utils.ExceptionUtils.*;
 import static java.nio.file.StandardOpenOption.*;
 
 public class InstallConcordCliAction {
@@ -48,7 +49,7 @@ public class InstallConcordCliAction {
             try {
                 Files.createDirectories(dest.getParent());
             } catch (Exception e) {
-                throw new RuntimeException("Error creating concord-cli directory: " + e.getMessage());
+                throwError("Error creating concord-cli directory: ", e);
             }
         }
 
@@ -60,7 +61,7 @@ public class InstallConcordCliAction {
 
             destChannel.transferFrom(sourceChannel, 0, Long.MAX_VALUE);
         } catch (Exception e) {
-            throw new RuntimeException("Error downloading concord-cli: " + e.getMessage());
+            throwError("Error downloading concord-cli: ", e);
         }
 
         Set<PosixFilePermission> perms = new HashSet<>();
@@ -80,7 +81,7 @@ public class InstallConcordCliAction {
             try {
                 Files.createDirectories(cfgPath.getParent());
             } catch (Exception e) {
-                throw new RuntimeException("Error creating concord-cli directory: " + e.getMessage());
+                throwError("Error creating concord-cli directory: ", e);
             }
         }
 
@@ -94,9 +95,9 @@ public class InstallConcordCliAction {
 
             LogUtils.info("Installing concord mvn config to {}", cfgPath);
 
-            Files.writeString(cfgPath, content, TRUNCATE_EXISTING);
+            Files.writeString(cfgPath, content, CREATE, TRUNCATE_EXISTING);
         } catch (IOException e) {
-            throw new RuntimeException("Can't load default concord config. This is most likely a bug.");
+            throwError("Can't load default concord config. This is most likely a bug: ", e);
         }
 
         return cfgPath;
