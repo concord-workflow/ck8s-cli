@@ -19,6 +19,7 @@ public class Ck8sFlowBuilder {
     private final Ck8sPath ck8sPath;
     private final Path target;
     private boolean includeTests;
+    private boolean debug;
 
     public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target) {
         this.ck8sPath = ck8sPath;
@@ -27,6 +28,11 @@ public class Ck8sFlowBuilder {
 
     public Ck8sFlowBuilder includeTests(boolean include) {
         this.includeTests = include;
+        return this;
+    }
+
+    public Ck8sFlowBuilder debug(boolean debug) {
+        this.debug = debug;
         return this;
     }
 
@@ -50,7 +56,7 @@ public class Ck8sFlowBuilder {
             throw new RuntimeException("Can't create target '" + target + "': " + e.getMessage());
         }
 
-        Map<String, Object> concordYaml = Ck8sUtils.buildConcordYaml(ck8sPath, clusterYaml, concordYamlTemplate());
+        Map<String, Object> concordYaml = Ck8sUtils.buildConcordYaml(ck8sPath, clusterYaml, concordYamlTemplate(), debug);
         Mapper.yamlMapper().write(flows.resolve("concord.yml"), concordYaml);
 
         copyComponents(ck8sPath, flows);

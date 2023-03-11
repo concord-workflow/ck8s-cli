@@ -1,5 +1,6 @@
 package brig.ck8s.utils;
 
+import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 
 import java.io.IOException;
@@ -50,13 +51,14 @@ public class Ck8sUtils {
                 .orElse(null);
     }
 
-    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate) {
+    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug) {
 
         Path defaultCfg = ck8sPath.defaultCfg();
         Path organizationYamlPath = ck8sPath.orgCfgForCluster(clusterYaml);
         Path accountYamlPath = ck8sPath.accountCfgForCluster(clusterYaml);
 
         Map<String, Object> concordYml = new HashMap<>(concordYmlTemplate);
+        ConfigurationUtils.set(concordYml, debug, "configuration", "debug");
         Map<String, Object> merged = merge(defaultCfg, organizationYamlPath, accountYamlPath, clusterYaml);
         MapUtils.set(concordYml, merged, "configuration.arguments.clusterRequest");
 

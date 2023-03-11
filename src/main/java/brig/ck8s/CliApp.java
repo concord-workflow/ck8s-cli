@@ -119,6 +119,7 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
 
             Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath())
                     .includeTests(withTests)
+                    .debug(verbose)
                     .build(clusterAlias);
 
             Ck8sPayload payload = Ck8sPayload.builder()
