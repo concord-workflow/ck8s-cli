@@ -3,9 +3,9 @@ package brig.ck8s.concord;
 import brig.ck8s.utils.LogUtils;
 import com.walmartlabs.concord.client.CreateInventoryResponse;
 import com.walmartlabs.concord.client.InventoryEntry;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import java.util.UUID;
 
 @Path("/api/v1/org")

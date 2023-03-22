@@ -1,82 +1,37 @@
-package brig.ck8s.actions;
+package brig.ck8s.executor;
 
-import brig.ck8s.executor.ConcordConfigurationProvider;
 import brig.ck8s.utils.LogUtils;
 import brig.ck8s.utils.MapUtils;
 import brig.ck8s.utils.Mapper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static brig.ck8s.utils.ExceptionUtils.*;
-import static java.nio.file.StandardOpenOption.*;
+import static brig.ck8s.utils.ExceptionUtils.throwError;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
-public class InstallConcordCliAction {
+public class MvnJsonProvider {
 
-    private static final String VERSION = "1.100.0";
+    public Path get() {
+        Path cfgPath = Path.of(System.getProperty("user.home")).resolve(".ck8s").resolve("mvn.json");
+        if (Files.exists(cfgPath)) {
+            return cfgPath;
+        }
 
-    private static final String CONCORD_CLI_URL = String.format("https://repo.maven.apache.org/maven2/com/walmartlabs/concord/concord-cli/%s/concord-cli-%s-executable.jar", VERSION, VERSION);
-
-    public static Path getCliPath() {
-        return Path.of(System.getProperty("user.home")).resolve("bin").resolve("concord-cli");
-    }
-
-    public int perform() {
-        installCli();
-
-        Path cfgPath = installMvnConf();
-
+        installFromTemplate(cfgPath);
         populateMvnConfFromSettingsXml(cfgPath);
-
-        LogUtils.info("done");
-
-        return 0;
+        return cfgPath;
     }
 
-    private static void installCli() {
-        Path dest = getCliPath();
-
-        if (Files.notExists(dest.getParent())) {
-            try {
-                Files.createDirectories(dest.getParent());
-            } catch (Exception e) {
-                throwError("Error creating concord-cli directory: ", e);
-            }
-        }
-
-        LogUtils.info("Installing concord-cli to {}", dest);
-
-        try (InputStream is = new URL(CONCORD_CLI_URL).openStream();
-             ReadableByteChannel sourceChannel = Channels.newChannel(is);
-             FileChannel destChannel = FileChannel.open(dest, WRITE, CREATE, TRUNCATE_EXISTING)) {
-
-            destChannel.transferFrom(sourceChannel, 0, Long.MAX_VALUE);
-        } catch (Exception e) {
-            throwError("Error downloading concord-cli: ", e);
-        }
-
-        Set<PosixFilePermission> perms = new HashSet<>();
-        perms.add(PosixFilePermission.OWNER_READ);
-        perms.add(PosixFilePermission.OWNER_WRITE);
-        perms.add(PosixFilePermission.OWNER_EXECUTE);
-        try {
-            Files.setPosixFilePermissions(dest, perms);
-        } catch (Exception e) {
-            LogUtils.error("Error setting permissions to concord-cli: " + e.getMessage());
-        }
-    }
-
-    private Path installMvnConf() {
-        Path cfgPath = Path.of(System.getProperty("user.home")).resolve(".concord").resolve("mvn.json");
+    private void installFromTemplate(Path cfgPath) {
         if (Files.notExists(cfgPath.getParent())) {
             try {
                 Files.createDirectories(cfgPath.getParent());
@@ -93,14 +48,10 @@ public class InstallConcordCliAction {
             String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
             content = content.replace("<USER_HOME>", System.getProperty("user.home"));
 
-            LogUtils.info("Installing concord mvn config to {}", cfgPath);
-
             Files.writeString(cfgPath, content, CREATE, TRUNCATE_EXISTING);
         } catch (IOException e) {
             throwError("Can't load default concord config. This is most likely a bug: ", e);
         }
-
-        return cfgPath;
     }
 
     private void populateMvnConfFromSettingsXml(Path cfgPath) {
@@ -121,8 +72,8 @@ public class InstallConcordCliAction {
         Map<String, Object> nexusRepo = new HashMap<>();
         nexusRepo.put("id", "nexus");
         nexusRepo.put("url", "https://nexus.eng.aetion.com/repository/aetion-maven");
-        nexusRepo.put("username", "username");
-        nexusRepo.put("password", "password");
+        nexusRepo.put("username", username);
+        nexusRepo.put("password", password);
 
         Map<String, Object> options = Mapper.jsonMapper().readMap(cfgPath);
         List<Map<String, Object>> repositories = MapUtils.getList(options, "repositories");

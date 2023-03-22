@@ -1,6 +1,9 @@
 package brig.ck8s;
 
-import brig.ck8s.actions.*;
+import brig.ck8s.actions.ActionType;
+import brig.ck8s.actions.BootstrapLocalClusterAction;
+import brig.ck8s.actions.ClusterListAction;
+import brig.ck8s.actions.ExecuteScriptAction;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
@@ -8,31 +11,23 @@ import brig.ck8s.utils.Ck8sPath;
 import brig.ck8s.utils.EnumCompletionCandidates;
 import brig.ck8s.utils.EnumConverter;
 import brig.ck8s.utils.LogUtils;
-import io.quarkus.picocli.runtime.annotations.TopCommand;
-import io.quarkus.runtime.QuarkusApplication;
-import io.quarkus.runtime.annotations.QuarkusMain;
+import com.walmartlabs.concord.cli.Verbosity;
 import picocli.AutoComplete;
 import picocli.CommandLine;
 
-import javax.inject.Inject;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-@QuarkusMain
-@TopCommand
 @CommandLine.Command(name = "ck8s-cli",
         mixinStandardHelpOptions = true,
         versionProvider = VersionProvider.class,
         subcommands = {AutoComplete.GenerateCompletion.class})
-public class CliApp implements Callable<Integer>, QuarkusApplication {
+public class CliApp implements Callable<Integer> {
 
     @CommandLine.Spec
     CommandLine.Model.CommandSpec spec;
-
-    @Inject
-    CommandLine.IFactory factory;
 
     @CommandLine.Mixin
     Ck8sPathOptionsMixin ck8sPathOptions;
@@ -61,13 +56,19 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
     @CommandLine.Option(names = {"-a"},description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
     ActionType actionType;
 
-    @CommandLine.Option(names = {"--verbose"}, description = "verbose output")
-    boolean verbose = false;
+    @CommandLine.Option(names = {"-V", "--verbose"}, description = {
+            "Specify multiple -v options to increase verbosity. For example, `-V -V -V` or `-VVV`",
+            "-V log flow steps",
+            "-VV log task input/output args",
+            "-VVV debug logs"})
+    boolean[] verbosity = new boolean[0];
 
     @Override
     public Integer call() {
+        Verbosity verbosity = new Verbosity(this.verbosity);
+
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
-        if (verbose) {
+        if (verbosity.verbose()) {
             LogUtils.info("Using ck8s path: {}", ck8s.ck8sDir());
             if (ck8s.ck8sExtDir() != null) {
                 LogUtils.info("Using ck8s-ext path: {}", ck8s.ck8sExtDir());
@@ -101,9 +102,6 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
                 case REINSTALL_CONCORD_AGENT_POOL -> {
                     return scriptAction.perform("reinstallConcordAgentPool");
                 }
-                case INSTALL_CONCORD_CLI -> {
-                    return new InstallConcordCliAction().perform();
-                }
                 default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
             }
         }
@@ -119,7 +117,7 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
 
             Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath())
                     .includeTests(withTests)
-                    .debug(verbose)
+                    .debug(verbosity.verbose())
                     .build(clusterAlias);
 
             Ck8sPayload payload = Ck8sPayload.builder()
@@ -128,24 +126,12 @@ public class CliApp implements Callable<Integer>, QuarkusApplication {
                     .flow(flow)
                     .build();
 
-            return new FlowExecutor().execute(flowExecutorType.getType(), payload, verbose);
+            return new FlowExecutor().execute(flowExecutorType.getType(), payload, verbosity);
         }
 
         spec.commandLine().usage(System.out);
 
         return -1;
-    }
-
-    @Override
-    public int run(String... args) {
-        CommandLine cmd = new CommandLine(this, factory)
-                .setCaseInsensitiveEnumValuesAllowed(true);
-
-        // hide generate-completion subcommand from usage help
-        CommandLine gen = cmd.getSubcommands().get("generate-completion");
-        gen.getCommandSpec().usageMessage().hidden(true);
-
-        return cmd.execute(args);
     }
 
     static class ActionTypeCompletionCandidates extends EnumCompletionCandidates<ActionType> {

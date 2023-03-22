@@ -1,27 +1,22 @@
 package brig.ck8s.concord;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import org.immutables.value.Value;
 
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
 @Value.Immutable
 @Value.Style(
-        jdkOnly = true,
-        passAnnotations = RegisterForReflection.class)
-@RegisterForReflection(ignoreNested = false)
+        jdkOnly = true)
 public interface Ck8sPayload {
 
     Path location();
 
-    @Nullable
     String entryPoint();
 
     @Value.Default
-    default Map<String, String> args() {
+    default Map<String, Object> args() {
         return Collections.emptyMap();
     }
 
