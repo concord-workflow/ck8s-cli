@@ -8,14 +8,15 @@ import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static brig.ck8s.utils.MapUtils.getString;
 
 public class Ck8sUtils {
+
+    private static final List<String> ignorePatterns = Arrays.asList(".*\\.pdf$", ".*\\.png$");
 
     private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
@@ -92,7 +93,7 @@ public class Ck8sUtils {
 
         try {
             copyComponentsYaml(sourceCk8sComponents, concordDir);
-            IOUtils.copy(sourceCk8sComponents, componentsDir, StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.copy(sourceCk8sComponents, componentsDir, ignorePatterns, null, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException("Error copying ck8s components '" + sourceCk8sComponents + "' to '" + componentsDir + "': " + e.getMessage(), e);
         }
@@ -100,7 +101,7 @@ public class Ck8sUtils {
         if (sourceCk8sExtComponents != null && Files.isDirectory(sourceCk8sExtComponents)) {
             try {
                 copyComponentsYaml(sourceCk8sExtComponents, concordDir);
-                IOUtils.copy(sourceCk8sExtComponents, componentsDir, StandardCopyOption.REPLACE_EXISTING);
+                IOUtils.copy(sourceCk8sExtComponents, componentsDir, ignorePatterns, null,  StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
                 throw new RuntimeException("Error copying ck8sExt components '" + sourceCk8sExtComponents + "' to '" + componentsDir + "': " + e.getMessage());
             }

@@ -21,7 +21,7 @@ public class ConcordCliFlowExecutor {
 
     public int execute(Ck8sPayload payload) {
         if (verbose) {
-            LogUtils.info("Using concord cli: {}", getCliVersion(payload.location()));
+             LogUtils.info("Using concord cli: {}", getCliVersion(payload.location()));
             LogUtils.info("Using java version: {}", JavaVersionAssert.getJavaVersion(payload.location()));
         }
 
