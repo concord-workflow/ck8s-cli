@@ -83,6 +83,15 @@ public class Mapper {
         }
     }
 
+    public String writeAsString(Object value) {
+        try {
+            return objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(value);
+        } catch (Exception e) {
+            throw new RuntimeException("Error writing value '" + value + "' to string: " + e.getMessage());
+        }
+    }
+
     private static ObjectMapper createYamlObjectMapper() {
         YAMLFactory yamlFactory = new YAMLFactory();
         yamlFactory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);

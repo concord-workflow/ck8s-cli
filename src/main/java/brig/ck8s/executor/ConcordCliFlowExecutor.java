@@ -7,7 +7,9 @@ import brig.ck8s.utils.Mapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
@@ -24,9 +26,11 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
+import com.walmartlabs.concord.svm.ExecutionListener;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -117,7 +121,16 @@ public class ConcordCliFlowExecutor {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, DEFAULT_VAULT_ID), dependencyManager, verbosity))
+                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, DEFAULT_VAULT_ID), dependencyManager, verbosity),
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        if (verbosity.logTaskParams()) {
+                            Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
+                            executionListeners.addBinding().toInstance(new FlowCallParamsLogger());
+                        }
+                    }
+                })
                 .create();
 
         Runner runner = injector.getInstance(Runner.class);

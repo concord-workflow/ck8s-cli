@@ -1,7 +1,7 @@
 # ck8s-cli
 
 Requirements for ck8s-cli with local concord (concord-cli):
-- Java 18+
+- Java 17+
 - yq v4.30.6+
 - mustache
 
