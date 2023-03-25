@@ -15,7 +15,7 @@ public class FlowCallParamsLogger implements ExecutionListener {
 
     @Override
     public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
-        if (!(cmd instanceof StepCommand stepCommand)) {
+        if (!(cmd instanceof StepCommand<?> stepCommand)) {
             return Result.CONTINUE;
         }
 
@@ -28,12 +28,13 @@ public class FlowCallParamsLogger implements ExecutionListener {
             return Result.CONTINUE;
         }
 
-        ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-        Context ctx = contextFactory.create(runtime, state, threadId, flowCall);
-
         Map<String, Serializable> inVars = flowCall.getOptions().input();
+        if (!inVars.isEmpty()) {
+            ContextFactory contextFactory = runtime.getService(ContextFactory.class);
+            Context ctx = contextFactory.create(runtime, state, threadId, flowCall);
 
-        System.out.println("     in: " + ctx.eval(inVars, Map.class));
+            System.out.println("     in: " + ctx.eval(inVars, Map.class));
+        }
 
         return Result.CONTINUE;
     }
