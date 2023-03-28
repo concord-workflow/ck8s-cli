@@ -168,7 +168,7 @@ public class ConcordCliFlowExecutor {
     }
 
     private Path ck8sHome() {
-        return Paths.get(System.getProperty("user.home"));
+        return Paths.get(System.getProperty("user.home")).resolve(".ck8s");
     }
 
     private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo) {

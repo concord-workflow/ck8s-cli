@@ -11,7 +11,7 @@ import java.nio.file.Path;
 public class ConcordConfigurationProvider {
 
     public static ConcordConfiguration get() {
-        Path cfgPath = Path.of(System.getProperty("user.home")).resolve(".ck8s-cli").resolve("concord-config.yaml");
+        Path cfgPath = Path.of(System.getProperty("user.home")).resolve(".ck8s").resolve("concord-config.yaml");
         if (!Files.exists(cfgPath)) {
             try (InputStream in = ConcordConfigurationProvider.class.getResourceAsStream("/templates/default-concord-config.yaml")) {
                 return Mapper.yamlMapper().read(in, ConcordConfiguration.class);
