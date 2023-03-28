@@ -27,11 +27,14 @@ public class ConcordConfigurationProvider {
         }
 
         try {
-            List<ConcordConfiguration> profiles = Mapper.yamlMapper().read(cfgPath, new TypeReference<List<ConcordConfiguration>>(){});
+            List<ConcordConfiguration> profiles = Mapper.yamlMapper().read(cfgPath, new TypeReference<List<ConcordConfiguration>>() {
+            });
             return profiles.stream()
                     .filter(p -> profile.equals(p.alias()))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Can't find profile '" + profile + "' in concord configuration: '" + cfgPath + "'"));
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Can't load concord configuration from '" + cfgPath + "': " + e.getMessage());
         }
