@@ -11,6 +11,8 @@ import org.immutables.value.Value;
 @JsonDeserialize(as = ImmutableConcordConfiguration.class)
 public interface ConcordConfiguration {
 
+    String alias();
+
     String baseUrl();
 
     String apiKey();

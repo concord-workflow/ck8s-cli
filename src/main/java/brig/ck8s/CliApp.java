@@ -56,6 +56,9 @@ public class CliApp implements Callable<Integer> {
     @CommandLine.Option(names = {"-a"},description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
     ActionType actionType;
 
+    @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name")
+    String profile = "default";
+
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {
             "Specify multiple -v options to increase verbosity. For example, `-V -V -V` or `-VVV`",
             "-V log flow steps",
@@ -102,6 +105,9 @@ public class CliApp implements Callable<Integer> {
                 case REINSTALL_CONCORD_AGENT_POOL -> {
                     return scriptAction.perform("reinstallConcordAgentPool");
                 }
+//                case CONSOLE ->  {
+//                    return scriptAction.perform("ck8sConsole");
+//                }
                 default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
             }
         }
@@ -112,7 +118,7 @@ public class CliApp implements Callable<Integer> {
 
         if (clusterAlias != null) {
             if ("local".equals(clusterAlias) && "cluster".equals(flow)) {
-                return new BootstrapLocalClusterAction(ck8s, targetPathOptions.getTargetRootPath()).perform();
+                return new BootstrapLocalClusterAction(ck8s, targetPathOptions.getTargetRootPath(), profile).perform();
             }
 
             Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath())
@@ -126,7 +132,7 @@ public class CliApp implements Callable<Integer> {
                     .flow(flow)
                     .build();
 
-            return new FlowExecutor().execute(flowExecutorType.getType(), payload, verbosity);
+            return new FlowExecutor().execute(flowExecutorType.getType(), payload, profile, verbosity);
         }
 
         spec.commandLine().usage(System.out);

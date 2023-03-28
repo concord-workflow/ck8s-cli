@@ -61,9 +61,26 @@ public class Mapper {
         return objectMapper.readValue(in, clazz);
     }
 
+    public <T> T read(InputStream in, TypeReference<T> valueTypeRef) throws IOException {
+        return objectMapper.readValue(in, valueTypeRef);
+    }
+
     public <T> T read(Path p, Class<T> clazz) {
         try {
             return objectMapper.readValue(p.toFile(), clazz);
+        } catch (ValueInstantiationException e) {
+            if (e.getCause() instanceof MandatoryValuesMissing mvm) {
+                throw mvm;
+            }
+            throw new RuntimeException("Error reading '" + p.toAbsolutePath().normalize() + "': " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading '" + p.toAbsolutePath().normalize() + "': " + e.getMessage());
+        }
+    }
+
+    public <T> T read(Path p, TypeReference<T> valueTypeRef) {
+        try {
+            return objectMapper.readValue(p.toFile(), valueTypeRef);
         } catch (ValueInstantiationException e) {
             if (e.getCause() instanceof MandatoryValuesMissing mvm) {
                 throw mvm;

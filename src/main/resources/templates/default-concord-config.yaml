@@ -1,2 +1,3 @@
-baseUrl: "https://concord.local.localhost"
-apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+- alias: default
+  baseUrl: "https://concord.local.localhost"
+  apiKey: "auBy4eDWrKWsyhiDp3AQiw"

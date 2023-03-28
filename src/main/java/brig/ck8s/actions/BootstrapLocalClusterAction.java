@@ -15,10 +15,12 @@ public class BootstrapLocalClusterAction {
 
     private final Ck8sPath ck8s;
     private final Path targetRoot;
+    private final String profile;
 
-    public BootstrapLocalClusterAction(Ck8sPath ck8s, Path targetRoot) {
+    public BootstrapLocalClusterAction(Ck8sPath ck8s, Path targetRoot, String profile) {
         this.ck8s = ck8s;
         this.targetRoot = targetRoot;
+        this.profile = profile;
     }
 
     public int perform() {
@@ -30,7 +32,7 @@ public class BootstrapLocalClusterAction {
         Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRoot)
                 .build("local");
 
-        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(ConcordConfigurationProvider.get());
+        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(ConcordConfigurationProvider.get(profile));
 
         ExecutorService executor = Executors.newCachedThreadPool();
         
