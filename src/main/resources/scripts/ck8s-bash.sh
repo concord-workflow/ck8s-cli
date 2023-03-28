@@ -469,3 +469,25 @@ function assertLocalCluster() {
     echo " FAILURE :("
   fi
 }
+
+function ck8sConsole() {
+  if [ -z "${CONCORD_ADMIN_TOKEN}" ]; then
+      >&2 echo "No CONCORD_ADMIN_TOKEN provided"
+      exit 1
+  fi
+
+  if [ -z "${CONCORD_URL}" ]; then
+      >&2 echo "No CONCORD_URL provided"
+      exit 1
+  fi
+
+  [ -f /usr/bin/pbcopy ] && echo ${CONCORD_ADMIN_TOKEN} | pbcopy
+
+  OPEN_CMD=open
+  if [ "$(uname -s)" = "Linux" ]; then
+    OPEN_CMD=xdg-open
+  fi
+
+  echo "${CONCORD_ADMIN_TOKEN}"
+  $OPEN_CMD "${CONCORD_URL}/#/login?useApiKey=true"
+}

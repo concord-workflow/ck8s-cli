@@ -21,6 +21,10 @@ public class ExecuteScriptAction {
     }
 
     public int perform(String functionName) {
+        return perform(functionName, Collections.emptyMap());
+    }
+
+    public int perform(String functionName, Map<String, String> extraEnv) {
         try (TempPath script = TempPath.createFile("main");
              TempPath call = TempPath.createFile("call")) {
 
@@ -29,6 +33,7 @@ public class ExecuteScriptAction {
 
             Map<String, String> env = new HashMap<>();
             env.put("CK8S_COMPONENTS", ck8s.ck8sComponents().toString());
+            env.putAll(extraEnv);
 
             List<String> scriptArgs = new ArrayList<>();
             scriptArgs.add(script.path().toAbsolutePath().toString());
@@ -60,7 +65,7 @@ public class ExecuteScriptAction {
         args.addAll(scriptArgs);
 
         try {
-            CliCommand.Result result = CliCommand.withRedirectStd(args, path.getParent()).execute();
+            CliCommand.Result result = CliCommand.withRedirectStd(args, path.getParent(), env).execute();
             return result.code();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());

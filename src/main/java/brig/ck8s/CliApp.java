@@ -6,7 +6,10 @@ import brig.ck8s.actions.ClusterListAction;
 import brig.ck8s.actions.ExecuteScriptAction;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
+import brig.ck8s.concord.ConcordProcess;
+import brig.ck8s.executor.ConcordConfigurationProvider;
 import brig.ck8s.executor.FlowExecutor;
+import brig.ck8s.model.ConcordConfiguration;
 import brig.ck8s.utils.Ck8sPath;
 import brig.ck8s.utils.EnumCompletionCandidates;
 import brig.ck8s.utils.EnumConverter;
@@ -16,6 +19,7 @@ import picocli.AutoComplete;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -105,9 +109,14 @@ public class CliApp implements Callable<Integer> {
                 case REINSTALL_CONCORD_AGENT_POOL -> {
                     return scriptAction.perform("reinstallConcordAgentPool");
                 }
-//                case CONSOLE ->  {
-//                    return scriptAction.perform("ck8sConsole");
-//                }
+                case CONSOLE ->  {
+                    ConcordConfiguration concordCfg = ConcordConfigurationProvider.get(profile);
+                    Map<String, String> params = new HashMap<>();
+                    params.put("CONCORD_URL", concordCfg.baseUrl());
+                    params.put("CONCORD_ADMIN_TOKEN", concordCfg.apiKey());
+                    params.put("CK8S_COMPONENTS", concordCfg.apiKey());
+                    return scriptAction.perform("ck8sConsole", params);
+                }
                 default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
             }
         }
