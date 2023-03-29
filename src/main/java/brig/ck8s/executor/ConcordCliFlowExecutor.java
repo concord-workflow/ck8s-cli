@@ -2,8 +2,6 @@ package brig.ck8s.executor;
 
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.concord.ConcordServer;
-import brig.ck8s.utils.MapUtils;
-import brig.ck8s.utils.Mapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
@@ -26,7 +24,6 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -91,15 +88,12 @@ public class ConcordCliFlowExecutor {
         ProcessDefinition processDefinition = loadResult.getProjectDefinition();
 
         UUID instanceId = UUID.randomUUID();
-        String awsProfile = MapUtils.getString(clusterRequest(payload), "account");
         Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
-        args.put("AWS_PROFILE", awsProfile);
         args.put("concordUrl", "https://localhost");
-        args.put("clusterRequest.envars.AWS_PROFILE", awsProfile);
         args.put("clusterRequest.localCluster", "true");
-        args.put("clusterRequest.localConcord", "true");
+        args.put("clusterRequest.localConcord", true);
 
         if (verbosity.verbose()) {
             dumpArguments(args);
@@ -154,11 +148,6 @@ public class ConcordCliFlowExecutor {
         }
 
         return 0;
-    }
-
-    private static Map<String, Object> clusterRequest(Ck8sPayload payload) {
-        Map<String, Object> yaml = Mapper.yamlMapper().readMap(payload.location().resolve("concord.yml"));
-        return MapUtils.getMap(yaml, "configuration.arguments.clusterRequest", Collections.emptyMap());
     }
 
     private DependencyManagerConfiguration getDependencyManagerConfiguration() {
