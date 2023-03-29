@@ -35,7 +35,7 @@ public class ClusterListAction {
         return 0;
     }
 
-    private Map<Path, ClusterInfo> getInfo() {
+    public Map<Path, ClusterInfo> getInfo() {
         return Ck8sUtils.streamClusterYaml(ck8sPath)
                 .map(p -> new PathForClusterInfo(p, toClusterInfo(p)))
                 .filter(r -> r.clusterInfo() != null)

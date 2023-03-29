@@ -389,7 +389,6 @@ function concordProcess() {
 }
 
 function testConcord() {
-
   echo -n ">>> Submitting test process ... "
 
   RESULT=`curl --silent -H "Authorization: ${concordAdminApiToken}" -F concord.yml=@${CK8S_COMPONENTS}/concord/test.yaml ${concordUrl}/api/v1/process`
@@ -490,4 +489,32 @@ function ck8sConsole() {
 
   echo "${CONCORD_ADMIN_TOKEN}"
   $OPEN_CMD "${CONCORD_URL}/#/login?useApiKey=true"
+}
+
+function awsKubeconfig () {
+    if [ -z "${NAME}" ]; then
+        >&2 echo "No NAME provided"
+        exit 1
+    fi
+
+    if [ -z "${REGION}" ]; then
+        >&2 echo "No REGION provided"
+        exit 1
+    fi
+
+    if [ -z "${ACCOUNT}" ]; then
+        >&2 echo "No ACCOUNT provided"
+        exit 1
+    fi
+
+    if [ -z "${ALIAS}" ]; then
+        >&2 echo "No ALIAS provided"
+        exit 1
+    fi
+
+    # Only update the kubeconfig for active clusters
+    if aws eks describe-cluster --name ${NAME} --region ${REGION} --profile ${ACCOUNT} > /dev/null 2>&1; then
+      aws eks update-kubeconfig --name ${NAME} --alias ${ALIAS} --region ${REGION} --profile ${ACCOUNT} \
+        --kubeconfig ${HOME}/.kube/ck8s-config-${ACCOUNT}
+    fi
 }

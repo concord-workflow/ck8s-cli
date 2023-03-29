@@ -1,12 +1,8 @@
 package brig.ck8s;
 
-import brig.ck8s.actions.ActionType;
-import brig.ck8s.actions.BootstrapLocalClusterAction;
-import brig.ck8s.actions.ClusterListAction;
-import brig.ck8s.actions.ExecuteScriptAction;
+import brig.ck8s.actions.*;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
-import brig.ck8s.concord.ConcordProcess;
 import brig.ck8s.executor.ConcordConfigurationProvider;
 import brig.ck8s.executor.FlowExecutor;
 import brig.ck8s.model.ConcordConfiguration;
@@ -116,6 +112,9 @@ public class CliApp implements Callable<Integer> {
                     params.put("CONCORD_ADMIN_TOKEN", concordCfg.apiKey());
                     params.put("CK8S_COMPONENTS", concordCfg.apiKey());
                     return scriptAction.perform("ck8sConsole", params);
+                }
+                case AWS_KUBE_CONFIG -> {
+                    return new AwsKubeconfigAction(ck8s, scriptAction).perform();
                 }
                 default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
             }
