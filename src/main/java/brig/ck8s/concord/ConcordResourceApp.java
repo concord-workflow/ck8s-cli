@@ -13,7 +13,6 @@ public class ConcordResourceApp extends Application {
     public ConcordResourceApp() {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(InventoryResource.class);
-
         resources.add(JacksonFeature.class);
 
         this.classes = Collections.unmodifiableSet(resources);

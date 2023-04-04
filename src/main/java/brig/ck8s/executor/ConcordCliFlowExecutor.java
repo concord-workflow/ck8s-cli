@@ -90,9 +90,7 @@ public class ConcordCliFlowExecutor {
 
         UUID instanceId = UUID.randomUUID();
         Map<String, Object> args = new LinkedHashMap<>();
-        args.put("concordUrl", "https://localhost");
-        args.put("clusterRequest.localCluster", "true");
-        args.put("clusterRequest.localConcord", true);
+        args.put("concordUrl", "https://concord.local.localhost");
 
         Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
         args.putAll(flowAndUserArgs);
