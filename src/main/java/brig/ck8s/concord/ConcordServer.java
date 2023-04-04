@@ -14,7 +14,7 @@ public class ConcordServer {
     public static HttpServer start() throws IOException {
         System.setProperty("java.net.preferIPv4Stack" , "true");
         System.setProperty("jersey.config.json.jackson.disabled.modules", "JaxbAnnotationIntrospector");
-        
+
         assertPort(8001);
 
         HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", 8001), 0);

@@ -32,6 +32,11 @@ public class Main {
         CommandLine gen = cmd.getSubcommands().get("generate-completion");
         gen.getCommandSpec().usageMessage().hidden(true);
 
+        if (cmd.isVersionHelpRequested()) {
+            cmd.printVersionHelp(System.out);
+            return;
+        }
+
         int code = cmd.execute(args);
         System.exit(code);
     }

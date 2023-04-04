@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "ck8s-cli",
-        mixinStandardHelpOptions = true,
         versionProvider = VersionProvider.class,
         subcommands = {AutoComplete.GenerateCompletion.class})
 public class CliApp implements Callable<Integer> {
@@ -65,6 +64,9 @@ public class CliApp implements Callable<Integer> {
             "-VV log task input/output args",
             "-VVV debug logs"})
     boolean[] verbosity = new boolean[0];
+
+    @CommandLine.Option(names = {"--version"}, versionHelp = true, description = "display version info")
+    boolean versionInfoRequested;
 
     @Override
     public Integer call() {
