@@ -31,6 +31,7 @@
         <logback.version>1.2.10</logback.version>
         <httpclient.version>4.5.14</httpclient.version>
         <jakarta.activation-api.version>2.1.0</jakarta.activation-api.version>
+        <version.xmlbind.api>4.0.0</version.xmlbind.api>
     </properties>
 
     <dependencies>
@@ -149,6 +150,11 @@
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
             <version>${jakarta.activation-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${version.xmlbind.api}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
