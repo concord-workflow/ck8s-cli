@@ -1,1 +1,1 @@
-java -jar target/ck8s-cli-0.1.5-SNAPSHOT-executable.jar --target-root /tmp/ck8s-target --ck8s-root /Users/brig/prj/github/concord-workflow/ck8s --ck8s-ext-root /Users/brig/prj/github/aetion/ck8s-ext --flow-executor concord-cli $@
+java -jar target/ck8s-cli-0.1.6-SNAPSHOT-executable.jar --target-root /tmp/ck8s-target --ck8s-root /Users/brig/prj/github/concord-workflow/ck8s --ck8s-ext-root /Users/brig/prj/github/aetion/ck8s-ext --flow-executor concord-cli $@
