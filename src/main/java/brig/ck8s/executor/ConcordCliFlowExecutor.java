@@ -32,6 +32,7 @@ import com.walmartlabs.concord.svm.ExecutionListener;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -88,12 +89,16 @@ public class ConcordCliFlowExecutor {
         ProcessDefinition processDefinition = loadResult.getProjectDefinition();
 
         UUID instanceId = UUID.randomUUID();
-        Map<String, Object> args = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
-        args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
-        args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
+        Map<String, Object> args = new LinkedHashMap<>();
         args.put("concordUrl", "https://localhost");
         args.put("clusterRequest.localCluster", "true");
         args.put("clusterRequest.localConcord", true);
+
+        Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
+        args.putAll(flowAndUserArgs);
+
+        args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
+        args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
         if (verbosity.verbose()) {
             dumpArguments(args);
