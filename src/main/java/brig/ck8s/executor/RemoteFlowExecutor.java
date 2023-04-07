@@ -35,6 +35,8 @@ public class RemoteFlowExecutor {
                     .putArgs("concordUrl", concordCfg.baseUrl())
                     .build();
 
+            payload = new FlowRequirementsProcessor().process(payload);
+
             ConcordProcess process = startProcess(payload);
             LogUtils.info("process: {}", String.format("%s/#/process/%s/log", concordCfg.baseUrl(), process.instanceId()));
             return process;

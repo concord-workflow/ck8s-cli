@@ -2,6 +2,7 @@ configuration:
   runtime: concord-v2
   events:
     recordTaskInVars: true
+    recordTaskOutVars: true
   arguments:
     clusterRequest: <CLUSTER_REQUEST>
   dependencies:

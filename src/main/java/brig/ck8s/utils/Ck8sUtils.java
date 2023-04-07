@@ -19,6 +19,8 @@ import static brig.ck8s.utils.MapUtils.getString;
 
 public class Ck8sUtils {
 
+    public static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
+
     private static final List<String> ignorePatterns = Arrays.asList(".*\\.pdf$", ".*\\.png$");
 
     private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
@@ -125,7 +127,7 @@ public class Ck8sUtils {
         try (Stream<Path> walk = Files.walk(src)) {
             walk
                     .filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().matches("ck8s-.*\\.concord\\.yaml"))
+                    .filter(p -> p.getFileName().toString().matches(CONCORD_YAML_PATTERN))
                     .forEach(p -> copy(p, dest.resolve(p.getFileName()), StandardCopyOption.REPLACE_EXISTING));
         }
     }

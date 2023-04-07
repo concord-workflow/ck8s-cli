@@ -63,6 +63,10 @@ public final class MapUtils {
         ConfigurationUtils.set(m, b, path.split("\\."));
     }
 
+    public static void delete(Map<String, Object> m, String path) {
+        ConfigurationUtils.delete(m, path.split("\\."));
+    }
+
     private MapUtils() {
     }
 }
