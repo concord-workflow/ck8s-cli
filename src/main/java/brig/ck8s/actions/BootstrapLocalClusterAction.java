@@ -32,7 +32,7 @@ public class BootstrapLocalClusterAction {
         Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRoot)
                 .build("local");
 
-        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(ConcordConfigurationProvider.get(profile));
+        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(ConcordConfigurationProvider.get(profile), false);
 
         ExecutorService executor = Executors.newCachedThreadPool();
         
@@ -40,13 +40,17 @@ public class BootstrapLocalClusterAction {
                 .location(payloadLocation)
                 .flow("cert-manager-local")
                 .build());
-        process.streamLogs(executor);
+        if (process != null) {
+            process.streamLogs(executor);
+        }
 
         process = flowExecutor.execute(Ck8sPayload.builder()
                 .location(payloadLocation)
                 .flow("polaris")
                 .build());
-        process.streamLogs(executor);
+        if (process != null) {
+            process.streamLogs(executor);
+        }
 
         scriptAction.perform("assertLocalCluster");
 

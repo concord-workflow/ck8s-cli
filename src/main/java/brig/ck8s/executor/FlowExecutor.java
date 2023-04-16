@@ -10,10 +10,10 @@ public class FlowExecutor {
         REMOTE
     }
 
-    public int execute(ExecutorType type, Ck8sPayload payload, String profile, Verbosity verbosity) {
+    public int execute(ExecutorType type, Ck8sPayload payload, String profile, Verbosity verbosity, boolean testMode) {
         switch (type) {
             case REMOTE -> {
-                RemoteFlowExecutor executor = new RemoteFlowExecutor(ConcordConfigurationProvider.get(profile));
+                RemoteFlowExecutor executor = new RemoteFlowExecutor(ConcordConfigurationProvider.get(profile), testMode);
                 executor.execute(payload);
                 return 0;
             }

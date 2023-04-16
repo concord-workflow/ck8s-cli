@@ -13,9 +13,12 @@ import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,12 +26,15 @@ public class RemoteFlowExecutor {
 
     private final ConcordConfiguration concordCfg;
     private final ApiClient apiClient;
+    private final boolean testMode;
 
-    public RemoteFlowExecutor(ConcordConfiguration concordCfg) {
+    public RemoteFlowExecutor(ConcordConfiguration concordCfg, boolean testMode) {
         this.concordCfg = concordCfg;
         this.apiClient = createClient(concordCfg);
+        this.testMode = testMode;
     }
 
+    @Nullable
     public ConcordProcess execute(Ck8sPayload payload) {
         try {
             payload = Ck8sPayload.builder().from(payload)
@@ -37,9 +43,24 @@ public class RemoteFlowExecutor {
 
             payload = new FlowRequirementsProcessor().process(payload);
 
-            ConcordProcess process = startProcess(payload);
-            LogUtils.info("process: {}", String.format("%s/#/process/%s/log", concordCfg.baseUrl(), process.instanceId()));
-            return process;
+            if (testMode) {
+                StringBuilder args = new StringBuilder();
+                for (Map.Entry<String, Object> e : payload.args().entrySet()) {
+                    args.append(String.format("-F arguments.%s=%s ", e.getKey(), e.getValue()));
+                }
+                Path archivePath = payload.location().resolve("payload.zip");
+                archiveToFile(payload.location(), archivePath);
+
+                String curl = String.format("curl -s --http1.1 -H 'Authorization: %s' -F archive=@%s -F entryPoint=%s %s %s/api/v1/process",
+                        concordCfg.apiKey(), archivePath, payload.entryPoint(), args, concordCfg.baseUrl());
+
+                LogUtils.info("Test mode is on. Use this command to start your process:\n{}", curl);
+                return null;
+            } else {
+                ConcordProcess process = startProcess(payload);
+                LogUtils.info("process: {}", String.format("%s/#/process/%s/log", concordCfg.baseUrl(), process.instanceId()));
+                return process;
+            }
         } catch (Exception e) {
             throw new RuntimeException("Error starting concord process: " + e.getMessage());
         }
@@ -84,6 +105,16 @@ public class RemoteFlowExecutor {
                 IOUtils.zip(zip, path);
             }
             input.put("archive", out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void archiveToFile(Path src, Path dest) {
+        try {
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
+                IOUtils.zip(zip, src);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

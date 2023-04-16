@@ -65,6 +65,9 @@ public class CliApp implements Callable<Integer> {
             "-VVV debug logs"})
     boolean[] verbosity = new boolean[0];
 
+    @CommandLine.Option(names = {"-t"}, description = "Test mode: Only display the command that will be executed")
+    boolean testMode = false;
+
     @CommandLine.Option(names = {"--version"}, versionHelp = true, description = "display version info")
     boolean versionInfoRequested;
 
@@ -80,6 +83,7 @@ public class CliApp implements Callable<Integer> {
             }
 
             LogUtils.info("Using target path: {}", targetPathOptions.getTargetRootPath());
+            LogUtils.info("Test mode: {}", testMode);
         }
 
         if (actionType != null) {
@@ -142,7 +146,7 @@ public class CliApp implements Callable<Integer> {
                     .flow(flow)
                     .build();
 
-            return new FlowExecutor().execute(flowExecutorType.getType(), payload, profile, verbosity);
+            return new FlowExecutor().execute(flowExecutorType.getType(), payload, profile, verbosity, testMode);
         }
 
         spec.commandLine().usage(System.out);
