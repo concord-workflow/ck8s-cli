@@ -1,9 +1,9 @@
 package brig.ck8s.actions;
 
+import brig.ck8s.cfg.ConcordConfigurationProvider;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.concord.ConcordProcess;
-import brig.ck8s.executor.ConcordConfigurationProvider;
 import brig.ck8s.executor.RemoteFlowExecutor;
 import brig.ck8s.utils.Ck8sPath;
 

@@ -1,5 +1,6 @@
 package brig.ck8s.executor;
 
+import brig.ck8s.cfg.ConcordConfigurationProvider;
 import brig.ck8s.utils.LogUtils;
 import brig.ck8s.utils.MapUtils;
 import brig.ck8s.utils.Mapper;

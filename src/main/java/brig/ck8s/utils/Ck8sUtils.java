@@ -96,6 +96,10 @@ public class Ck8sUtils {
             throw new RuntimeException("Error creating '" + componentsDirName + "' target dir: " + e.getMessage());
         }
 
+        if (Files.notExists(sourceCk8sComponents)) {
+            throw new RuntimeException("Can't find ck8s components in '" + sourceCk8sComponents + "'. Check the configuration");
+        }
+
         try {
             copyComponentsYaml(sourceCk8sComponents, concordDir);
             IOUtils.copy(sourceCk8sComponents, componentsDir, ignorePatterns, null, StandardCopyOption.REPLACE_EXISTING);

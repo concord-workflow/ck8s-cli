@@ -1,0 +1,7 @@
+# targetPath: ""
+# ck8sDir: ""
+# ck8sExtDir: ""
+concord:
+  - alias: default
+    baseUrl: "https://concord.local.localhost"
+    apiKey: "auBy4eDWrKWsyhiDp3AQiw"

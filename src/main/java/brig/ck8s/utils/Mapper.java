@@ -109,6 +109,10 @@ public class Mapper {
         }
     }
 
+    public <T> T convertValue(Object fromValue, TypeReference<T> toValueTypeRef) {
+        return objectMapper.convertValue(fromValue, toValueTypeRef);
+    }
+
     private static ObjectMapper createYamlObjectMapper() {
         YAMLFactory yamlFactory = new YAMLFactory();
         yamlFactory.disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);

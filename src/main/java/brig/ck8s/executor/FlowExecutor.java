@@ -1,5 +1,6 @@
 package brig.ck8s.executor;
 
+import brig.ck8s.cfg.ConcordConfigurationProvider;
 import brig.ck8s.concord.Ck8sPayload;
 import com.walmartlabs.concord.cli.Verbosity;
 

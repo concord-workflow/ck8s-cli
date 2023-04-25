@@ -1,9 +1,10 @@
 package brig.ck8s;
 
 import brig.ck8s.actions.*;
+import brig.ck8s.cfg.CliConfigurationProvider;
+import brig.ck8s.cfg.ConcordConfigurationProvider;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
-import brig.ck8s.executor.ConcordConfigurationProvider;
 import brig.ck8s.executor.FlowExecutor;
 import brig.ck8s.model.ConcordConfiguration;
 import brig.ck8s.utils.Ck8sPath;
@@ -22,7 +23,8 @@ import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "ck8s-cli",
         versionProvider = VersionProvider.class,
-        subcommands = {AutoComplete.GenerateCompletion.class})
+        subcommands = {AutoComplete.GenerateCompletion.class},
+        defaultValueProvider = CliConfigurationProvider.class)
 public class CliApp implements Callable<Integer> {
 
     @CommandLine.Spec
@@ -31,8 +33,8 @@ public class CliApp implements Callable<Integer> {
     @CommandLine.Mixin
     Ck8sPathOptionsMixin ck8sPathOptions;
 
-    @CommandLine.Mixin
-    TargetPathOptionsMixin targetPathOptions;
+    @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
+    private Path targetRootPath = Path.of(System.getProperty("user.dir")).resolve("target");
 
     @CommandLine.Mixin
     FlowExecutorOptionsMixin flowExecutorType;
@@ -82,7 +84,7 @@ public class CliApp implements Callable<Integer> {
                 LogUtils.info("Using ck8s-ext path: {}", ck8s.ck8sExtDir());
             }
 
-            LogUtils.info("Using target path: {}", targetPathOptions.getTargetRootPath());
+            LogUtils.info("Using target path: {}", targetRootPath);
             LogUtils.info("Test mode: {}", testMode);
         }
 
@@ -132,10 +134,10 @@ public class CliApp implements Callable<Integer> {
 
         if (clusterAlias != null) {
             if ("local".equals(clusterAlias) && "cluster".equals(flow)) {
-                return new BootstrapLocalClusterAction(ck8s, targetPathOptions.getTargetRootPath(), profile).perform();
+                return new BootstrapLocalClusterAction(ck8s, targetRootPath, profile).perform();
             }
 
-            Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetPathOptions.getTargetRootPath())
+            Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRootPath)
                     .includeTests(withTests)
                     .debug(verbosity.verbose())
                     .build(clusterAlias);
