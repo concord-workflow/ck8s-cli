@@ -7,6 +7,7 @@ import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
 import brig.ck8s.model.ConcordConfiguration;
+import brig.ck8s.selfupdate.SelfUpdateCommand;
 import brig.ck8s.utils.Ck8sPath;
 import brig.ck8s.utils.EnumCompletionCandidates;
 import brig.ck8s.utils.EnumConverter;
@@ -23,7 +24,7 @@ import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "ck8s-cli",
         versionProvider = VersionProvider.class,
-        subcommands = {AutoComplete.GenerateCompletion.class},
+        subcommands = {AutoComplete.GenerateCompletion.class, SelfUpdateCommand.class},
         defaultValueProvider = CliConfigurationProvider.class)
 public class CliApp implements Callable<Integer> {
 
@@ -74,7 +75,7 @@ public class CliApp implements Callable<Integer> {
     boolean versionInfoRequested;
 
     @Override
-    public Integer call() {
+    public Integer call() throws Exception {
         Verbosity verbosity = new Verbosity(this.verbosity);
 
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());

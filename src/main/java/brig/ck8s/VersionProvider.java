@@ -12,13 +12,17 @@ public class VersionProvider implements CommandLine.IVersionProvider {
 
     @Override
     public String[] getVersion() {
+        return new String[]{"ck8s-cli version: " + getCliVersion(), javaVersion()};
+    }
+
+    public static String getCliVersion() {
         Properties props = new Properties();
         try {
             props.load(VersionProvider.class.getClassLoader().getResourceAsStream("project.properties"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return new String[]{"ck8s-cli version: " + props.getProperty("project.version"), javaVersion()};
+        return props.getProperty("project.version");
     }
 
     private static String javaVersion() {
