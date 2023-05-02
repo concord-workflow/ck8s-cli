@@ -303,7 +303,7 @@ function installComponents() {
 function installConcordAgentPool() {
   echo ">>> Installing concord agent pool"
 
-  kubectl apply -f ${CK8S_COMPONENTS}/concord/agentpool.yaml -n concord > /dev/null 2>&1
+  kubectl apply -f ${CK8S_COMPONENTS}/concord/test/local-agentpool.yaml -n concord > /dev/null 2>&1
 
   # The metrics endpoint has a metric for the workers available to do work.
   #
@@ -391,7 +391,7 @@ function concordProcess() {
 function testConcord() {
   echo -n ">>> Submitting test process ... "
 
-  RESULT=`curl --silent -H "Authorization: ${concordAdminApiToken}" -F concord.yml=@${CK8S_COMPONENTS}/concord/test.yaml ${concordUrl}/api/v1/process`
+  RESULT=`curl --silent -H "Authorization: ${concordAdminApiToken}" -F concord.yml=@${CK8S_COMPONENTS}/concord/local-test.yaml ${concordUrl}/api/v1/process`
   ID=`echo ${RESULT} | jq -r .instanceId`
   echo ${ID}
 

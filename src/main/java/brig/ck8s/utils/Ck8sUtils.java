@@ -21,7 +21,7 @@ public class Ck8sUtils {
 
     public static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
 
-    private static final List<String> ignorePatterns = Arrays.asList(".*\\.pdf$", ".*\\.png$");
+    private static final List<String> ignorePatterns = Arrays.asList(".*\\.pdf$", ".*\\.png$", ".*\\.jpg$");
 
     private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
