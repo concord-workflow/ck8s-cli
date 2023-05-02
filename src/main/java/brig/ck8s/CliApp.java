@@ -17,9 +17,7 @@ import picocli.AutoComplete;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "ck8s-cli",
@@ -27,6 +25,9 @@ import java.util.concurrent.Callable;
         subcommands = {AutoComplete.GenerateCompletion.class, SelfUpdateCommand.class},
         defaultValueProvider = CliConfigurationProvider.class)
 public class CliApp implements Callable<Integer> {
+
+    private static final Set<String> flowPatternsToConfirm = Set.of("(?i).*delete.*", "(?i).*reinstall.*");
+    private static final Set<String> confirmInput = Set.of("y", "yes");
 
     @CommandLine.Spec
     CommandLine.Model.CommandSpec spec;
@@ -136,6 +137,19 @@ public class CliApp implements Callable<Integer> {
         if (clusterAlias != null) {
             if ("local".equals(clusterAlias) && "cluster".equals(flow)) {
                 return new BootstrapLocalClusterAction(ck8s, targetRootPath, profile).perform();
+            }
+
+            boolean needConfirmation = flowPatternsToConfirm.stream().anyMatch(flow::matches);
+            if (needConfirmation) {
+                String msg = String.format("Are you sure you want to execute '%s' on '%s' cluster? (y/N): ", flow, clusterAlias);
+                System.out.print(msg);
+
+                try (Scanner input = new Scanner(System.in)) {
+                    String confirm = input.nextLine();
+                    if (!confirmInput.contains(confirm)) {
+                        return -1;
+                    }
+                }
             }
 
             Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRootPath)
