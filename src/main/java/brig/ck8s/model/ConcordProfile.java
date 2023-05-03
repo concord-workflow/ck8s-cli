@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
+
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({"alias", "baseUrl", "apiKey"})
@@ -17,6 +19,7 @@ public interface ConcordProfile {
 
     String baseUrl();
 
+    @Nullable
     String apiKey();
 
     static ImmutableConcordProfile.Builder builder() {
