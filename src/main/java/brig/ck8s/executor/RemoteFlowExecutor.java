@@ -2,7 +2,7 @@ package brig.ck8s.executor;
 
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.concord.ConcordProcess;
-import brig.ck8s.model.ConcordConfiguration;
+import brig.ck8s.model.ConcordProfile;
 import brig.ck8s.utils.LogUtils;
 import com.walmartlabs.concord.ApiClient;
 import com.walmartlabs.concord.ApiException;
@@ -24,11 +24,11 @@ import java.util.Map;
 
 public class RemoteFlowExecutor {
 
-    private final ConcordConfiguration concordCfg;
+    private final ConcordProfile concordCfg;
     private final ApiClient apiClient;
     private final boolean testMode;
 
-    public RemoteFlowExecutor(ConcordConfiguration concordCfg, boolean testMode) {
+    public RemoteFlowExecutor(ConcordProfile concordCfg, boolean testMode) {
         this.concordCfg = concordCfg;
         this.apiClient = createClient(concordCfg);
         this.testMode = testMode;
@@ -81,7 +81,7 @@ public class RemoteFlowExecutor {
         return new ConcordProcess(apiClient, resp.getData().getInstanceId());
     }
 
-    private static ApiClient createClient(ConcordConfiguration cfg) {
+    private static ApiClient createClient(ConcordProfile cfg) {
         return new ConcordApiClient(cfg.baseUrl())
                 .setVerifyingSsl(false)
                 .setApiKey(cfg.apiKey());

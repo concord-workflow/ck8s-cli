@@ -1,49 +1,112 @@
 package brig.ck8s.cfg;
 
-import brig.ck8s.utils.MapUtils;
+import brig.ck8s.model.CliConfiguration;
+import brig.ck8s.model.ConcordProfile;
 import brig.ck8s.utils.Mapper;
-import picocli.CommandLine;
+import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Map;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 
-public class CliConfigurationProvider implements CommandLine.IDefaultValueProvider {
+public class CliConfigurationProvider {
 
-    private static final Map<String, String> mapping = Map.of(
-            "--target-root", "targetDir",
-            "--ck8s-root", "ck8sDir",
-            "--ck8s-ext-root", "ck8sExtDir"
-    );
+    private static CliConfiguration cfg;
 
-    private Map<String, Object> properties;
+    private static final List<Supplier<CliConfiguration>> providers = List.of(new MainProvider(), new OldCfgProvider(), new DefaultsProvider());
 
-    @Override
-    public String defaultValue(CommandLine.Model.ArgSpec argSpec) throws Exception {
-        if (!argSpec.isOption()) {
-            return null;
+    private static final MainProvider provider = new MainProvider();
+
+    public static CliConfiguration get() {
+        if (cfg != null) {
+            return cfg;
         }
 
-        if (properties == null) {
-            properties = loadCfg();
-        }
+        cfg = providers.stream()
+                .map(Supplier::get)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
-        String propertiesPath = mapping.get(((CommandLine.Model.OptionSpec)argSpec).longestName());
-        if (propertiesPath == null) {
-            return null;
-        }
-
-        return MapUtils.getString(properties, propertiesPath);
+        return cfg;
     }
 
-    public static Map<String, Object> loadCfg() {
-        Path propPath = Paths.get(System.getProperty("user.home")).resolve(".ck8s").resolve("ck8s-cli.yaml");
-        if (!Files.exists(propPath)) {
-            return Collections.emptyMap();
+    public static ConcordProfile getConcordProfile(String profile) {
+        return get().concordProfiles().stream()
+                .filter(p -> profile.equals(p.alias()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Can't find profile '" + profile + "' in configuration"));
+    }
+
+    public static void replace(CliConfiguration newCfg) {
+        cfg = newCfg;
+        provider.save(cfg);
+    }
+
+    private static class MainProvider implements Supplier<CliConfiguration> {
+
+        @Override
+        public CliConfiguration get() {
+            Path path = Paths.get(System.getProperty("user.home")).resolve(".ck8s").resolve("ck8s-cli.yaml");
+            if (!Files.exists(path)) {
+                return null;
+            }
+
+            try {
+                return Mapper.yamlMapper().read(path, new TypeReference<>() {
+                });
+            } catch (Exception e) {
+                throw new RuntimeException("Can't load configuration from '" + path + "': " + e.getMessage());
+            }
         }
 
-        return Mapper.yamlMapper().readMap(propPath);
+        public void save(CliConfiguration cfg) {
+            Path path = Paths.get(System.getProperty("user.home")).resolve(".ck8s").resolve("ck8s-cli.yaml");
+
+            try {
+                Files.writeString(path, Mapper.yamlMapper().writeAsString(cfg), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            } catch (Exception e) {
+                throw new RuntimeException("Can't save configuration to '" + path + "': " + e.getMessage());
+            }
+        }
+    }
+
+    private static class OldCfgProvider implements Supplier<CliConfiguration> {
+
+        @Override
+        public CliConfiguration get() {
+            Path path = Path.of(System.getProperty("user.home")).resolve(".ck8s").resolve("concord-config.yaml");
+            if (!Files.exists(path)) {
+                return null;
+            }
+
+            try {
+                List<ConcordProfile> profiles = Mapper.yamlMapper().read(path, new TypeReference<>() {
+                });
+                return CliConfiguration.builder()
+                        .concordProfiles(profiles)
+                        .build();
+            } catch (Exception e) {
+                throw new RuntimeException("Can't load configuration from '" + path + "': " + e.getMessage());
+            }
+        }
+    }
+
+    private static class DefaultsProvider implements Supplier<CliConfiguration> {
+
+        @Override
+        public CliConfiguration get() {
+            try (InputStream in = CliConfigurationProvider.class.getResourceAsStream("/templates/default-ck8s-cli-config.yaml")) {
+                return Mapper.yamlMapper().read(in, new TypeReference<>() {});
+            } catch (Exception e) {
+                throw new RuntimeException("Can't load default config. This is most likely a bug.");
+            }
+        }
     }
 }

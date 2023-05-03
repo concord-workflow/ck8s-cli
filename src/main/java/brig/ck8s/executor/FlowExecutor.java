@@ -1,6 +1,6 @@
 package brig.ck8s.executor;
 
-import brig.ck8s.cfg.ConcordConfigurationProvider;
+import brig.ck8s.cfg.CliConfigurationProvider;
 import brig.ck8s.concord.Ck8sPayload;
 import com.walmartlabs.concord.cli.Verbosity;
 
@@ -14,7 +14,7 @@ public class FlowExecutor {
     public int execute(ExecutorType type, Ck8sPayload payload, String profile, Verbosity verbosity, boolean testMode) {
         switch (type) {
             case REMOTE -> {
-                RemoteFlowExecutor executor = new RemoteFlowExecutor(ConcordConfigurationProvider.get(profile), testMode);
+                RemoteFlowExecutor executor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), testMode);
                 executor.execute(payload);
                 return 0;
             }

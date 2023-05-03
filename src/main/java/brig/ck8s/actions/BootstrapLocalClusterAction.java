@@ -1,6 +1,6 @@
 package brig.ck8s.actions;
 
-import brig.ck8s.cfg.ConcordConfigurationProvider;
+import brig.ck8s.cfg.CliConfigurationProvider;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.concord.ConcordProcess;
@@ -32,7 +32,7 @@ public class BootstrapLocalClusterAction {
         Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRoot)
                 .build("local");
 
-        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(ConcordConfigurationProvider.get(profile), false);
+        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), false);
 
         ExecutorService executor = Executors.newCachedThreadPool();
         

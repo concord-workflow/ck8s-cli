@@ -35,7 +35,6 @@ public class GitHubLatestReleaseFinder {
                 .build();
         HttpResponse<InputStream> response = client.send(request, BodyHandlers.ofInputStream());
 
-        // https://stackoverflow.com/questions/57629401/deserializing-json-using-java-11-httpclient-and-custom-bodyhandler-with-jackson
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

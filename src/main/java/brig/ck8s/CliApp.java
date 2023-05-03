@@ -2,12 +2,13 @@ package brig.ck8s;
 
 import brig.ck8s.actions.*;
 import brig.ck8s.cfg.CliConfigurationProvider;
-import brig.ck8s.cfg.ConcordConfigurationProvider;
+import brig.ck8s.cfg.CliDefaultParamValuesProvider;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
-import brig.ck8s.model.ConcordConfiguration;
+import brig.ck8s.model.ConcordProfile;
 import brig.ck8s.selfupdate.SelfUpdateCommand;
+import brig.ck8s.sso.GenerateTokenCommand;
 import brig.ck8s.utils.Ck8sPath;
 import brig.ck8s.utils.EnumCompletionCandidates;
 import brig.ck8s.utils.EnumConverter;
@@ -22,8 +23,8 @@ import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "ck8s-cli",
         versionProvider = VersionProvider.class,
-        subcommands = {AutoComplete.GenerateCompletion.class, SelfUpdateCommand.class},
-        defaultValueProvider = CliConfigurationProvider.class)
+        subcommands = {AutoComplete.GenerateCompletion.class, SelfUpdateCommand.class, GenerateTokenCommand.class},
+        defaultValueProvider = CliDefaultParamValuesProvider.class)
 public class CliApp implements Callable<Integer> {
 
     private static final Set<String> flowPatternsToConfirm = Set.of("(?i).*delete.*", "(?i).*reinstall.*");
@@ -76,7 +77,7 @@ public class CliApp implements Callable<Integer> {
     boolean versionInfoRequested;
 
     @Override
-    public Integer call() throws Exception {
+    public Integer call() {
         Verbosity verbosity = new Verbosity(this.verbosity);
 
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
@@ -116,7 +117,7 @@ public class CliApp implements Callable<Integer> {
                     return scriptAction.perform("reinstallConcordAgentPool");
                 }
                 case CONSOLE ->  {
-                    ConcordConfiguration concordCfg = ConcordConfigurationProvider.get(profile);
+                    ConcordProfile concordCfg = CliConfigurationProvider.getConcordProfile(profile);
                     Map<String, String> params = new HashMap<>();
                     params.put("CONCORD_URL", concordCfg.baseUrl());
                     params.put("CONCORD_ADMIN_TOKEN", concordCfg.apiKey());

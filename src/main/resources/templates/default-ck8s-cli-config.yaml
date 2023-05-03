@@ -5,3 +5,7 @@ concord:
   - alias: default
     baseUrl: "https://concord.local.localhost"
     apiKey: "auBy4eDWrKWsyhiDp3AQiw"
+
+oidc:
+  clientId: ""
+  oauthUrl: ""  # e.g. https://${yourOktaDomain}/oauth2

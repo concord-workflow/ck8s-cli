@@ -1,7 +1,5 @@
 package brig.ck8s.executor;
 
-import brig.ck8s.cfg.ConcordConfigurationProvider;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -33,7 +31,7 @@ public class MvnJsonProvider {
             }
         }
 
-        try (InputStream in = ConcordConfigurationProvider.class.getResourceAsStream("/templates/mvn.json")) {
+        try (InputStream in = MvnJsonProvider.class.getResourceAsStream("/templates/mvn.json")) {
             if (in == null) {
                 throw new RuntimeException("Can't find mvn.json template. This is most likely a bug.");
             }
