@@ -42,26 +42,28 @@ public class GenerateTokenCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-//        Map<String, Object> cfg = CliConfigurationProvider.loadCfg();
-//        String oauthUrl = MapUtils.getString(cfg, "oidc.oauthUrl");
-//        if (oauthUrl == null || oauthUrl.trim().isEmpty()) {
-//            LogUtils.error("Please specify oidc.oauthUrl in ck8s-cli configuration file");
-//            return -1;
-//        }
-//
-//        String clientId = MapUtils.getString(cfg, "oidc.clientId");
-//        if (clientId == null || clientId.trim().isEmpty()) {
-//            LogUtils.error("Please specify oidc.clientId in ck8s-cli configuration file");
-//            return -1;
-//        }
-//
-//        String accessToken = getOidcAccessToken(oauthUrl, clientId);
-//        if (accessToken == null) {
-//            LogUtils.error("Can't get OIDC access token");
-//            return -1;
-//        }
+        CliConfiguration.Oidc oidc = CliConfigurationProvider.get().oidc();
+        if (oidc == null) {
+            LogUtils.error("Please specify oidc configuration in ck8s-cli configuration file");
+            return -1;
+        }
+        String oauthUrl = oidc.oauthUrl();
+        if (oauthUrl == null || oauthUrl.trim().isEmpty()) {
+            LogUtils.error("Please specify oidc.oauthUrl in ck8s-cli configuration file");
+            return -1;
+        }
 
-        String accessToken = "HjaHXnMf1+0DMC8CQ/KXKw";
+        String clientId = oidc.clientId();
+        if (clientId == null || clientId.trim().isEmpty()) {
+            LogUtils.error("Please specify oidc.clientId in ck8s-cli configuration file");
+            return -1;
+        }
+
+        String accessToken = getOidcAccessToken(oauthUrl, clientId);
+        if (accessToken == null) {
+            LogUtils.error("Can't get OIDC access token");
+            return -1;
+        }
 
         List<ConcordProfile> updatedProfiles = createConcordTokens(profile, accessToken);
         if (!updatedProfiles.isEmpty()) {
