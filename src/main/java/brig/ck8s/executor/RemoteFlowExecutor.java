@@ -82,6 +82,10 @@ public class RemoteFlowExecutor {
     }
 
     private static ApiClient createClient(ConcordProfile cfg) {
+        if (cfg.apiKey() == null) {
+            throw new RuntimeException("Can't create concord client for '" + cfg.alias() + "': api key is empty");
+        }
+
         return new ConcordApiClient(cfg.baseUrl())
                 .setVerifyingSsl(false)
                 .setApiKey(cfg.apiKey());

@@ -121,7 +121,6 @@ public class CliApp implements Callable<Integer> {
                     Map<String, String> params = new HashMap<>();
                     params.put("CONCORD_URL", concordCfg.baseUrl());
                     params.put("CONCORD_ADMIN_TOKEN", concordCfg.apiKey());
-                    params.put("CK8S_COMPONENTS", concordCfg.apiKey());
                     return scriptAction.perform("ck8sConsole", params);
                 }
                 case AWS_KUBE_CONFIG -> {
