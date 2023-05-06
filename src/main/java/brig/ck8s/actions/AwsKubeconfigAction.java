@@ -25,7 +25,9 @@ public class AwsKubeconfigAction {
     public int perform() {
         Path kubeHome = Paths.get(System.getProperty("user.home")).resolve(".kube");
         if (Files.isDirectory(kubeHome)) {
-            Arrays.stream(Objects.requireNonNull(kubeHome.toFile().listFiles((f, p) -> p.startsWith("ck8s-config-")))).forEach(File::delete);
+            Arrays.stream(Objects.requireNonNull(kubeHome.toFile()
+                .listFiles((f, p) -> p.startsWith("ck8s-config-") && !p.equals("ck8s-config-local"))))
+                .forEach(File::delete);
         }
 
         Map<Path, ClusterInfo> clusters =  new ClusterListAction(ck8sPath).getInfo();
