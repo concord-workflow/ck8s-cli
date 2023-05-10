@@ -3,6 +3,9 @@ package brig.ck8s;
 import brig.ck8s.actions.*;
 import brig.ck8s.cfg.CliConfigurationProvider;
 import brig.ck8s.cfg.CliDefaultParamValuesProvider;
+import brig.ck8s.completion.ClusterAliasCompletion;
+import brig.ck8s.completion.FlowCompletion;
+import brig.ck8s.completion.ProfilesCompletion;
 import brig.ck8s.concord.Ck8sFlowBuilder;
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.executor.FlowExecutor;
@@ -45,10 +48,10 @@ public class CliApp implements Callable<Integer> {
     @CommandLine.Option(names = {"-v", "--vars"}, description = "additional process variables")
     Map<String, String> extraVars = new LinkedHashMap<>();
 
-    @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow")
+    @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
     String flow;
 
-    @CommandLine.Option(names = {"-c", "--cluster"}, description = "alias of the cluster (this will find the right Concord YAML)")
+    @CommandLine.Option(names = {"-c", "--cluster"}, description = "alias of the cluster (this will find the right Concord YAML)", completionCandidates = ClusterAliasCompletion.class)
     String clusterAlias;
 
     @CommandLine.Option(names = {"-l", "--list"}, description = "list cluster names/aliases")
@@ -60,7 +63,7 @@ public class CliApp implements Callable<Integer> {
     @CommandLine.Option(names = {"-a"},description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
     ActionType actionType;
 
-    @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name")
+    @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name", completionCandidates = ProfilesCompletion.class)
     String profile = "default";
 
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {

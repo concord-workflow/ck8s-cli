@@ -25,6 +25,27 @@ public class Ck8sUtils {
 
     private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
+    public static Stream<Path> streamConcordYaml(Ck8sPath ck8sPath) {
+        return Stream.concat(
+                streamConcordYaml(ck8sPath.ck8sComponents()),
+                streamConcordYaml(ck8sPath.ck8sExtComponents()));
+    }
+
+    private static Stream<Path> streamConcordYaml(Path root) {
+        if (root == null || !Files.exists(root) || !Files.isDirectory(root)) {
+            return Stream.empty();
+        }
+
+        try (Stream<Path> walk = Files.walk(root)) {
+            return walk
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().matches(CONCORD_YAML_PATTERN))
+                    .toList().stream();
+        } catch (IOException e) {
+            throw new RuntimeException("stream concord yaml error: " + e.getMessage());
+        }
+    }
+
     public static Stream<Path> streamClusterYaml(Ck8sPath ck8sPath) {
         return Stream.concat(
                 streamClusterYaml(ck8sPath.ck8sOrgDir()),

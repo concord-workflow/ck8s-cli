@@ -2,7 +2,11 @@
   "repositories": [
     {
       "id": "local",
-      "url": "file://<USER_HOME>/.m2/repository"
+      "url": "file://<USER_HOME>/.m2/repository",
+      "snapshotPolicy": {
+        "enabled": true,
+        "updatePolicy": "always"
+      }
     },
     {
       "id": "central",
