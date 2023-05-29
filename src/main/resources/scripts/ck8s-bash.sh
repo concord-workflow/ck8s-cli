@@ -391,10 +391,17 @@ function concordProcess() {
 function testConcord() {
   echo -n ">>> Submitting test process ... "
 
-  RESULT=`curl --silent -H "Authorization: ${concordAdminApiToken}" -F concord.yml=@${CK8S_COMPONENTS}/concord/local-test.yaml ${concordUrl}/api/v1/process`
-  ID=`echo ${RESULT} | jq -r .instanceId`
-  echo ${ID}
+  testYaml="${CK8S_COMPONENTS}/concord/test/local-test.yaml"
 
+  if [ ! -f "${testYaml}" ]; then
+      echo "Can't find concord test process at ${testYaml}"
+      exit -1
+  fi
+
+  RESULT=`curl --silent -H "Authorization: ${concordAdminApiToken}" -F concord.yml=@${testYaml} ${concordUrl}/api/v1/process`
+  echo ${RESULT}
+
+  ID=`echo ${RESULT} | jq -r .instanceId`
   concordProcess ${ID}
 
   echo -n ">>> Looking for completion message in process log ... "
