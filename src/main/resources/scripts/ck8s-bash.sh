@@ -317,7 +317,7 @@ function installConcordAgentPool() {
 
   echo -n ">>> Waiting for Concord agents to be available "
   while [ "$(agentsAvailable)" = "0.0" ]; do
-    stdbuf -o0 printf '.'
+    printf '.'
     sleep 5
   done
   echo " READY!"
@@ -365,7 +365,7 @@ function installConcord() {
   echo -n ">>> Waiting for Concord to start"
 
   until $(curl --output /dev/null --silent --head --fail "${concordUrl}/api/v1/server/ping"); do
-    stdbuf -o0 printf '.'
+    printf '.'
     sleep 5
   done
   echo " READY!"
