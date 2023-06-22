@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -16,7 +17,13 @@ import java.util.List;
 @JsonPropertyOrder({"targetDir", "ck8sDir", "ck8sExtDir", "concord", "oidc"})
 @JsonSerialize(as = ImmutableCliConfiguration.class)
 @JsonDeserialize(as = ImmutableCliConfiguration.class)
-public interface CliConfiguration {
+public interface CliConfiguration
+{
+
+    static ImmutableCliConfiguration.Builder builder()
+    {
+        return ImmutableCliConfiguration.builder();
+    }
 
     @Nullable
     String targetDir();
@@ -29,27 +36,25 @@ public interface CliConfiguration {
 
     @Value.Default
     @JsonProperty("concord")
-    default List<ConcordProfile> concordProfiles() {
+    default List<ConcordProfile> concordProfiles()
+    {
         return Collections.emptyList();
     }
+
+    @Nullable
+    Oidc oidc();
 
     @Value.Immutable
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableOidc.class)
     @JsonDeserialize(as = ImmutableOidc.class)
-    interface Oidc {
+    interface Oidc
+    {
 
         @Nullable
         String clientId();
 
         @Nullable
         String oauthUrl();
-    }
-
-    @Nullable
-    Oidc oidc();
-
-    static ImmutableCliConfiguration.Builder builder() {
-        return ImmutableCliConfiguration.builder();
     }
 }

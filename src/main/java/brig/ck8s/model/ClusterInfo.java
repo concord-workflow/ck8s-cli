@@ -11,10 +11,11 @@ import javax.annotation.Nullable;
 
 @Value.Immutable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(as = ImmutableClusterInfo.class)
 @JsonDeserialize(as = ImmutableClusterInfo.class)
-public interface ClusterInfo {
+public interface ClusterInfo
+{
 
     @JsonProperty("clusterName")
     String name();

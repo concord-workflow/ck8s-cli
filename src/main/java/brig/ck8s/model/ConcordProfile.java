@@ -13,7 +13,13 @@ import javax.annotation.Nullable;
 @JsonPropertyOrder({"alias", "baseUrl", "apiKey"})
 @JsonSerialize(as = ImmutableConcordProfile.class)
 @JsonDeserialize(as = ImmutableConcordProfile.class)
-public interface ConcordProfile {
+public interface ConcordProfile
+{
+
+    static ImmutableConcordProfile.Builder builder()
+    {
+        return ImmutableConcordProfile.builder();
+    }
 
     String alias();
 
@@ -21,8 +27,4 @@ public interface ConcordProfile {
 
     @Nullable
     String apiKey();
-
-    static ImmutableConcordProfile.Builder builder() {
-        return ImmutableConcordProfile.builder();
-    }
 }

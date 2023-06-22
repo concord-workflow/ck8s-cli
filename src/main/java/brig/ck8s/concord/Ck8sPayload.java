@@ -9,31 +9,38 @@ import java.util.Map;
 @Value.Immutable
 @Value.Style(
         jdkOnly = true)
-public interface Ck8sPayload {
+public interface Ck8sPayload
+{
+
+    static Builder builder()
+    {
+        return new Builder();
+    }
 
     Path location();
 
     String entryPoint();
 
     @Value.Default
-    default Map<String, Object> args() {
+    default Map<String, Object> args()
+    {
         return Collections.emptyMap();
     }
 
-    class Builder extends ImmutableCk8sPayload.Builder {
+    class Builder
+            extends ImmutableCk8sPayload.Builder
+    {
 
-        public Ck8sPayload.Builder flow(String name) {
+        public Ck8sPayload.Builder flow(String name)
+        {
             if (name == null) {
                 return entryPoint("show")
                         .putArgs("flow", "show");
-            } else {
+            }
+            else {
                 return entryPoint("normalFlow")
                         .putArgs("flow", name);
             }
         }
-    }
-
-    static Builder builder() {
-        return new Builder();
     }
 }

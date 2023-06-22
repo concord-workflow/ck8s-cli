@@ -9,10 +9,13 @@ import brig.ck8s.utils.LogUtils;
 import java.util.Collections;
 import java.util.Iterator;
 
-public class ClusterAliasCompletion implements Iterable<String> {
+public class ClusterAliasCompletion
+        implements Iterable<String>
+{
 
     @Override
-    public Iterator<String> iterator() {
+    public Iterator<String> iterator()
+    {
         String ck8sDir = CliConfigurationProvider.get().ck8sDir();
         String ck8sExtDir = CliConfigurationProvider.get().ck8sExtDir();
         if (ck8sDir == null) {

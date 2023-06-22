@@ -15,15 +15,29 @@ import java.util.stream.Stream;
 
 import static brig.ck8s.utils.LogUtils.logAsTable;
 
-public class ClusterListAction {
+public class ClusterListAction
+{
 
     private final Ck8sPath ck8sPath;
 
-    public ClusterListAction(Ck8sPath ck8sPath) {
+    public ClusterListAction(Ck8sPath ck8sPath)
+    {
         this.ck8sPath = ck8sPath;
     }
 
-    public int perform() {
+    private static ClusterInfo toClusterInfo(Path clusterYaml)
+    {
+        try {
+            return Mapper.yamlMapper().read(clusterYaml, ClusterInfo.class);
+        }
+        catch (MandatoryValuesMissing e) {
+            LogUtils.warn("cluster definition '{}' ignored: {}", clusterYaml, e.getMessage());
+        }
+        return null;
+    }
+
+    public int perform()
+    {
         Map<Path, ClusterInfo> clusters = getInfo();
 
         String[] caption = new String[] {"Alias", "Name", "Region", "Server", "Path"};
@@ -35,26 +49,19 @@ public class ClusterListAction {
         return 0;
     }
 
-    public Map<Path, ClusterInfo> getInfo() {
+    public Map<Path, ClusterInfo> getInfo()
+    {
         return Ck8sUtils.streamClusterYaml(ck8sPath)
                 .map(p -> new PathForClusterInfo(p, toClusterInfo(p)))
                 .filter(r -> r.clusterInfo() != null)
                 .collect(Collectors.toMap(PathForClusterInfo::clusterYaml, PathForClusterInfo::clusterInfo));
     }
 
-    private String[] toTableRow(Map.Entry<Path, ClusterInfo> e) {
+    private String[] toTableRow(Map.Entry<Path, ClusterInfo> e)
+    {
         ClusterInfo c = e.getValue();
         return new String[] {c.alias(), c.name(), c.region(), c.server(), ck8sPath.relativize(e.getKey()).toString()};
     }
 
-    private static ClusterInfo toClusterInfo(Path clusterYaml) {
-        try {
-            return Mapper.yamlMapper().read(clusterYaml, ClusterInfo.class);
-        } catch (MandatoryValuesMissing e) {
-            LogUtils.warn("cluster definition '{}' ignored: {}", clusterYaml, e.getMessage());
-        }
-        return null;
-    }
-
-    record PathForClusterInfo (Path clusterYaml, ClusterInfo clusterInfo) {}
+    record PathForClusterInfo(Path clusterYaml, ClusterInfo clusterInfo) {}
 }

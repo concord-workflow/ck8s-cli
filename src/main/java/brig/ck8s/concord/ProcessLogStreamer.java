@@ -10,15 +10,24 @@ import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
 
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-public class ProcessLogStreamer implements Runnable {
+public class ProcessLogStreamer
+        implements Runnable
+{
 
     private static final String PATH_TEMPLATE = "/api/v1/process/%s/log";
     private static final long ERROR_DELAY = 5000;
     private static final long REQUEST_DELAY = 3000;
     private static final long RANGE_INCREMENT = 1024;
-    private static final Type BYTE_ARRAY_TYPE = new TypeToken<byte[]>() {
+    private static final Type BYTE_ARRAY_TYPE = new TypeToken<byte[]>()
+    {
     }.getType();
     private static final Set<StatusEnum> FINAL_STATUSES = new HashSet<>(Arrays.asList(
             StatusEnum.FINISHED,
@@ -33,13 +42,25 @@ public class ProcessLogStreamer implements Runnable {
     private long rangeStart = 0L;
     private Long rangeEnd;
 
-    public ProcessLogStreamer(ApiClient client, UUID instanceId) {
+    public ProcessLogStreamer(ApiClient client, UUID instanceId)
+    {
         this.client = client;
         this.instanceId = instanceId;
     }
 
+    private static void sleep(long ms)
+    {
+        try {
+            Thread.sleep(ms);
+        }
+        catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     @Override
-    public void run() {
+    public void run()
+    {
         Set<String> auths = client.getAuthentications().keySet();
         String[] authNames = auths.toArray(new String[0]);
 
@@ -61,7 +82,8 @@ public class ProcessLogStreamer implements Runnable {
 
                     rangeStart += ab.length;
                     rangeEnd = rangeStart + RANGE_INCREMENT;
-                } else {
+                }
+                else {
                     ProcessApi processApi = new ProcessApi(client);
                     ProcessEntry e = processApi.get(instanceId);
                     StatusEnum s = e.getStatus();
@@ -72,18 +94,11 @@ public class ProcessLogStreamer implements Runnable {
                 }
 
                 sleep(REQUEST_DELAY);
-            } catch (ApiException e) {
+            }
+            catch (ApiException e) {
                 LogUtils.info("Error while streaming the process' ({}) log: {}. Retrying in {}ms...", instanceId, e.getMessage(), ERROR_DELAY);
                 sleep(ERROR_DELAY);
             }
-        }
-    }
-
-    private static void sleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
         }
     }
 }

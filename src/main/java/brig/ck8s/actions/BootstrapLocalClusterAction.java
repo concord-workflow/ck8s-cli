@@ -11,19 +11,22 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class BootstrapLocalClusterAction {
+public class BootstrapLocalClusterAction
+{
 
     private final Ck8sPath ck8s;
     private final Path targetRoot;
     private final String profile;
 
-    public BootstrapLocalClusterAction(Ck8sPath ck8s, Path targetRoot, String profile) {
+    public BootstrapLocalClusterAction(Ck8sPath ck8s, Path targetRoot, String profile)
+    {
         this.ck8s = ck8s;
         this.targetRoot = targetRoot;
         this.profile = profile;
     }
 
-    public int perform() {
+    public int perform()
+    {
         ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
 
         scriptAction.perform("ck8sDown");
@@ -35,7 +38,7 @@ public class BootstrapLocalClusterAction {
         RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), false);
 
         ExecutorService executor = Executors.newCachedThreadPool();
-        
+
         ConcordProcess process = flowExecutor.execute(Ck8sPayload.builder()
                 .location(payloadLocation)
                 .flow("cert-manager-local")

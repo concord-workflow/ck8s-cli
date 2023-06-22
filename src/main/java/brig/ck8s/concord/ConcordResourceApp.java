@@ -4,13 +4,20 @@ import jakarta.ws.rs.core.Application;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ServerProperties;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public class ConcordResourceApp extends Application {
+public class ConcordResourceApp
+        extends Application
+{
 
     private final Set<Class<?>> classes;
 
-    public ConcordResourceApp() {
+    public ConcordResourceApp()
+    {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(InventoryResource.class);
         resources.add(JacksonFeature.class);
@@ -19,14 +26,16 @@ public class ConcordResourceApp extends Application {
     }
 
     @Override
-    public Map<String, Object> getProperties() {
+    public Map<String, Object> getProperties()
+    {
         Map<String, Object> m = new HashMap<>();
         m.put(ServerProperties.WADL_FEATURE_DISABLE, "true");
         return m;
     }
 
     @Override
-    public Set<Class<?>> getClasses() {
+    public Set<Class<?>> getClasses()
+    {
         return classes;
     }
 }

@@ -1,6 +1,10 @@
 package brig.ck8s;
 
-import brig.ck8s.actions.*;
+import brig.ck8s.actions.ActionType;
+import brig.ck8s.actions.AwsKubeconfigAction;
+import brig.ck8s.actions.BootstrapLocalClusterAction;
+import brig.ck8s.actions.ClusterListAction;
+import brig.ck8s.actions.ExecuteScriptAction;
 import brig.ck8s.cfg.CliConfigurationProvider;
 import brig.ck8s.cfg.CliDefaultParamValuesProvider;
 import brig.ck8s.completion.ClusterAliasCompletion;
@@ -21,14 +25,20 @@ import picocli.AutoComplete;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "ck8s-cli",
         versionProvider = VersionProvider.class,
         subcommands = {AutoComplete.GenerateCompletion.class, SelfUpdateCommand.class, GenerateTokenCommand.class},
         defaultValueProvider = CliDefaultParamValuesProvider.class)
-public class CliApp implements Callable<Integer> {
+public class CliApp
+        implements Callable<Integer>
+{
 
     private static final Set<String> flowPatternsToConfirm = Set.of("(?i).*delete.*", "(?i).*reinstall.*");
     private static final Set<String> confirmInput = Set.of("y", "yes");
@@ -38,49 +48,40 @@ public class CliApp implements Callable<Integer> {
 
     @CommandLine.Mixin
     Ck8sPathOptionsMixin ck8sPathOptions;
-
-    @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
-    private Path targetRootPath = Path.of(System.getProperty("user.dir")).resolve("target");
-
     @CommandLine.Mixin
     FlowExecutorOptionsMixin flowExecutorType;
-
     @CommandLine.Option(names = {"-v", "--vars"}, description = "additional process variables")
     Map<String, String> extraVars = new LinkedHashMap<>();
-
     @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
     String flow;
-
-    @CommandLine.Option(names = {"-c", "--cluster"}, description = "alias of the cluster (this will find the right Concord YAML)", completionCandidates = ClusterAliasCompletion.class)
+    @CommandLine.Option(names = {"-c",
+            "--cluster"}, description = "alias of the cluster (this will find the right Concord YAML)", completionCandidates = ClusterAliasCompletion.class)
     String clusterAlias;
-
     @CommandLine.Option(names = {"-l", "--list"}, description = "list cluster names/aliases")
     boolean clusterList = false;
-
     @CommandLine.Option(names = {"--withTests"}, description = "include test flows to concord payload")
     boolean withTests = false;
-
-    @CommandLine.Option(names = {"-a"},description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
+    @CommandLine.Option(names = {
+            "-a"}, description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
     ActionType actionType;
-
     @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name", completionCandidates = ProfilesCompletion.class)
     String profile = "default";
-
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {
             "Specify multiple -v options to increase verbosity. For example, `-V -V -V` or `-VVV`",
             "-V log flow steps",
             "-VV log task input/output args",
             "-VVV debug logs"})
     boolean[] verbosity = new boolean[0];
-
     @CommandLine.Option(names = {"-t"}, description = "Test mode: Only display the command that will be executed")
     boolean testMode = false;
-
     @CommandLine.Option(names = {"--version"}, versionHelp = true, description = "display version info")
     boolean versionInfoRequested;
+    @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
+    private Path targetRootPath = Path.of(System.getProperty("user.dir")).resolve("target");
 
     @Override
-    public Integer call() {
+    public Integer call()
+    {
         Verbosity verbosity = new Verbosity(this.verbosity);
 
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
@@ -119,7 +120,7 @@ public class CliApp implements Callable<Integer> {
                 case REINSTALL_CONCORD_AGENT_POOL -> {
                     return scriptAction.perform("reinstallConcordAgentPool");
                 }
-                case CONSOLE ->  {
+                case CONSOLE -> {
                     ConcordProfile concordCfg = CliConfigurationProvider.getConcordProfile(profile);
                     Map<String, String> params = new HashMap<>();
                     params.put("CONCORD_URL", concordCfg.baseUrl());
@@ -174,18 +175,23 @@ public class CliApp implements Callable<Integer> {
         return -1;
     }
 
-    static class ActionTypeCompletionCandidates extends EnumCompletionCandidates<ActionType> {
+    static class ActionTypeCompletionCandidates
+            extends EnumCompletionCandidates<ActionType>
+    {
 
-        public ActionTypeCompletionCandidates() {
+        public ActionTypeCompletionCandidates()
+        {
             super(ActionType.class);
         }
     }
 
-    static class ActionTypeConverter extends EnumConverter<ActionType> {
+    static class ActionTypeConverter
+            extends EnumConverter<ActionType>
+    {
 
-        public ActionTypeConverter() {
+        public ActionTypeConverter()
+        {
             super(ActionType.class);
         }
     }
-
 }

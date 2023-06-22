@@ -15,9 +15,35 @@ import java.util.stream.Stream;
 
 import static brig.ck8s.utils.Ck8sUtils.CONCORD_YAML_PATTERN;
 
-public class FlowRequirementsProcessor {
+public class FlowRequirementsProcessor
+{
 
-    public Ck8sPayload process(Ck8sPayload payload) {
+    private static ProcessDefinition findFlowYaml(Path flowsDir, String flowName)
+    {
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+
+        try (Stream<Path> walk = Files.walk(flowsDir)) {
+            return walk
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().matches(CONCORD_YAML_PATTERN))
+                    .map(p -> {
+                        try {
+                            return loader.loadFromFile(p).getProjectDefinition();
+                        }
+                        catch (IOException e) {
+                            throw new RuntimeException("Error loading " + p + ":" + e);
+                        }
+                    })
+                    .filter(pd -> pd.flows().containsKey(flowName))
+                    .findFirst().orElse(null);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("find yaml for flow '" + flowName + "' error: " + e.getMessage());
+        }
+    }
+
+    public Ck8sPayload process(Ck8sPayload payload)
+    {
         String flowName = MapUtils.getString(payload.args(), "flow");
         if (flowName == null) {
             return payload;
@@ -40,26 +66,5 @@ public class FlowRequirementsProcessor {
         Mapper.yamlMapper().write(rootConcordYamlPath, rootYaml);
 
         return payload;
-    }
-
-    private static ProcessDefinition findFlowYaml(Path flowsDir, String flowName) {
-        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-
-        try (Stream<Path> walk = Files.walk(flowsDir)) {
-            return walk
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().matches(CONCORD_YAML_PATTERN))
-                    .map(p -> {
-                        try {
-                            return loader.loadFromFile(p).getProjectDefinition();
-                        } catch (IOException e) {
-                            throw new RuntimeException("Error loading " + p + ":" + e);
-                        }
-                    })
-                    .filter(pd -> pd.flows().containsKey(flowName))
-                    .findFirst().orElse(null);
-        } catch (IOException e) {
-            throw new RuntimeException("find yaml for flow '" + flowName + "' error: " + e.getMessage());
-        }
     }
 }

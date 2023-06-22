@@ -17,12 +17,16 @@ import java.util.concurrent.Callable;
         description = {"Update ck8s-cli to the latest version"},
         helpCommand = true
 )
-public class SelfUpdateCommand implements Callable<Integer> {
+public class SelfUpdateCommand
+        implements Callable<Integer>
+{
 
     private static final String downloadTemplate = "https://github.com/concord-workflow/ck8s-cli/releases/download/%s/ck8s-cli-%s-executable.jar";
 
     @Override
-    public Integer call() throws Exception {
+    public Integer call()
+            throws Exception
+    {
         String currentVersion = VersionProvider.getCliVersion();
         String latestVersion = new GitHubLatestReleaseFinder().find("concord-workflow", "ck8s-cli");
 
@@ -39,7 +43,7 @@ public class SelfUpdateCommand implements Callable<Integer> {
         URL url = new URL(String.format(downloadTemplate, latestVersion, latestVersion));
 
         try (ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-             FileOutputStream fos = new FileOutputStream(cliPath)) {
+                FileOutputStream fos = new FileOutputStream(cliPath)) {
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         }
         LogUtils.info("Done");

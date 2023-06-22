@@ -14,16 +14,25 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class FlowCompletion implements Iterable<String> {
+public class FlowCompletion
+        implements Iterable<String>
+{
 
     private final ProjectLoaderV2 projectLoader;
 
-    public FlowCompletion() {
+    public FlowCompletion()
+    {
         this.projectLoader = new ProjectLoaderV2(new NoopImportManager());
     }
 
+    public static void main(String[] args)
+    {
+        new FlowCompletion().iterator();
+    }
+
     @Override
-    public Iterator<String> iterator() {
+    public Iterator<String> iterator()
+    {
         String ck8sDir = CliConfigurationProvider.get().ck8sDir();
         String ck8sExtDir = CliConfigurationProvider.get().ck8sExtDir();
         if (ck8sDir == null) {
@@ -36,16 +45,14 @@ public class FlowCompletion implements Iterable<String> {
                 .collect(Collectors.toSet()).iterator();
     }
 
-    private Set<String> flowNames(Path concordYaml) {
+    private Set<String> flowNames(Path concordYaml)
+    {
         try {
             ProcessDefinition processDefinition = projectLoader.loadFromFile(concordYaml).getProjectDefinition();
             return processDefinition.flows().keySet();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Can't parse concord yaml '" + concordYaml + "': " + e.getMessage());
         }
-    }
-
-    public static void main(String[] args) {
-        new FlowCompletion().iterator();
     }
 }

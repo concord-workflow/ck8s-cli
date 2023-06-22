@@ -1,6 +1,7 @@
 package brig.ck8s.actions;
 
-public enum ActionType {
+public enum ActionType
+{
     UP,
     DOWN,
     DOCKER_REGISTRY,
