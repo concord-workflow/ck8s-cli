@@ -14,29 +14,49 @@ import java.util.Map;
 import static brig.ck8s.utils.Ck8sUtils.copyComponents;
 import static brig.ck8s.utils.Ck8sUtils.copyTestComponents;
 
-public class Ck8sFlowBuilder {
+public class Ck8sFlowBuilder
+{
 
     private final Ck8sPath ck8sPath;
     private final Path target;
     private boolean includeTests;
     private boolean debug;
 
-    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target) {
+    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target)
+    {
         this.ck8sPath = ck8sPath;
         this.target = target;
     }
 
-    public Ck8sFlowBuilder includeTests(boolean include) {
+    private static Map<String, Object> concordYamlTemplate()
+    {
+        URL url = RemoteFlowExecutor.class.getResource("/templates/concord.yaml");
+        if (url == null) {
+            throw new RuntimeException("Can't find concord.yml template. This is most likely a bug.");
+        }
+
+        try {
+            return Mapper.yamlMapper().readMap(url);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error reading concord template. This is most likely a bug.", e);
+        }
+    }
+
+    public Ck8sFlowBuilder includeTests(boolean include)
+    {
         this.includeTests = include;
         return this;
     }
 
-    public Ck8sFlowBuilder debug(boolean debug) {
+    public Ck8sFlowBuilder debug(boolean debug)
+    {
         this.debug = debug;
         return this;
     }
 
-    public Path build(String clusterAlias) {
+    public Path build(String clusterAlias)
+    {
         Path clusterYaml = Ck8sUtils.findClusterYamlByAlias(ck8sPath, clusterAlias);
         if (clusterYaml == null) {
             throw new RuntimeException("The cluster alias '" + clusterAlias + "' doesn't map to any ck8s cluster yaml file.");
@@ -44,7 +64,8 @@ public class Ck8sFlowBuilder {
 
         try {
             IOUtils.deleteRecursively(target);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Can't delete target '" + target + "': " + e.getMessage());
         }
 
@@ -52,7 +73,8 @@ public class Ck8sFlowBuilder {
         try {
             Files.createDirectories(target);
             Files.createDirectories(flows);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException("Can't create target '" + target + "': " + e.getMessage());
         }
 
@@ -65,18 +87,5 @@ public class Ck8sFlowBuilder {
         }
 
         return flows;
-    }
-
-    private static Map<String, Object> concordYamlTemplate() {
-        URL url = RemoteFlowExecutor.class.getResource("/templates/concord.yaml");
-        if (url == null) {
-            throw new RuntimeException("Can't find concord.yml template. This is most likely a bug.");
-        }
-
-        try {
-            return Mapper.yamlMapper().readMap(url);
-        } catch (Exception e) {
-            throw new RuntimeException("Error reading concord template. This is most likely a bug.", e);
-        }
     }
 }

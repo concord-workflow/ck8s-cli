@@ -5,10 +5,10 @@
         </encoder>
     </appender>
 
-    <logger name="com.walmartlabs.concord.dependencymanager" level="WARN"/>
-    <logger name="com.walmartlabs.concord.repository" level="WARN"/>
+    <logger name="com.walmartlabs.concord.dependencymanager" level="WARN" />
+    <logger name="com.walmartlabs.concord.repository" level="WARN" />
 
     <root level="INFO">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="STDOUT" />
     </root>
 </configuration>

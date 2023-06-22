@@ -5,28 +5,37 @@ import org.slf4j.helpers.MessageFormatter;
 
 import java.util.List;
 
-public final class LogUtils {
+public final class LogUtils
+{
 
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_RED = "\u001B[31m";
     private static final String ANSI_RED_BOLD = "\033[1;31m";
 
-    public static void info(String log, Object... args) {
+    private LogUtils()
+    {
+    }
+
+    public static void info(String log, Object... args)
+    {
         FormattingTuple m = MessageFormatter.arrayFormat(log, args);
         System.out.println(m.getMessage());
     }
 
-    public static void warn(String log, Object... args) {
+    public static void warn(String log, Object... args)
+    {
         FormattingTuple m = MessageFormatter.arrayFormat(log, args);
         System.out.println("WARN: " + m.getMessage());
     }
 
-    public static void error(String log, Object... args) {
+    public static void error(String log, Object... args)
+    {
         FormattingTuple m = MessageFormatter.arrayFormat(log, args);
         System.err.println(ANSI_RED_BOLD + "ERROR: " + m.getMessage() + ANSI_RESET);
     }
 
-    public static void logAsTable(List<String[]> rows) {
+    public static void logAsTable(List<String[]> rows)
+    {
         if (rows.isEmpty()) {
             return;
         }
@@ -37,7 +46,8 @@ public final class LogUtils {
         }
     }
 
-    private static String buildFormatString(int[] row) {
+    private static String buildFormatString(int[] row)
+    {
         StringBuilder result = new StringBuilder();
         for (int c : row) {
             result.append("%").append(c).append("s ");
@@ -45,7 +55,8 @@ public final class LogUtils {
         return result.append('\n').toString();
     }
 
-    private static int[] maxRow(List<String[]> rows) {
+    private static int[] maxRow(List<String[]> rows)
+    {
         int[] result = new int[rows.get(0).length];
         for (String[] r : rows) {
             for (int i = 0; i < r.length; i++) {
@@ -58,16 +69,14 @@ public final class LogUtils {
         return result;
     }
 
-    private static String formatNull(String str, Object[] args){
-        for(int i = 0; i < args.length; i++){
-            if(args[i] == null){
+    private static String formatNull(String str, Object[] args)
+    {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] == null) {
                 args[i] = "n/a";
             }
         }
 
         return String.format(str, args);
-    }
-
-    private LogUtils() {
     }
 }

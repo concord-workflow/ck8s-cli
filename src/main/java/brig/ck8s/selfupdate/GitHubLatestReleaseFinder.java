@@ -19,9 +19,12 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
-public class GitHubLatestReleaseFinder {
+public class GitHubLatestReleaseFinder
+{
 
-    public String find(String organization, String repository) throws Exception {
+    public String find(String organization, String repository)
+            throws Exception
+    {
         String api = format("https://api.github.com/repos/%s/%s/releases", organization, repository);
 
         Builder requestBuilder = HttpRequest.newBuilder();
@@ -39,7 +42,8 @@ public class GitHubLatestReleaseFinder {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        List<Map<String, Object>> releases = mapper.readValue(response.body(), new TypeReference<>() {
+        List<Map<String, Object>> releases = mapper.readValue(response.body(), new TypeReference<>()
+        {
         });
         if (releases.isEmpty()) {
             return null;

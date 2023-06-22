@@ -9,10 +9,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
-public class ConcordServer {
+public class ConcordServer
+{
 
-    public static HttpServer start() throws IOException {
-        System.setProperty("java.net.preferIPv4Stack" , "true");
+    public static HttpServer start()
+            throws IOException
+    {
+        System.setProperty("java.net.preferIPv4Stack", "true");
         System.setProperty("jersey.config.json.jackson.disabled.modules", "JaxbAnnotationIntrospector");
 
         assertPort(8001);
@@ -28,10 +31,12 @@ public class ConcordServer {
         return server;
     }
 
-    private static void assertPort(int port) {
+    private static void assertPort(int port)
+    {
         try (ServerSocket unused = new ServerSocket(port, 50, InetAddress.getByName("0.0.0.0"))) {
             // do nothing
-        } catch (IOException ex) {
+        }
+        catch (IOException ex) {
             throw new RuntimeException("Can't start concord server: " + ex.getMessage());
         }
     }

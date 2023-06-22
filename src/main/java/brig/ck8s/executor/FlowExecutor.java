@@ -4,14 +4,11 @@ import brig.ck8s.cfg.CliConfigurationProvider;
 import brig.ck8s.concord.Ck8sPayload;
 import com.walmartlabs.concord.cli.Verbosity;
 
-public class FlowExecutor {
+public class FlowExecutor
+{
 
-    public enum ExecutorType {
-        CONCORD_CLI,
-        REMOTE
-    }
-
-    public int execute(ExecutorType type, Ck8sPayload payload, String profile, Verbosity verbosity, boolean testMode) {
+    public int execute(ExecutorType type, Ck8sPayload payload, String profile, Verbosity verbosity, boolean testMode)
+    {
         switch (type) {
             case REMOTE -> {
                 RemoteFlowExecutor executor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), testMode);
@@ -24,5 +21,11 @@ public class FlowExecutor {
             }
             default -> throw new IllegalArgumentException("Unknown type: " + type);
         }
+    }
+
+    public enum ExecutorType
+    {
+        CONCORD_CLI,
+        REMOTE
     }
 }

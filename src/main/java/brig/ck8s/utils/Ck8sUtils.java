@@ -17,7 +17,8 @@ import java.util.stream.Stream;
 
 import static brig.ck8s.utils.MapUtils.getString;
 
-public class Ck8sUtils {
+public class Ck8sUtils
+{
 
     public static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
 
@@ -25,13 +26,15 @@ public class Ck8sUtils {
 
     private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
-    public static Stream<Path> streamConcordYaml(Ck8sPath ck8sPath) {
+    public static Stream<Path> streamConcordYaml(Ck8sPath ck8sPath)
+    {
         return Stream.concat(
                 streamConcordYaml(ck8sPath.ck8sComponents()),
                 streamConcordYaml(ck8sPath.ck8sExtComponents()));
     }
 
-    private static Stream<Path> streamConcordYaml(Path root) {
+    private static Stream<Path> streamConcordYaml(Path root)
+    {
         if (root == null || !Files.exists(root) || !Files.isDirectory(root)) {
             return Stream.empty();
         }
@@ -41,18 +44,21 @@ public class Ck8sUtils {
                     .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().matches(CONCORD_YAML_PATTERN))
                     .toList().stream();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("stream concord yaml error: " + e.getMessage());
         }
     }
 
-    public static Stream<Path> streamClusterYaml(Ck8sPath ck8sPath) {
+    public static Stream<Path> streamClusterYaml(Ck8sPath ck8sPath)
+    {
         return Stream.concat(
                 streamClusterYaml(ck8sPath.ck8sOrgDir()),
                 streamClusterYaml(ck8sPath.ck8sExtOrgDir()));
     }
 
-    private static Stream<Path> streamClusterYaml(Path root) {
+    private static Stream<Path> streamClusterYaml(Path root)
+    {
         if (root == null || !Files.exists(root) || !Files.isDirectory(root)) {
             return Stream.empty();
         }
@@ -62,23 +68,27 @@ public class Ck8sUtils {
                     .filter(Files::isRegularFile)
                     .filter(p -> CK8S_CLUSTER_YAML_NAME.equals(p.getFileName().toString()))
                     .toList().stream();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("stream cluster yaml error: " + e.getMessage());
         }
     }
 
-    public static Path findClusterYamlByAlias(Ck8sPath ck8sPath, String alias) {
+    public static Path findClusterYamlByAlias(Ck8sPath ck8sPath, String alias)
+    {
         return findClusterYamlBy(ck8sPath, cluster -> alias.equals(getString(cluster, "alias")));
     }
 
-    public static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<Map<String, Object>> filter) {
+    public static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<Map<String, Object>> filter)
+    {
         return streamClusterYaml(ck8sPath)
                 .filter(p -> filter.test(Mapper.yamlMapper().readMap(p)))
                 .findFirst()
                 .orElse(null);
     }
 
-    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug) {
+    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug)
+    {
 
         Path defaultCfg = ck8sPath.defaultCfg();
         Path organizationYamlPath = ck8sPath.orgCfgForCluster(clusterYaml);
@@ -92,28 +102,33 @@ public class Ck8sUtils {
         return concordYml;
     }
 
-    public static void copyComponents(Ck8sPath ck8sPath, Path target) {
+    public static void copyComponents(Ck8sPath ck8sPath, Path target)
+    {
         copyComponents(ck8sPath.ck8sComponents(), ck8sPath.ck8sExtComponents(), target, "ck8s-components");
     }
 
-    public static void copyTestComponents(Ck8sPath ck8sPath, Path target) {
+    public static void copyTestComponents(Ck8sPath ck8sPath, Path target)
+    {
         copyComponents(ck8sPath.ck8sComponentsTests(), ck8sPath.ck8sExtComponentsTests(), target, "ck8s-components-tests");
     }
 
-    private static void copyComponents(Path sourceCk8sComponents, Path sourceCk8sExtComponents, Path target, String componentsDirName) {
+    private static void copyComponents(Path sourceCk8sComponents, Path sourceCk8sExtComponents, Path target, String componentsDirName)
+    {
         Path concordDir = target.resolve("concord");
         try {
             if (Files.notExists(concordDir)) {
                 Files.createDirectory(concordDir);
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Error creating concord target dir: " + e.getMessage());
         }
 
         Path componentsDir = target.resolve(componentsDirName);
         try {
             Files.createDirectory(componentsDir);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Error creating '" + componentsDirName + "' target dir: " + e.getMessage());
         }
 
@@ -124,21 +139,24 @@ public class Ck8sUtils {
         try {
             copyComponentsYaml(sourceCk8sComponents, concordDir);
             IOUtils.copy(sourceCk8sComponents, componentsDir, ignorePatterns, null, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Error copying ck8s components '" + sourceCk8sComponents + "' to '" + componentsDir + "': " + e.getMessage(), e);
         }
 
         if (sourceCk8sExtComponents != null && Files.isDirectory(sourceCk8sExtComponents)) {
             try {
                 copyComponentsYaml(sourceCk8sExtComponents, concordDir);
-                IOUtils.copy(sourceCk8sExtComponents, componentsDir, ignorePatterns, null,  StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
+                IOUtils.copy(sourceCk8sExtComponents, componentsDir, ignorePatterns, null, StandardCopyOption.REPLACE_EXISTING);
+            }
+            catch (IOException e) {
                 throw new RuntimeException("Error copying ck8sExt components '" + sourceCk8sExtComponents + "' to '" + componentsDir + "': " + e.getMessage());
             }
         }
     }
 
-    private static Map<String, Object> merge(Path ... yamls) {
+    private static Map<String, Object> merge(Path... yamls)
+    {
         Map<String, Object> merged = null;
         for (Path p : yamls) {
             if (Files.exists(p)) {
@@ -148,7 +166,9 @@ public class Ck8sUtils {
         return merged;
     }
 
-    private static void copyComponentsYaml(Path src, Path dest) throws IOException {
+    private static void copyComponentsYaml(Path src, Path dest)
+            throws IOException
+    {
         try (Stream<Path> walk = Files.walk(src)) {
             walk
                     .filter(Files::isRegularFile)
@@ -157,10 +177,12 @@ public class Ck8sUtils {
         }
     }
 
-    private static void copy(Path source, Path target, CopyOption... options) {
+    private static void copy(Path source, Path target, CopyOption... options)
+    {
         try {
             Files.copy(source, target, options);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Error copy '" + source + "' to '" + target + "':" + e.getMessage());
         }
     }

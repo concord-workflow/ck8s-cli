@@ -9,9 +9,15 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public final class IOUtils {
+public final class IOUtils
+{
 
-    public static boolean deleteRecursively(Path p) {
+    private IOUtils()
+    {
+    }
+
+    public static boolean deleteRecursively(Path p)
+    {
         if (!Files.exists(p)) {
             return false;
         }
@@ -22,34 +28,39 @@ public final class IOUtils {
                 return true;
             }
 
-            Files.walkFileTree(p, new SimpleFileVisitor<>() {
+            Files.walkFileTree(p, new SimpleFileVisitor<>()
+            {
                 @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException
+                {
                     Files.delete(file);
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                        throws IOException
+                {
                     Files.delete(dir);
                     return FileVisitResult.CONTINUE;
                 }
             });
 
             return true;
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static String toString(InputStream input) {
+    public static String toString(InputStream input)
+    {
         try {
             return new String(input.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private IOUtils() {
     }
 }

@@ -5,16 +5,23 @@ import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
 import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
+import com.walmartlabs.concord.svm.Command;
+import com.walmartlabs.concord.svm.ExecutionListener;
 import com.walmartlabs.concord.svm.Runtime;
-import com.walmartlabs.concord.svm.*;
+import com.walmartlabs.concord.svm.State;
+import com.walmartlabs.concord.svm.ThreadId;
+import com.walmartlabs.concord.svm.VM;
 
 import java.io.Serializable;
 import java.util.Map;
 
-public class FlowCallParamsLogger implements ExecutionListener {
+public class FlowCallParamsLogger
+        implements ExecutionListener
+{
 
     @Override
-    public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
+    public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd)
+    {
         if (!(cmd instanceof StepCommand<?> stepCommand)) {
             return Result.CONTINUE;
         }

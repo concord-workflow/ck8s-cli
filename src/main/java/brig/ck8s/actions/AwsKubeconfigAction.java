@@ -12,25 +12,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class AwsKubeconfigAction {
+public class AwsKubeconfigAction
+{
 
     private final Ck8sPath ck8sPath;
     private final ExecuteScriptAction scriptAction;
 
-    public AwsKubeconfigAction(Ck8sPath ck8sPath, ExecuteScriptAction scriptAction) {
+    public AwsKubeconfigAction(Ck8sPath ck8sPath, ExecuteScriptAction scriptAction)
+    {
         this.ck8sPath = ck8sPath;
         this.scriptAction = scriptAction;
     }
 
-    public int perform() {
+    public int perform()
+    {
         Path kubeHome = Paths.get(System.getProperty("user.home")).resolve(".kube");
         if (Files.isDirectory(kubeHome)) {
             Arrays.stream(Objects.requireNonNull(kubeHome.toFile()
-                .listFiles((f, p) -> p.startsWith("ck8s-config-") && !p.equals("ck8s-config-local"))))
-                .forEach(File::delete);
+                            .listFiles((f, p) -> p.startsWith("ck8s-config-") && !p.equals("ck8s-config-local"))))
+                    .forEach(File::delete);
         }
 
-        Map<Path, ClusterInfo> clusters =  new ClusterListAction(ck8sPath).getInfo();
+        Map<Path, ClusterInfo> clusters = new ClusterListAction(ck8sPath).getInfo();
         for (Map.Entry<Path, ClusterInfo> e : clusters.entrySet()) {
             Path clusterYaml = e.getKey();
             String account = ck8sPath.accountCfgForCluster(clusterYaml).getParent().getFileName().toString();
