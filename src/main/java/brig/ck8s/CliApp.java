@@ -1,10 +1,6 @@
 package brig.ck8s;
 
-import brig.ck8s.actions.ActionType;
-import brig.ck8s.actions.AwsKubeconfigAction;
-import brig.ck8s.actions.BootstrapLocalClusterAction;
-import brig.ck8s.actions.ClusterListAction;
-import brig.ck8s.actions.ExecuteScriptAction;
+import brig.ck8s.actions.*;
 import brig.ck8s.cfg.CliConfigurationProvider;
 import brig.ck8s.cfg.CliDefaultParamValuesProvider;
 import brig.ck8s.completion.ClusterAliasCompletion;
@@ -25,11 +21,7 @@ import picocli.AutoComplete;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "ck8s-cli",
@@ -48,34 +40,49 @@ public class CliApp
 
     @CommandLine.Mixin
     Ck8sPathOptionsMixin ck8sPathOptions;
+
     @CommandLine.Mixin
     FlowExecutorOptionsMixin flowExecutorType;
+
     @CommandLine.Option(names = {"-v", "--vars"}, description = "additional process variables")
     Map<String, String> extraVars = new LinkedHashMap<>();
+
     @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
     String flow;
+
     @CommandLine.Option(names = {"-c",
             "--cluster"}, description = "alias of the cluster (this will find the right Concord YAML)", completionCandidates = ClusterAliasCompletion.class)
     String clusterAlias;
+
     @CommandLine.Option(names = {"-l", "--list"}, description = "list cluster names/aliases")
     boolean clusterList = false;
+
     @CommandLine.Option(names = {"--withTests"}, description = "include test flows to concord payload")
     boolean withTests = false;
+
+    @CommandLine.Option(names = {"--withInputAssert"}, description = "assert flow call input parameters aat runtime")
+    boolean withInputAssert= false;
+
     @CommandLine.Option(names = {
             "-a"}, description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
     ActionType actionType;
+
     @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name", completionCandidates = ProfilesCompletion.class)
     String profile = "default";
+
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {
             "Specify multiple -v options to increase verbosity. For example, `-V -V -V` or `-VVV`",
             "-V log flow steps",
             "-VV log task input/output args",
             "-VVV debug logs"})
     boolean[] verbosity = new boolean[0];
+
     @CommandLine.Option(names = {"-t"}, description = "Test mode: Only display the command that will be executed")
     boolean testMode = false;
+
     @CommandLine.Option(names = {"--version"}, versionHelp = true, description = "display version info")
     boolean versionInfoRequested;
+
     @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
     private Path targetRootPath = Path.of(System.getProperty("user.dir")).resolve("target");
 
@@ -156,8 +163,14 @@ public class CliApp
                 }
             }
 
+            List<String> deps = Collections.emptyList();
+            if (withInputAssert) {
+                deps = List.of("mvn://com.walmartlabs.concord.plugins.basic:input-params-assert:1.102.1-SNAPSHOT");
+            }
+
             Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRootPath)
                     .includeTests(withTests)
+                    .withDependencies(deps)
                     .debug(verbosity.verbose())
                     .build(clusterAlias);
 

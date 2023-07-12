@@ -8,10 +8,7 @@ import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -87,7 +84,7 @@ public class Ck8sUtils
                 .orElse(null);
     }
 
-    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug)
+    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug, List<String> additionalDeps)
     {
 
         Path defaultCfg = ck8sPath.defaultCfg();
@@ -98,6 +95,12 @@ public class Ck8sUtils
         ConfigurationUtils.set(concordYml, debug, "configuration", "debug");
         Map<String, Object> merged = merge(defaultCfg, organizationYamlPath, accountYamlPath, clusterYaml);
         MapUtils.set(concordYml, merged, "configuration.arguments.clusterRequest");
+
+        List<String> currentDependencies = MapUtils.getList(concordYml, "configuration.dependencies");
+        List<String> dependencies = new ArrayList<>(currentDependencies);
+        dependencies.addAll(additionalDeps);
+
+        ConfigurationUtils.set(concordYml, dependencies, "configuration", "dependencies");
 
         return concordYml;
     }

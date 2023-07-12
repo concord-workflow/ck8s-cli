@@ -14,7 +14,7 @@ public final class MapUtils
     }
 
     @SuppressWarnings("unchecked")
-    public static List<Map<String, Object>> getList(Map<String, Object> m, String path)
+    public static <T> List<T> getList(Map<String, Object> m, String path)
     {
         return get(m, path, Collections.emptyList(), List.class);
     }
@@ -39,6 +39,10 @@ public final class MapUtils
     public static String getString(Map<String, Object> m, String path)
     {
         return getString(m, path, null);
+    }
+
+    public static boolean getBoolean(Map<String, Object> m, String path, boolean defaultValue) {
+        return get(m, path, defaultValue, Boolean.class);
     }
 
     public static String getString(Map<String, Object> m, String path, String defaultValue)

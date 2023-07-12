@@ -9,6 +9,8 @@ import brig.ck8s.utils.Mapper;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static brig.ck8s.utils.Ck8sUtils.copyComponents;
@@ -21,6 +23,7 @@ public class Ck8sFlowBuilder
     private final Path target;
     private boolean includeTests;
     private boolean debug;
+    private List<String> additionalDependencies = Collections.emptyList();
 
     public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target)
     {
@@ -46,6 +49,12 @@ public class Ck8sFlowBuilder
     public Ck8sFlowBuilder includeTests(boolean include)
     {
         this.includeTests = include;
+        return this;
+    }
+
+    public Ck8sFlowBuilder withDependencies(List<String> additionalDependencies)
+    {
+        this.additionalDependencies = additionalDependencies;
         return this;
     }
 
@@ -78,7 +87,7 @@ public class Ck8sFlowBuilder
             throw new RuntimeException("Can't create target '" + target + "': " + e.getMessage());
         }
 
-        Map<String, Object> concordYaml = Ck8sUtils.buildConcordYaml(ck8sPath, clusterYaml, concordYamlTemplate(), debug);
+        Map<String, Object> concordYaml = Ck8sUtils.buildConcordYaml(ck8sPath, clusterYaml, concordYamlTemplate(), debug, additionalDependencies);
         Mapper.yamlMapper().write(flows.resolve("concord.yml"), concordYaml);
 
         copyComponents(ck8sPath, flows);
