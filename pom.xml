@@ -23,7 +23,7 @@
         <jsr305.version>3.0.2</jsr305.version>
         <jackson.version>2.14.2</jackson.version>
         <errorproneannotations.version>2.18.0</errorproneannotations.version>
-        <concord.version>1.102.0</concord.version>
+        <concord.version>1.102.1-SNAPSHOT</concord.version>
         <commons.compress.version>1.21</commons.compress.version>
         <picocli.version>4.7.1</picocli.version>
         <jaxrs.api.impl.version>3.1.0</jaxrs.api.impl.version>
@@ -32,6 +32,7 @@
         <httpclient.version>4.5.14</httpclient.version>
         <jakarta.activation-api.version>2.1.0</jakarta.activation-api.version>
         <version.xmlbind.api>4.0.0</version.xmlbind.api>
+        <junit.version>5.9.1</junit.version>
     </properties>
 
     <dependencies>
@@ -195,6 +196,19 @@
             <artifactId>jsr305</artifactId>
             <version>${jsr305.version}</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+            <version>${junit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+            <version>${junit.version}</version>
         </dependency>
     </dependencies>
 
