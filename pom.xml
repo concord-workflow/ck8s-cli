@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>brig.ck8s</groupId>
     <artifactId>ck8s-cli</artifactId>
-    <version>0.1.21</version>
+    <version>0.1.22-SNAPSHOT</version>
     <packaging>takari-jar</packaging>
 
     <properties>
@@ -314,6 +314,6 @@
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>0.1.21</tag>
+        <tag>HEAD</tag>
     </scm>
 </project>
