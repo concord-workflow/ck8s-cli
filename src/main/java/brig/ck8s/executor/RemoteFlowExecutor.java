@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RemoteFlowExecutor
@@ -29,6 +31,10 @@ public class RemoteFlowExecutor
     private final ConcordProfile concordCfg;
     private final ApiClient apiClient;
     private final boolean testMode;
+    private final List<PayloadProcessor> payloadProcessors = Arrays.asList(
+            new FlowRequirementsProcessor(),
+            new ConcordArgsProcessor(),
+            new FlowExclusiveProcessor());
 
     public RemoteFlowExecutor(ConcordProfile concordCfg, boolean testMode)
     {
@@ -57,6 +63,7 @@ public class RemoteFlowExecutor
         if (payload.entryPoint() != null) {
             result.put("entryPoint", payload.entryPoint());
         }
+        result.putAll(payload.concord());
         return result;
     }
 
@@ -94,7 +101,9 @@ public class RemoteFlowExecutor
                     .putArgs("concordUrl", concordCfg.baseUrl())
                     .build();
 
-            payload = new FlowRequirementsProcessor().process(payload);
+            for (PayloadProcessor p : payloadProcessors) {
+                payload = p.process(payload);
+            }
 
             if (testMode) {
                 StringBuilder args = new StringBuilder();

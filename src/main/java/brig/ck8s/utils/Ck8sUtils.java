@@ -1,7 +1,11 @@
 package brig.ck8s.utils;
 
+import brig.ck8s.concord.Ck8sPayload;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.imports.NoopImportManager;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.io.IOException;
 import java.nio.file.CopyOption;
@@ -187,6 +191,30 @@ public class Ck8sUtils
         }
         catch (IOException e) {
             throw new RuntimeException("Error copy '" + source + "' to '" + target + "':" + e.getMessage());
+        }
+    }
+
+    public static ProcessDefinition findYaml(Path flowsDir, String flowName)
+    {
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+
+        try (Stream<Path> walk = Files.walk(flowsDir)) {
+            return walk
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().matches(CONCORD_YAML_PATTERN))
+                    .map(p -> {
+                        try {
+                            return loader.loadFromFile(p).getProjectDefinition();
+                        }
+                        catch (IOException e) {
+                            throw new RuntimeException("Error loading " + p + ":" + e);
+                        }
+                    })
+                    .filter(pd -> pd.flows().containsKey(flowName))
+                    .findFirst().orElse(null);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("find yaml for flow '" + flowName + "' error: " + e.getMessage());
         }
     }
 }
