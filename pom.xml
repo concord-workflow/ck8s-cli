@@ -3,8 +3,8 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>brig.ck8s</groupId>
     <artifactId>ck8s-cli</artifactId>
-    <version>0.1.24-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <version>0.1.23-SNAPSHOT</version>
+    <packaging>takari-jar</packaging>
 
     <properties>
         <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
@@ -232,17 +232,17 @@
             </resource>
         </resources>
         <plugins>
-<!--            <plugin>-->
-<!--                <groupId>io.takari.maven.plugins</groupId>-->
-<!--                <artifactId>takari-lifecycle-plugin</artifactId>-->
-<!--                <version>2.0.8</version>-->
-<!--                <extensions>true</extensions>-->
-<!--                <configuration>-->
-<!--                    <source>${maven.compiler.source}</source>-->
-<!--                    <target>${maven.compiler.target}</target>-->
-<!--                    <proc>proc</proc>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>io.takari.maven.plugins</groupId>
+                <artifactId>takari-lifecycle-plugin</artifactId>
+                <version>2.0.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <proc>proc</proc>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
