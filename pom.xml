@@ -3,13 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>brig.ck8s</groupId>
     <artifactId>ck8s-cli</artifactId>
-    <version>0.1.25-SNAPSHOT</version>
+    <version>0.1.23-SNAPSHOT</version>
     <packaging>takari-jar</packaging>
 
     <properties>
         <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
 
         <releaseUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2</releaseUrl>
+        <snapshotUrl>https://oss.sonatype.org/content/repositories/snapshots</snapshotUrl>
 
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -294,31 +295,31 @@
                     </execution>
                 </executions>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>com.oneops.maven.plugins</groupId>-->
-<!--                <artifactId>really-executable-jar-maven-plugin</artifactId>-->
-<!--                <version>1.4.2</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>really-executable-jar</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--                <configuration>-->
-<!--                    <flags>-Xmx128m -client</flags>-->
-<!--                    <classifier>uber</classifier>-->
-<!--                    <outputClassifier>executable</outputClassifier>-->
-<!--                    <allowOtherTypes>true</allowOtherTypes>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>com.oneops.maven.plugins</groupId>
+                <artifactId>really-executable-jar-maven-plugin</artifactId>
+                <version>1.4.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>really-executable-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <flags>-Xmx128m -client</flags>
+                    <classifier>uber</classifier>
+                    <outputClassifier>executable</outputClassifier>
+                    <allowOtherTypes>true</allowOtherTypes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>0.1.23</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
@@ -326,5 +327,9 @@
             <id>sonatype.releases</id>
             <url>${releaseUrl}</url>
         </repository>
+        <snapshotRepository>
+            <id>sonatype.snapshots</id>
+            <url>${snapshotUrl}</url>
+        </snapshotRepository>
     </distributionManagement>
 </project>
