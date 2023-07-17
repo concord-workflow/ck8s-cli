@@ -4,10 +4,12 @@
     <groupId>brig.ck8s</groupId>
     <artifactId>ck8s-cli</artifactId>
     <version>0.1.23-SNAPSHOT</version>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
+
+        <releaseUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2</releaseUrl>
 
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -230,22 +232,24 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <version>2.0.8</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>io.takari.maven.plugins</groupId>-->
+<!--                <artifactId>takari-lifecycle-plugin</artifactId>-->
+<!--                <version>2.0.8</version>-->
+<!--                <extensions>true</extensions>-->
+<!--                <configuration>-->
+<!--                    <source>${maven.compiler.source}</source>-->
+<!--                    <target>${maven.compiler.target}</target>-->
+<!--                    <proc>proc</proc>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.3</version>
                 <configuration>
+                    <localCheckout>false</localCheckout>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
                     <tagNameFormat>@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
@@ -316,4 +320,11 @@
         <developerConnection>${scm.connection}</developerConnection>
         <tag>HEAD</tag>
     </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>sonatype.releases</id>
+            <url>${releaseUrl}</url>
+        </repository>
+    </distributionManagement>
 </project>
