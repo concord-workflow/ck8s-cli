@@ -1,7 +1,7 @@
 package brig.ck8s.cli.actions;
 
-import brig.ck8s.cli.model.ClusterInfo;
 import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.model.ClusterInfo;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static brig.ck8s.cli.op.ClusterListOperation.getClusterList;
 
 public class AwsKubeconfigAction
 {
@@ -33,7 +35,7 @@ public class AwsKubeconfigAction
                     .forEach(File::delete);
         }
 
-        Map<Path, ClusterInfo> clusters = new ClusterListAction(ck8sPath).getInfo();
+        Map<Path, ClusterInfo> clusters = getClusterList(ck8sPath);
         for (Map.Entry<Path, ClusterInfo> e : clusters.entrySet()) {
             Path clusterYaml = e.getKey();
             String account = ck8sPath.accountCfgForCluster(clusterYaml).getParent().getFileName().toString();

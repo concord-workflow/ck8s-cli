@@ -1,13 +1,14 @@
 package brig.ck8s.cli.completion;
 
-import brig.ck8s.cli.actions.ClusterListAction;
 import brig.ck8s.cli.cfg.CliConfigurationProvider;
-import brig.ck8s.cli.model.ClusterInfo;
 import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.model.ClusterInfo;
 import brig.ck8s.cli.utils.LogUtils;
 
 import java.util.Collections;
 import java.util.Iterator;
+
+import static brig.ck8s.cli.op.ClusterListOperation.getClusterList;
 
 public class ClusterAliasCompletion
         implements Iterable<String>
@@ -23,7 +24,10 @@ public class ClusterAliasCompletion
             return Collections.emptyIterator();
         }
 
-        return new ClusterListAction(Ck8sPath.from(ck8sDir, ck8sExtDir)).getInfo().values().stream()
-                .map(ClusterInfo::alias).iterator();
+        return getClusterList(Ck8sPath.from(ck8sDir, ck8sExtDir))
+                .values()
+                .stream()
+                .map(ClusterInfo::alias)
+                .iterator();
     }
 }
