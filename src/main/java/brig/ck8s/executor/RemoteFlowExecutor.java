@@ -2,6 +2,7 @@ package brig.ck8s.executor;
 
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.concord.ConcordProcess;
+import brig.ck8s.executor.processors.*;
 import brig.ck8s.model.ConcordProfile;
 import brig.ck8s.utils.LogUtils;
 import com.walmartlabs.concord.ApiClient;
@@ -20,9 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class RemoteFlowExecutor
@@ -31,10 +30,6 @@ public class RemoteFlowExecutor
     private final ConcordProfile concordCfg;
     private final ApiClient apiClient;
     private final boolean testMode;
-    private final List<PayloadProcessor> payloadProcessors = Arrays.asList(
-            new FlowRequirementsProcessor(),
-            new ConcordArgsProcessor(),
-            new FlowExclusiveProcessor());
 
     public RemoteFlowExecutor(ConcordProfile concordCfg, boolean testMode)
     {
@@ -60,9 +55,6 @@ public class RemoteFlowExecutor
 
         archive(payload.location(), result);
         payload.args().forEach((name, value) -> result.put("arguments." + name, value));
-        if (payload.entryPoint() != null) {
-            result.put("entryPoint", payload.entryPoint());
-        }
         result.putAll(payload.concord());
         return result;
     }
@@ -101,9 +93,7 @@ public class RemoteFlowExecutor
                     .putArgs("concordUrl", concordCfg.baseUrl())
                     .build();
 
-            for (PayloadProcessor p : payloadProcessors) {
-                payload = p.process(payload);
-            }
+            payload = new ConcordProcessors().process(payload);
 
             if (testMode) {
                 StringBuilder args = new StringBuilder();
@@ -113,8 +103,8 @@ public class RemoteFlowExecutor
                 Path archivePath = payload.location().resolve("payload.zip");
                 archiveToFile(payload.location(), archivePath);
 
-                String curl = String.format("curl -s --http1.1 -H 'Authorization: %s' -F archive=@%s -F entryPoint=%s %s %s/api/v1/process",
-                        concordCfg.apiKey(), archivePath, payload.entryPoint(), args, concordCfg.baseUrl());
+                String curl = String.format("curl -s --http1.1 -H 'Authorization: %s' -F archive=@%s %s %s/api/v1/process",
+                        concordCfg.apiKey(), archivePath, args, concordCfg.baseUrl());
 
                 LogUtils.info("Test mode is on. Use this command to start your process:\n{}", curl);
                 return null;

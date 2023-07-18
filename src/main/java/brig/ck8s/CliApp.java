@@ -150,7 +150,7 @@ public class CliApp
                 return new BootstrapLocalClusterAction(ck8s, targetRootPath, profile).perform();
             }
 
-            boolean needConfirmation = flowPatternsToConfirm.stream().anyMatch(flow::matches);
+            boolean needConfirmation = flow != null && flowPatternsToConfirm.stream().anyMatch(flow::matches);
             if (needConfirmation) {
                 String msg = String.format("Are you sure you want to execute '%s' on '%s' cluster? (y/N): ", flow, clusterAlias);
                 System.out.print(msg);

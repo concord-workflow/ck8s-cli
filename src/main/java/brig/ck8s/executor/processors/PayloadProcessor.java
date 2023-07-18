@@ -1,4 +1,4 @@
-package brig.ck8s.executor;
+package brig.ck8s.executor.processors;
 
 import brig.ck8s.concord.Ck8sPayload;
 

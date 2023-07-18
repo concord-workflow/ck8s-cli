@@ -20,7 +20,7 @@ public interface Ck8sPayload
 
     Path location();
 
-    String entryPoint();
+//    String entryPoint();
 
     @Value.Default
     default Map<String, Object> concord()
@@ -52,14 +52,10 @@ public interface Ck8sPayload
 
         public Ck8sPayload.Builder flow(String name)
         {
-            if (name == null) {
-                return entryPoint("show")
-                        .putArgs("flow", "show");
+            if (name != null) {
+                return putArgs("flow", name);
             }
-            else {
-                return entryPoint("normalFlow")
-                        .putArgs("flow", name);
-            }
+            return this;
         }
     }
 }

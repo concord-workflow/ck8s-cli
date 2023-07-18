@@ -160,7 +160,6 @@ public class ConcordCliFlowExecutor
         }
 
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(), projectInfo())
-                .entryPoint(payload.entryPoint())
                 .instanceId(instanceId)
                 .build();
 

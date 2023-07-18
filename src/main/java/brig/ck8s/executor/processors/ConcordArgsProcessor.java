@@ -1,4 +1,4 @@
-package brig.ck8s.executor;
+package brig.ck8s.executor.processors;
 
 import brig.ck8s.concord.Ck8sPayload;
 import brig.ck8s.utils.Ck8sUtils;
@@ -25,12 +25,12 @@ public class ConcordArgsProcessor implements PayloadProcessor
         }
 
         Map<String, Object> concordArgs = MapUtils.getMap(pd.configuration().arguments(), "concord", Collections.emptyMap());
-        if (concordArgs.isEmpty()) {
-            return payload;
-        }
+        String globalExclusiveGroup = MapUtils.getString(concordArgs, "globalExclusiveGroup", "");
 
         return Ck8sPayload.builder().from(payload)
                 .concord(concordArgs)
+                .putArgs("hasGlobalLock", !globalExclusiveGroup.trim().isEmpty())
+                .putArgs("globalExclusiveGroup", globalExclusiveGroup)
                 .build();
     }
 }
