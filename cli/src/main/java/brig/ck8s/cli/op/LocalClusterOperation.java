@@ -1,38 +1,34 @@
-package brig.ck8s.cli.actions;
+package brig.ck8s.cli.op;
 
+import brig.ck8s.cli.CliApp;
+import brig.ck8s.cli.actions.ExecuteScriptAction;
 import brig.ck8s.cli.cfg.CliConfigurationProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
+import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.concord.ConcordProcess;
 import brig.ck8s.cli.executor.RemoteFlowExecutor;
-import brig.ck8s.cli.common.Ck8sPath;
 
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class BootstrapLocalClusterAction
+public class LocalClusterOperation
+        implements CliOperation
 {
-
-    private final Ck8sPath ck8s;
-    private final Path targetRoot;
-    private final String profile;
-
-    public BootstrapLocalClusterAction(Ck8sPath ck8s, Path targetRoot, String profile)
+    @Override
+    public Integer execute(CliOperationContext cliOperationContext)
     {
-        this.ck8s = ck8s;
-        this.targetRoot = targetRoot;
-        this.profile = profile;
-    }
+        CliApp cliApp = cliOperationContext.cliApp();
+        Ck8sPath ck8s = cliOperationContext.ck8sPath();
+        String profile = cliApp.getProfile();
 
-    public int perform()
-    {
         ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
 
         scriptAction.perform("ck8sDown");
         scriptAction.perform("ck8sUp");
 
-        Path payloadLocation = new Ck8sFlowBuilder(ck8s, targetRoot)
+        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath())
                 .build("local");
 
         RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), false);
