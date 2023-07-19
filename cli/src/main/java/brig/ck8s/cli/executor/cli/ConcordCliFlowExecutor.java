@@ -1,9 +1,9 @@
-package brig.ck8s.cli.executor;
+package brig.ck8s.cli.executor.cli;
 
 import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.common.MapUtils;
-import brig.ck8s.cli.common.processors.ConcordProcessors;
 import brig.ck8s.cli.concord.ConcordServer;
+import brig.ck8s.cli.executor.FlowExecutor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
@@ -11,7 +11,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
-import com.walmartlabs.concord.cli.runner.*;
+import com.walmartlabs.concord.cli.runner.CliImportsListener;
+import com.walmartlabs.concord.cli.runner.CliImportsNormalizer;
+import com.walmartlabs.concord.cli.runner.CliRepositoryExporter;
+import com.walmartlabs.concord.cli.runner.CliServicesModule;
+import com.walmartlabs.concord.cli.runner.DependencyResolver;
+import com.walmartlabs.concord.cli.runner.VaultProvider;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
@@ -27,13 +32,21 @@ import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.*;
+import com.walmartlabs.concord.runtime.v2.sdk.ImmutableProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
+import com.walmartlabs.concord.runtime.v2.sdk.ProcessInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
+import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ConcordCliFlowExecutor
         implements FlowExecutor
@@ -92,8 +105,6 @@ public class ConcordCliFlowExecutor
 
     public int execute(Ck8sPayload payload)
     {
-        payload = new ConcordProcessors().process(payload);
-
         try {
             return _execute(payload);
         }

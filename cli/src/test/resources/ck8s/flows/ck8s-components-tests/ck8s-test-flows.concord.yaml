@@ -1,0 +1,6 @@
+flows:
+  test:
+    - task: log
+      in:
+        msg: |
+          Test flow

@@ -1,19 +1,18 @@
 package brig.ck8s.cli.op;
 
 import brig.ck8s.cli.CliApp;
-import brig.ck8s.cli.VersionProvider;
-import brig.ck8s.cli.common.Ck8sFlowBuilder;
-import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.common.Ck8sPayload;
-import com.walmartlabs.concord.cli.Verbosity;
 
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import static brig.ck8s.cli.common.Ck8sPayload.createClusterConcordYamlFileName;
+import static brig.ck8s.cli.common.IOUtils.deleteRecursively;
 import static brig.ck8s.cli.executor.FlowExecutorType.resolveFlowExecutor;
+import static brig.ck8s.cli.subcom.PackageCommand.createCk8sPayload;
+import static java.nio.file.Files.move;
+import static java.nio.file.Files.walk;
 import static java.util.Objects.nonNull;
 
 public class RunFlowOperation
@@ -25,10 +24,7 @@ public class RunFlowOperation
     public Integer execute(CliOperationContext cliOperationContext)
     {
         CliApp cliApp = cliOperationContext.cliApp();
-        Ck8sPath ck8s = cliOperationContext.ck8sPath();
-        Verbosity verbosity = cliOperationContext.verbosity();
         String flow = cliApp.getFlow();
-        String profile = cliApp.getProfile();
         String clusterAlias = cliApp.getClusterAlias();
 
         boolean needConfirmation = nonNull(flow)
@@ -46,31 +42,44 @@ public class RunFlowOperation
             }
         }
 
-        List<String> deps = Collections.emptyList();
-        if (cliApp.isWithInputAssert()) {
-            deps = List.of("mvn://com.walmartlabs.concord.plugins.basic:input-params-assert:1.102.1-SNAPSHOT");
+        Ck8sPayload ck8sPayload = createCk8sPayload(
+                cliOperationContext,
+                flow,
+                cliApp.getExtraVars(),
+                cliApp.isWithTests(),
+                clusterAlias);
+
+        Path packageDir = ck8sPayload.location();
+        String clusterConcordYamlFileName = createClusterConcordYamlFileName(clusterAlias);
+        try {
+            walk(packageDir, 1)
+                    // Filter out all cluster concord.yml
+                    .filter(Ck8sPayload::isClusterConcordYaml)
+                    // Filter out wanted cluster concord.yml
+                    .filter(file -> !file.getFileName().toString().equals(clusterConcordYamlFileName))
+                    // We delete other cluster concord.yml
+                    .forEach(clusterConcordYaml -> deleteRecursively(clusterConcordYaml));
+            move(packageDir.resolve(clusterConcordYamlFileName), packageDir.resolve("concord.yml"));
+        }
+        catch (Exception e) {
+            throw new RuntimeException(
+                    "Failed to select cluster alias: %s yaml file % for root concord.yml"
+                            .formatted(clusterAlias, clusterConcordYamlFileName),
+                    e);
         }
 
-        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath())
-                .includeTests(cliApp.isWithTests())
-                .withDependencies(deps)
-                .debug(verbosity.verbose())
-                .build(clusterAlias);
-
-        Ck8sPayload payload = Ck8sPayload.builder()
-                .cks8sPath(ck8s)
-                .location(payloadLocation)
-                .putArgs("ck8sCliVersion", VersionProvider.getCliVersion())
-                .putAllArgs(cliApp.getExtraVars())
-                .flow(cliApp.getFlow())
-                .build();
-
         if (cliApp.isTestMode()) {
-            System.out.println("Running flow: %s on cluster: %s with profile: %s".formatted(flow, clusterAlias, profile));
+            Path ck8sPackagePath = cliApp.getCk8sPackagePath();
+            System.out.println(
+                    "Running flow: %s on cluster: %s with profile: %s%s".formatted(
+                            flow,
+                            clusterAlias,
+                            cliApp.getProfile(),
+                            nonNull(ck8sPackagePath) ? " and package: %s".formatted(ck8sPackagePath) : ""));
             return 0;
         }
 
         return resolveFlowExecutor(cliOperationContext)
-                .execute(payload);
+                .execute(ck8sPayload);
     }
 }

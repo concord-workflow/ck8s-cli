@@ -1,4 +1,4 @@
-package brig.ck8s.cli.selfupdate;
+package brig.ck8s.cli.subcom.selfupdate;
 
 import brig.ck8s.cli.common.MapUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;

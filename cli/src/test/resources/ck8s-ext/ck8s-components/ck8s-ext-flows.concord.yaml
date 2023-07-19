@@ -1,0 +1,6 @@
+flows:
+  ext:
+    - task: log
+      in:
+        msg: |
+          Ext flow
