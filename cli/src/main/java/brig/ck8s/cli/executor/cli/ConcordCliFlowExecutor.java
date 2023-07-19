@@ -36,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class ConcordCliFlowExecutor
+        implements FlowExecutor
 {
 
     private static final String DEFAULT_IMPORTS_SOURCE = "https://github.com";

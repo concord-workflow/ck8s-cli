@@ -1,8 +1,9 @@
-package brig.ck8s.cli.executor;
+package brig.ck8s.cli.executor.remote;
 
 import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.common.processors.ConcordProcessors;
 import brig.ck8s.cli.concord.ConcordProcess;
+import brig.ck8s.cli.executor.FlowExecutor;
 import brig.ck8s.cli.model.ConcordProfile;
 import brig.ck8s.cli.utils.LogUtils;
 import com.walmartlabs.concord.ApiClient;
@@ -13,8 +14,6 @@ import com.walmartlabs.concord.client.ConcordApiClient;
 import com.walmartlabs.concord.client.StartProcessResponse;
 import com.walmartlabs.concord.common.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-
-import javax.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 public class RemoteFlowExecutor
+        implements FlowExecutor
 {
 
     private final ConcordProfile concordCfg;
@@ -100,44 +100,38 @@ public class RemoteFlowExecutor
         }
     }
 
-    @Nullable
-    public ConcordProcess execute(Ck8sPayload payload)
+    @Override
+    public int execute(Ck8sPayload payload)
     {
-        try {
-            payload = Ck8sPayload.builder().from(payload)
-                    .putArgs("concordUrl", concordCfg.baseUrl())
-                    .build();
-
-            payload = new ConcordProcessors().process(payload);
-
-            if (testMode) {
-                StringBuilder args = new StringBuilder();
-                for (Map.Entry<String, Object> e : payload.args().entrySet()) {
-                    args.append(String.format("-F arguments.%s=%s ", e.getKey(), e.getValue()));
-                }
-                Path archivePath = payload.location().resolve("payload.zip");
-                archiveToFile(payload.location(), archivePath);
-
-                String curl = String.format("curl -s --http1.1 -H 'Authorization: %s' -F archive=@%s %s %s/api/v1/process",
-                        concordCfg.apiKey(), archivePath, args, concordCfg.baseUrl());
-
-                LogUtils.info("Test mode is on. Use this command to start your process:\n{}", curl);
-                return null;
+        if (testMode) {
+            StringBuilder args = new StringBuilder();
+            for (Map.Entry<String, Object> e : payload.args().entrySet()) {
+                args.append(String.format("-F arguments.%s=%s ", e.getKey(), e.getValue()));
             }
-            else {
-                ConcordProcess process = startProcess(payload);
-                LogUtils.info("process: {}", String.format("%s/#/process/%s/log", concordCfg.baseUrl(), process.instanceId()));
-                return process;
-            }
+            Path archivePath = payload.location().resolve("payload.zip");
+            archiveToFile(payload.location(), archivePath);
+
+            String curl = String.format("curl -s --http1.1 -H 'Authorization: %s' -F archive=@%s %s %s/api/v1/process",
+                    concordCfg.apiKey(), archivePath, args, concordCfg.baseUrl());
+
+            LogUtils.info("Test mode is on. Use this command to start your process:\n{}", curl);
+            return 0;
         }
-        catch (Exception e) {
-            throw new RuntimeException("Error starting concord process: " + e.getMessage());
+        else {
+            ConcordProcess process = startRemoteProcessInternal(payload);
+            LogUtils.info("process: {}", String.format("%s/#/process/%s/log", concordCfg.baseUrl(), process.instanceId()));
+            return 0;
         }
     }
 
-    private ConcordProcess startProcess(Ck8sPayload payload)
+    public ConcordProcess startRemoteProcess(Ck8sPayload payload)
             throws ApiException
     {
+        payload = Ck8sPayload.builder().from(payload)
+                .putArgs("concordUrl", concordCfg.baseUrl())
+                .build();
+        payload = new ConcordProcessors().process(payload);
+
         ApiResponse<StartProcessResponse> resp = ClientUtils.postData(apiClient, "/api/v1/process", toMap(payload), StartProcessResponse.class);
 
         int code = resp.getStatusCode();
@@ -150,5 +144,15 @@ public class RemoteFlowExecutor
         }
 
         return new ConcordProcess(apiClient, resp.getData().getInstanceId());
+    }
+
+    private ConcordProcess startRemoteProcessInternal(Ck8sPayload payload)
+    {
+        try {
+            return startRemoteProcess(payload);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error starting concord process: " + e.getMessage());
+        }
     }
 }
