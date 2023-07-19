@@ -17,17 +17,17 @@ public abstract class ConcordYamlProcessor implements PayloadProcessor {
             return payload;
         }
 
-        ProcessDefinition pd = Ck8sUtils.findYaml(payload.flowsPath(), flowName);
-        if (pd == null) {
+        ProcessDefinition flowProcessDefinition = Ck8sUtils.findYaml(payload.flowsPath(), flowName);
+        if (flowProcessDefinition == null) {
             return payload;
         }
 
         Path rootConcordYamlPath = payload.rootConcordYaml();
         Map<String, Object> rootYaml = Mapper.yamlMapper().readMap(rootConcordYamlPath);
-        rootYaml = processRootYaml(pd, rootYaml);
+        rootYaml = processRootYaml(payload, flowProcessDefinition, rootYaml);
         Mapper.yamlMapper().write(rootConcordYamlPath, rootYaml);
         return payload;
     }
 
-    protected abstract Map<String, Object> processRootYaml(ProcessDefinition pd, Map<String, Object> rootYaml);
+    protected abstract Map<String, Object> processRootYaml(Ck8sPayload payload, ProcessDefinition pd, Map<String, Object> rootYaml);
 }

@@ -44,6 +44,12 @@ public interface Ck8sPayload
         return Collections.emptyMap();
     }
 
+    @Value.Default
+    default Map<String, Object> meta()
+    {
+        return Collections.emptyMap();
+    }
+
     class Builder
             extends ImmutableCk8sPayload.Builder
     {

@@ -10,7 +10,8 @@ public class ConcordProcessors {
     private final List<PayloadProcessor> payloadProcessors = Arrays.asList(
             new FlowRequirementsProcessor(),
             new ConcordArgsProcessor(),
-            new FlowExclusiveProcessor());
+            new FlowExclusiveProcessor(),
+            new FlowMetaProcessor());
 
     public Ck8sPayload process(Ck8sPayload payload) {
         for (PayloadProcessor p : payloadProcessors) {

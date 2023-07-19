@@ -25,10 +25,12 @@ public class ConcordArgsProcessor implements PayloadProcessor
         }
 
         Map<String, Object> concordArgs = MapUtils.getMap(pd.configuration().arguments(), "concord", Collections.emptyMap());
-        String globalExclusiveGroup = MapUtils.getString(concordArgs, "globalExclusiveGroup", "");
+        Map<String, Object> concordArgsResult = MapUtils.merge(concordArgs, payload.concord());
+
+        String globalExclusiveGroup = MapUtils.getString(concordArgsResult, "globalExclusiveGroup", "");
 
         return Ck8sPayload.builder().from(payload)
-                .concord(concordArgs)
+                .concord(concordArgsResult)
                 .putArgs("hasGlobalLock", !globalExclusiveGroup.trim().isEmpty())
                 .putArgs("globalExclusiveGroup", globalExclusiveGroup)
                 .build();
