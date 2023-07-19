@@ -42,7 +42,7 @@ public class CliApp
     @CommandLine.Mixin
     FlowExecutorOptionsMixin flowExecutorType;
 
-    @CommandLine.ArgGroup(exclusive = true, multiplicity = "1")
+    @CommandLine.ArgGroup(exclusive = true, multiplicity = "0..1")
     CliOperationArgs cliOperationArgs;
 
     @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name", completionCandidates = ProfilesCompletion.class)
