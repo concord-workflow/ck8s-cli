@@ -42,7 +42,6 @@ jobs:
           server-password: OSSRH_PASSWORD
           distribution: 'temurin'
           java-version: 17
-          cache: maven
       - name: Build & Test & Deploy
         run: ./mvnw -B test
         env:

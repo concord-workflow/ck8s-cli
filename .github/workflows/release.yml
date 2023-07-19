@@ -21,7 +21,6 @@ jobs:
           server-password: OSSRH_PASSWORD
           distribution: 'temurin'
           java-version: 17
-          cache: maven
 
       - name: Download Package
         run: |
@@ -32,6 +31,10 @@ jobs:
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+
+      - name: Remove local sources
+        run: |
+          rm -rf ck8s-cli
 
       - name: Create Release
         id: create_release
