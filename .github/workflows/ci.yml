@@ -21,7 +21,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          server-id: sonatype.snapshots
+          server-id: github
           server-username: OSSRH_USERNAME
           server-password: OSSRH_PASSWORD
           distribution: 'temurin'
