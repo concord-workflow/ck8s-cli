@@ -1,7 +1,6 @@
 package brig.ck8s.cli.executor.remote;
 
 import brig.ck8s.cli.common.Ck8sPayload;
-import brig.ck8s.cli.common.processors.ConcordProcessors;
 import brig.ck8s.cli.concord.ConcordProcess;
 import brig.ck8s.cli.executor.FlowExecutor;
 import brig.ck8s.cli.model.ConcordProfile;
@@ -51,42 +50,6 @@ public class RemoteFlowExecutor
                 .setApiKey(cfg.apiKey());
     }
 
-    private static Map<String, Object> toMap(Ck8sPayload payload)
-    {
-        Map<String, Object> result = new LinkedHashMap<>();
-
-        archive(payload.location(), result);
-        payload.args().forEach((name, value) -> result.put("arguments." + name, value));
-        result.putAll(serializeConcordProcessParams(payload.concord()));
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> serializeConcordProcessParams(Map<String, Object> params) {
-        Map<String, Object> result = new HashMap<>();
-        for (Map.Entry<String, Object> e : params.entrySet()) {
-            Object value = e.getValue();
-            if (value instanceof List) {
-                value = String.join(",", (List<String>)value);
-            }
-            result.put(e.getKey(), value);
-        }
-        return result;
-    }
-
-    private static void archive(Path path, Map<String, Object> input)
-    {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-                IOUtils.zip(zip, path);
-            }
-            input.put("archive", out.toByteArray());
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private static void archiveToFile(Path src, Path dest)
     {
@@ -117,22 +80,26 @@ public class RemoteFlowExecutor
             LogUtils.info("Test mode is on. Use this command to start your process:\n{}", curl);
             return 0;
         }
-        else {
-            ConcordProcess process = startRemoteProcessInternal(payload);
+
+        try {
+            ConcordProcess process = startRemoteProcess(payload);
             LogUtils.info("process: {}", String.format("%s/#/process/%s/log", concordCfg.baseUrl(), process.instanceId()));
-            return 0;
         }
+        catch (Exception e) {
+            throw new RuntimeException("Error starting concord process: " + e.getMessage());
+        }
+        return 0;
     }
 
     public ConcordProcess startRemoteProcess(Ck8sPayload payload)
             throws ApiException
     {
-        payload = Ck8sPayload.builder().from(payload)
-                .putArgs("concordUrl", concordCfg.baseUrl())
-                .build();
-        payload = new ConcordProcessors().process(payload);
+        Map<String, Object> payloadData = toMap(
+                payload,
+                Map.of("concordUrl", concordCfg.baseUrl()));
 
-        ApiResponse<StartProcessResponse> resp = ClientUtils.postData(apiClient, "/api/v1/process", toMap(payload), StartProcessResponse.class);
+        ApiResponse<StartProcessResponse> resp = ClientUtils
+                .postData(apiClient, "/api/v1/process", payloadData, StartProcessResponse.class);
 
         int code = resp.getStatusCode();
         if (code < 200 || code >= 300) {
@@ -146,13 +113,33 @@ public class RemoteFlowExecutor
         return new ConcordProcess(apiClient, resp.getData().getInstanceId());
     }
 
-    private ConcordProcess startRemoteProcessInternal(Ck8sPayload payload)
+    private static Map<String, Object> toMap(Ck8sPayload payload, Map<String, String> extraArgs)
     {
-        try {
-            return startRemoteProcess(payload);
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        payload.createArchive(out);
+        result.put("archive", out.toByteArray());
+
+        payload.args().forEach((name, value) -> result.put("arguments." + name, value));
+        extraArgs.forEach((name, value) -> result.put("arguments." + name, value));
+
+        result.putAll(serializeConcordProcessParams(payload.concord()));
+
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> serializeConcordProcessParams(Map<String, Object> params)
+    {
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, Object> e : params.entrySet()) {
+            Object value = e.getValue();
+            if (value instanceof List) {
+                value = String.join(",", (List<String>) value);
+            }
+            result.put(e.getKey(), value);
         }
-        catch (Exception e) {
-            throw new RuntimeException("Error starting concord process: " + e.getMessage());
-        }
+        return result;
     }
 }

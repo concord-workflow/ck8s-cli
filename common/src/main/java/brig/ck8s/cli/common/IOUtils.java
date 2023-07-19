@@ -16,6 +16,17 @@ public final class IOUtils
     {
     }
 
+    public static void createDir(Path dirPath)
+    {
+        try {
+
+            Files.createDirectories(dirPath);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Can't create target '" + dirPath + "': " + e.getMessage());
+        }
+    }
+
     public static boolean deleteRecursively(Path p)
     {
         if (!Files.exists(p)) {

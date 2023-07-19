@@ -1,4 +1,4 @@
-package brig.ck8s.cli.sso;
+package brig.ck8s.cli.subcom;
 
 import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.cfg.CliConfigurationProvider;
