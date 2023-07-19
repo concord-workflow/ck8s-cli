@@ -16,6 +16,25 @@ jobs:
       contents: write
       packages: write
     steps:
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'brig.ck8s.cli.parent'
+          package-type: 'maven'
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: 'true'
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'brig.ck8s.cli.ck8s-cli-common'
+          package-type: 'maven'
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: 'true'
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: ' brig.ck8s.cli.ck8s-cli'
+          package-type: 'maven'
+          min-versions-to-keep: 10
+          delete-only-untagged-versions: 'true'
+
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set up JDK
