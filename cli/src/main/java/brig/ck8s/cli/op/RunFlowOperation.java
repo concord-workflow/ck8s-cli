@@ -5,7 +5,6 @@ import brig.ck8s.cli.VersionProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
 import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.common.Ck8sPayload;
-import brig.ck8s.cli.executor.FlowExecutor;
 import com.walmartlabs.concord.cli.Verbosity;
 
 import java.nio.file.Path;
@@ -14,6 +13,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import static brig.ck8s.cli.executor.FlowExecutorType.resolveFlowExecutor;
 import static java.util.Objects.nonNull;
 
 public class RunFlowOperation
@@ -70,6 +70,7 @@ public class RunFlowOperation
             return 0;
         }
 
-        return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(), payload, profile, verbosity, cliApp.isTestMode());
+        return resolveFlowExecutor(cliOperationContext)
+                .execute(payload);
     }
 }
