@@ -1,0 +1,51 @@
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          server-id: github
+          server-username: OSSRH_USERNAME
+          server-password: OSSRH_PASSWORD
+          distribution: 'temurin'
+          java-version: 17
+          cache: maven
+
+      - name: Download Package
+        run: |
+          mvn org.apache.maven.plugins:maven-dependency-plugin:3.6.0:get -Dtransitive=false \
+          -DremoteRepositories=github::default::https://maven.pkg.github.com/concord-workflow/ck8s-cli \
+          -Dmaven.repo.remote.server-id=github \
+          -Dartifact=brig.ck8s.cli:ck8s-cli:${{ github.ref }}:jar:executable
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Package Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ~/.m2/repository/brig/ck8s/cli/ck8s-cli/${{ github.ref }}/ck8s-cli-${{ github.ref }}-executable.jar
+          asset_name: ck8s-cli-${{ github.ref }}-executable.jar
+          asset_content_type: application/java-archive

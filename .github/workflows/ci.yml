@@ -21,19 +21,16 @@ jobs:
           package-name: 'brig.ck8s.cli.parent'
           package-type: 'maven'
           min-versions-to-keep: 10
-          delete-only-untagged-versions: 'true'
       - uses: actions/delete-package-versions@v4
         with:
           package-name: 'brig.ck8s.cli.ck8s-cli-common'
           package-type: 'maven'
           min-versions-to-keep: 10
-          delete-only-untagged-versions: 'true'
       - uses: actions/delete-package-versions@v4
         with:
           package-name: ' brig.ck8s.cli.ck8s-cli'
           package-type: 'maven'
           min-versions-to-keep: 10
-          delete-only-untagged-versions: 'true'
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -47,7 +44,7 @@ jobs:
           java-version: 17
           cache: maven
       - name: Build & Test & Deploy
-        run: ./mvnw -B deploy
+        run: ./mvnw -B test
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
