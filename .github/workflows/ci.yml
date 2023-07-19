@@ -22,13 +22,10 @@ jobs:
         uses: actions/setup-java@v3
         with:
           server-id: github
-          server-username: OSSRH_USERNAME
-          server-password: OSSRH_PASSWORD
+          server-username: ${{ secrets.OSSRH_USERNAME }}
+          server-password: ${{ secrets.OSSRH_PASSWORD }}
           distribution: 'temurin'
           java-version: 17
           cache: maven
       - name: Build & Test & Deploy
         run: ./mvnw -B deploy
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
