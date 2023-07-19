@@ -5,7 +5,7 @@
     <parent>
         <groupId>brig.ck8s.cli</groupId>
         <artifactId>parent</artifactId>
-        <version>0.1.23-SNAPSHOT</version>
+        <version>0.1.23</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -152,17 +152,14 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>uber</shadedClassifierName>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/sisu/javax.inject.Named</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/services/com.oracle.truffle.api.TruffleLanguage$Provider
                                     </resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>brig.ck8s.cli.Main</Main-Class>
                                         <Add-Opens>java.base/java.lang java.base/java.util</Add-Opens>
