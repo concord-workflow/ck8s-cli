@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>brig.ck8s.cli</groupId>
     <artifactId>parent</artifactId>
-    <version>0.1.30-SNAPSHOT</version>
+    <version>0.1.30</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -381,7 +381,7 @@
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>0.1.24</tag>
+        <tag>0.1.30</tag>
     </scm>
 
     <distributionManagement>
