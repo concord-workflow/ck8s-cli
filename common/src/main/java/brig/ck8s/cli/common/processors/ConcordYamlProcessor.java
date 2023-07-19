@@ -5,7 +5,6 @@ import brig.ck8s.cli.common.Ck8sUtils;
 import brig.ck8s.cli.common.Mapper;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 public abstract class ConcordYamlProcessor implements PayloadProcessor {
@@ -22,10 +21,12 @@ public abstract class ConcordYamlProcessor implements PayloadProcessor {
             return payload;
         }
 
-        Path rootConcordYamlPath = payload.rootConcordYaml();
-        Map<String, Object> rootYaml = Mapper.yamlMapper().readMap(rootConcordYamlPath);
-        rootYaml = processRootYaml(payload, flowProcessDefinition, rootYaml);
-        Mapper.yamlMapper().write(rootConcordYamlPath, rootYaml);
+        payload.rootClusterConcordYamlList()
+                .forEach(clusterConcordYaml -> {
+                    Map<String, Object> rootYaml = Mapper.yamlMapper().readMap(clusterConcordYaml);
+                    rootYaml = processRootYaml(payload, flowProcessDefinition, rootYaml);
+                    Mapper.yamlMapper().write(clusterConcordYaml, rootYaml);
+                });
         return payload;
     }
 

@@ -2,18 +2,18 @@ package brig.ck8s.cli.op;
 
 import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.actions.ExecuteScriptAction;
-import brig.ck8s.cli.common.Ck8sFlowBuilder;
 import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.concord.ConcordProcess;
 import brig.ck8s.cli.executor.remote.RemoteFlowExecutor;
 import com.walmartlabs.concord.ApiException;
 
-import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static brig.ck8s.cli.cfg.CliConfigurationProvider.getConcordProfile;
+import static brig.ck8s.cli.subcom.PackageCommand.createCk8sPayload;
 
 public class LocalClusterOperation
         implements CliOperation
@@ -30,14 +30,11 @@ public class LocalClusterOperation
         scriptAction.perform(cliOperationContext, "ck8sDown");
         scriptAction.perform(cliOperationContext, "ck8sUp");
 
-        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath())
-                .build("local");
-
-        if (!cliApp.isTestMode()) {
+        if (!cliOperationContext.cliApp().isTestMode()) {
             ExecutorService executor = Executors.newCachedThreadPool();
             RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(getConcordProfile(profile), false);
-            executeFlow(payloadLocation, flowExecutor, executor, "cert-manager-local");
-            executeFlow(payloadLocation, flowExecutor, executor, "polaris");
+            executeFlow(cliOperationContext, flowExecutor, executor, "cert-manager-local");
+            executeFlow(cliOperationContext, flowExecutor, executor, "polaris");
         }
 
         scriptAction.perform(cliOperationContext, "assertLocalCluster");
@@ -46,17 +43,19 @@ public class LocalClusterOperation
     }
 
     private void executeFlow(
-            Path payloadLocation,
+            CliOperationContext cliOperationContext,
             RemoteFlowExecutor flowExecutor,
             ExecutorService executor,
             String flowName)
     {
         try {
-            ConcordProcess process;
-            process = flowExecutor.startRemoteProcess(Ck8sPayload.builder()
-                    .location(payloadLocation)
-                    .flow(flowName)
-                    .build());
+            Ck8sPayload payload = createCk8sPayload(
+                    cliOperationContext,
+                    flowName,
+                    Map.of(),
+                    false,
+                    "local");
+            ConcordProcess process = flowExecutor.startRemoteProcess(payload);
             if (process != null) {
                 process.streamLogs(executor);
             }

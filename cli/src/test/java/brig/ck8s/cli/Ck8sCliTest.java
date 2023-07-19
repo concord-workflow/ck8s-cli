@@ -1,10 +1,17 @@
 package brig.ck8s.cli;
 
+import com.walmartlabs.concord.common.IOUtils;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 import static brig.ck8s.cli.Ck8sCliAssertions.assertFailed;
 import static brig.ck8s.cli.Ck8sCliAssertions.assertRunAction;
 import static brig.ck8s.cli.Ck8sCliAssertions.assertSuccess;
+import static java.nio.file.Files.isDirectory;
+import static java.nio.file.Files.isRegularFile;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Ck8sCliTest
 {
@@ -125,9 +132,54 @@ public class Ck8sCliTest
     }
 
     @Test
-    public void testNoArgs() {
+    public void testNoArgs()
+    {
         assertFailed(null)
                 .assertOutContainsMatchingLine(
                         "Usage: ck8s-cli.*");
+    }
+
+    @Test
+    public void testPackage()
+            throws IOException
+    {
+        String ck8sPath = "./src/test/resources/ck8s";
+        String ck8sExtPath = "./src/test/resources/ck8s-ext";
+        assertSuccess(
+                "--ck8s-root " + ck8sPath + " "
+                        + "--ck8s-ext-root " + ck8sExtPath + " "
+                        + "package --dest-file ./target/package.zip")
+                .assertOutContainsMatchingLine("Create Ck8s package: .*");
+
+        Path packageFile = Path.of("./target/package.zip");
+        assertTrue(
+                isRegularFile(packageFile),
+                "Missing package.zip");
+
+        Path unpackedPackage = Path.of("./target/package");
+        IOUtils.deleteRecursively(unpackedPackage);
+        IOUtils.unzip(packageFile, unpackedPackage);
+
+        assertTrue(
+                isRegularFile(unpackedPackage.resolve("local-concord.yml")),
+                "Missing local cluster concord.yml");
+        assertTrue(
+                isDirectory(unpackedPackage.resolve("concord")),
+                "Missing package concord dir");
+        assertTrue(
+                isDirectory(unpackedPackage.resolve("ck8s-components")),
+                "Missing package ck8s-components dir");
+        assertTrue(
+                isDirectory(unpackedPackage.resolve("ck8s-components-tests")),
+                "Missing package ck8s-components dir");
+
+        assertSuccess("-f show -c local -p default --dry-run "
+                + "--ck8s-root " + ck8sPath + " "
+                + "--ck8s-ext-root " + ck8sExtPath + " "
+                + "--package " + packageFile)
+                .assertOutContainsMatchingLine(
+                        "Running flow: show on cluster: local " +
+                                "with profile: default " +
+                                "and package: ./target/package.zip");
     }
 }

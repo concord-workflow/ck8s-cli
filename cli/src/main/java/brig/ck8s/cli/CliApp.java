@@ -12,8 +12,9 @@ import brig.ck8s.cli.op.DefaultOperation;
 import brig.ck8s.cli.op.LocalClusterOperation;
 import brig.ck8s.cli.op.RunFlowOperation;
 import brig.ck8s.cli.op.ScriptActionOperation;
-import brig.ck8s.cli.selfupdate.SelfUpdateCommand;
-import brig.ck8s.cli.sso.GenerateTokenCommand;
+import brig.ck8s.cli.subcom.GenerateTokenCommand;
+import brig.ck8s.cli.subcom.PackageCommand;
+import brig.ck8s.cli.subcom.selfupdate.SelfUpdateCommand;
 import brig.ck8s.cli.utils.EnumCompletionCandidates;
 import brig.ck8s.cli.utils.EnumConverter;
 import picocli.AutoComplete;
@@ -28,7 +29,12 @@ import static java.util.Objects.nonNull;
 
 @CommandLine.Command(name = "ck8s-cli",
         versionProvider = VersionProvider.class,
-        subcommands = {AutoComplete.GenerateCompletion.class, SelfUpdateCommand.class, GenerateTokenCommand.class},
+        subcommands = {
+                AutoComplete.GenerateCompletion.class,
+                SelfUpdateCommand.class,
+                GenerateTokenCommand.class,
+                PackageCommand.class
+        },
         defaultValueProvider = CliDefaultParamValuesProvider.class)
 public class CliApp
         implements Callable<Integer>
@@ -76,6 +82,9 @@ public class CliApp
 
     @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
     Path targetRootPath = Path.of(System.getProperty("java.io.tmpdir")).resolve("ck8s-cli");
+
+    @CommandLine.Option(names = {"--package"}, description = "path to ck8s package")
+    Path ck8sPackagePath;
 
     static class CliOperationArgs
     {
@@ -158,6 +167,11 @@ public class CliApp
     public Path getCk8sExtPath()
     {
         return ck8sPathOptions.getCk8sExtPath();
+    }
+
+    public Path getCk8sPackagePath()
+    {
+        return ck8sPackagePath;
     }
 
     @Override

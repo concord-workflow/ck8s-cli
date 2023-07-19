@@ -11,14 +11,19 @@ import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class Ck8sUtils
 {
-
     public static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
+
+    public static final String CK_8_S_COMPONENTS_TESTS_DIR_NAME = "ck8s-components-tests";
 
     private static final List<String> ignorePatterns = Arrays.asList(".*\\.pdf$", ".*\\.png$", ".*\\.jpg$");
 
@@ -113,7 +118,13 @@ public class Ck8sUtils
 
     public static void copyTestComponents(Ck8sPath ck8sPath, Path target)
     {
-        copyComponents(ck8sPath.ck8sComponentsTests(), ck8sPath.ck8sExtComponentsTests(), target, "ck8s-components-tests");
+        copyComponents(ck8sPath.ck8sComponentsTests(), ck8sPath.ck8sExtComponentsTests(), target, CK_8_S_COMPONENTS_TESTS_DIR_NAME);
+    }
+
+    public static void removeTestComponents(Path target)
+    {
+        Path ck8sTestResourcesDir = target.resolve(CK_8_S_COMPONENTS_TESTS_DIR_NAME);
+        brig.ck8s.cli.common.IOUtils.deleteRecursively(ck8sTestResourcesDir);
     }
 
     private static void copyComponents(Path sourceCk8sComponents, Path sourceCk8sExtComponents, Path target, String componentsDirName)
