@@ -22,19 +22,26 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
+      - name: Remove local sources
+        run: |
+          rm -rf ck8s-cli
+
+      - name: Get Tag Name
+        run: |
+          full_ref=${{ github.ref }}
+          tag_name=${full_ref##refs/tags/}
+        env:
+          TAG_NAME: ${{ steps.get_tag_name.outputs.tag_name }}
+
       - name: Download Package
         run: |
           mvn org.apache.maven.plugins:maven-dependency-plugin:3.6.0:get -Dtransitive=false \
           -DremoteRepositories=github::default::https://maven.pkg.github.com/concord-workflow/ck8s-cli \
           -Dmaven.repo.remote.server-id=github \
-          -Dartifact=brig.ck8s.cli:ck8s-cli:${{ github.ref }}:jar:executable
+          -Dartifact=brig.ck8s.cli:ck8s-cli:${{ env.TAG_NAME }}:jar:executable
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-
-      - name: Remove local sources
-        run: |
-          rm -rf ck8s-cli
 
       - name: Create Release
         id: create_release
@@ -54,6 +61,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ~/.m2/repository/brig/ck8s/cli/ck8s-cli/${{ github.ref }}/ck8s-cli-${{ github.ref }}-executable.jar
-          asset_name: ck8s-cli-${{ github.ref }}-executable.jar
+          asset_path: ~/.m2/repository/brig/ck8s/cli/ck8s-cli/${{ env.TAG_NAME }}/ck8s-cli-${{ env.TAG_NAME }}-executable.jar
+          asset_name: ck8s-cli-${{ env.TAG_NAME }}-executable.jar
           asset_content_type: application/java-archive
