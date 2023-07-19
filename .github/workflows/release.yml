@@ -24,14 +24,10 @@ jobs:
 
       - name: Remove local sources
         run: |
-          rm -rf ck8s-cli
+          rm -rf /home/runner/work/ck8s-cli/ck8s-cli
 
       - name: Get Tag Name
-        run: |
-          full_ref=${{ github.ref }}
-          tag_name=${full_ref##refs/tags/}
-        env:
-          TAG_NAME: ${{ steps.get_tag_name.outputs.tag_name }}
+        run: echo "TAG_NAME=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Download Package
         run: |
