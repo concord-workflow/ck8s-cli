@@ -1,4 +1,4 @@
-package brig.ck8s.cli.executor;
+package brig.ck8s.cli.executor.cli;
 
 import java.io.IOException;
 import java.io.InputStream;

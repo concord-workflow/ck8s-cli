@@ -1,4 +1,4 @@
-package brig.ck8s.cli.executor;
+package brig.ck8s.cli.executor.cli;
 
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
 import com.walmartlabs.concord.runtime.v2.model.Step;
