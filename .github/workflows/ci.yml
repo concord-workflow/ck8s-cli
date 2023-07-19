@@ -42,7 +42,7 @@ jobs:
           server-password: OSSRH_PASSWORD
           distribution: 'temurin'
           java-version: 17
-      - name: Build & Test & Deploy
+      - name: Build & Test
         run: ./mvnw -B test
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}

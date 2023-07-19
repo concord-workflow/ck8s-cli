@@ -22,19 +22,11 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Remove local sources
-        run: |
-          rm -rf /home/runner/work/ck8s-cli/ck8s-cli
-
       - name: Get Tag Name
         run: echo "TAG_NAME=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
-      - name: Download Package
-        run: |
-          mvn org.apache.maven.plugins:maven-dependency-plugin:3.6.0:get -Dtransitive=false \
-          -DremoteRepositories=github::default::https://maven.pkg.github.com/concord-workflow/ck8s-cli \
-          -Dmaven.repo.remote.server-id=github \
-          -Dartifact=brig.ck8s.cli:ck8s-cli:${{ env.TAG_NAME }}:jar:executable
+      - name: Deploy
+        run: ./mvnw -B deploy
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}

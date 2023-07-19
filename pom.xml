@@ -9,9 +9,6 @@
     <properties>
         <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
 
-        <releaseUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2</releaseUrl>
-        <snapshotUrl>https://oss.sonatype.org/content/repositories/snapshots</snapshotUrl>
-
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
@@ -287,6 +284,7 @@
                     <configuration>
                         <localCheckout>false</localCheckout>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <goals>install</goals>
                         <tagNameFormat>@{project.version}</tagNameFormat>
                     </configuration>
                 </plugin>
