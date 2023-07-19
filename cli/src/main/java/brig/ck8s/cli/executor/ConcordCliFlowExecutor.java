@@ -9,32 +9,23 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
-import com.walmartlabs.concord.cli.runner.CliImportsListener;
-import com.walmartlabs.concord.cli.runner.CliImportsNormalizer;
-import com.walmartlabs.concord.cli.runner.CliRepositoryExporter;
-import com.walmartlabs.concord.cli.runner.CliServicesModule;
-import com.walmartlabs.concord.cli.runner.DependencyResolver;
-import com.walmartlabs.concord.cli.runner.VaultProvider;
+import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
-import com.walmartlabs.concord.imports.*;
+import com.walmartlabs.concord.imports.ImportManager;
+import com.walmartlabs.concord.imports.ImportManagerFactory;
+import com.walmartlabs.concord.imports.ImportProcessingException;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
-import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.ImmutableProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessConfiguration;
-import com.walmartlabs.concord.runtime.v2.sdk.ProcessInfo;
-import com.walmartlabs.concord.runtime.v2.sdk.ProjectInfo;
-import com.walmartlabs.concord.runtime.v2.sdk.WorkingDirectory;
+import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
 
@@ -195,9 +186,9 @@ public class ConcordCliFlowExecutor
         }
 
         // Just to notify listeners
-        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
-        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
+//        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
+//        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+//        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
 
         ConcordServer.start();
 
