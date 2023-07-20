@@ -26,10 +26,10 @@ public class Main
 {
 
     public static void main(String[] args)
-            throws Exception
     {
         CommandLine cmd = new CommandLine(new CliApp())
-                .setCaseInsensitiveEnumValuesAllowed(true);
+                .setCaseInsensitiveEnumValuesAllowed(true)
+                .setExitCodeExceptionMapper(Main::mapException);
 
         // hide generate-completion subcommand from usage help
         CommandLine gen = cmd.getSubcommands().get("generate-completion");
@@ -42,5 +42,13 @@ public class Main
 
         int code = cmd.execute(args);
         System.exit(code);
+    }
+
+    private static int mapException(Throwable th)
+    {
+        if (th instanceof CommandLine.ParameterException) {
+            return 2;
+        }
+        return 1;
     }
 }
