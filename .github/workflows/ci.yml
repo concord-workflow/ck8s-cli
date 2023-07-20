@@ -13,38 +13,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
     steps:
-      - uses: actions/delete-package-versions@v4
-        with:
-          package-name: 'brig.ck8s.cli.parent'
-          package-type: 'maven'
-          min-versions-to-keep: 10
-      - uses: actions/delete-package-versions@v4
-        with:
-          package-name: 'brig.ck8s.cli.ck8s-cli-common'
-          package-type: 'maven'
-          min-versions-to-keep: 10
-      - uses: actions/delete-package-versions@v4
-        with:
-          package-name: ' brig.ck8s.cli.ck8s-cli'
-          package-type: 'maven'
-          min-versions-to-keep: 10
-
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          server-id: github
-          server-username: OSSRH_USERNAME
-          server-password: OSSRH_PASSWORD
           distribution: 'temurin'
           java-version: 17
+
       - name: Build & Test
         run: ./mvnw -B clean install
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
