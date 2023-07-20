@@ -99,8 +99,8 @@ public class Mapper
             return objectMapper.readValue(p.toFile(), clazz);
         }
         catch (ValueInstantiationException e) {
-            if (e.getCause() instanceof MandatoryValuesMissing mvm) {
-                throw mvm;
+            if (e.getCause() instanceof MandatoryValuesMissing) {
+                throw (MandatoryValuesMissing)e.getCause();
             }
             throw new RuntimeException("Error reading '" + p.toAbsolutePath().normalize() + "': " + e.getMessage());
         }
@@ -115,8 +115,8 @@ public class Mapper
             return objectMapper.readValue(p.toFile(), valueTypeRef);
         }
         catch (ValueInstantiationException e) {
-            if (e.getCause() instanceof MandatoryValuesMissing mvm) {
-                throw mvm;
+            if (e.getCause() instanceof MandatoryValuesMissing) {
+                throw (MandatoryValuesMissing)e.getCause();
             }
             throw new RuntimeException("Error reading '" + p.toAbsolutePath().normalize() + "': " + e.getMessage());
         }
