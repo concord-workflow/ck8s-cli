@@ -169,19 +169,22 @@ public class CliApp
 
     private CliOperation resolveOperation()
     {
-        if (nonNull(cliOperationArgs.actionType)) {
-            return new ScriptActionOperation();
-        }
-        if (cliOperationArgs.clusterList) {
-            return new ClusterListOperation();
-        }
-        if (nonNull(cliOperationArgs.flow)) {
-            if ("cluster".equals(cliOperationArgs.flow)
-                    && "local".equals(clusterAlias)) {
-                return new LocalClusterOperation();
+        if (cliOperationArgs != null) {
+            if (nonNull(cliOperationArgs.actionType)) {
+                return new ScriptActionOperation();
             }
-            return new RunFlowOperation();
+            if (cliOperationArgs.clusterList) {
+                return new ClusterListOperation();
+            }
+            if (nonNull(cliOperationArgs.flow)) {
+                if ("cluster".equals(cliOperationArgs.flow)
+                        && "local".equals(clusterAlias)) {
+                    return new LocalClusterOperation();
+                }
+                return new RunFlowOperation();
+            }
         }
+
         return new DefaultOperation();
     }
 

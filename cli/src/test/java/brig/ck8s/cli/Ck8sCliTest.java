@@ -123,4 +123,11 @@ public class Ck8sCliTest
                 .assertOutContainsMatchingLine(
                         "Generating OIDC token for profile: default");
     }
+
+    @Test
+    public void testNoArgs() {
+        assertFailed(null)
+                .assertOutContainsMatchingLine(
+                        "Usage: ck8s-cli.*");
+    }
 }
