@@ -75,7 +75,7 @@ public class CliApp
     boolean versionInfoRequested;
 
     @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
-    Path targetRootPath = Path.of(System.getProperty("user.dir")).resolve("target");
+    Path targetRootPath = Path.of(System.getProperty("java.io.tmpdir")).resolve("ck8s-cli");
 
     static class CliOperationArgs
     {
