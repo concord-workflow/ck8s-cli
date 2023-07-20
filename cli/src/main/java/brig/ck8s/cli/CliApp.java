@@ -68,7 +68,7 @@ public class CliApp
             "-VVV debug logs"})
     boolean[] verbosity = new boolean[0];
 
-    @CommandLine.Option(names = {"-t"}, description = "Test mode: Only display the command that will be executed")
+    @CommandLine.Option(names = {"-t", "--dry-run"}, description = "Test mode: Only display the command that will be executed")
     boolean testMode = false;
 
     @CommandLine.Option(names = {"--version"}, versionHelp = true, description = "display version info")
