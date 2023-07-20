@@ -1,7 +1,6 @@
 package brig.ck8s.cli.common;
 
 import javax.annotation.Nullable;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 

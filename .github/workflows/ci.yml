@@ -44,7 +44,7 @@ jobs:
           distribution: 'temurin'
           java-version: 17
       - name: Build & Test
-        run: ./mvnw -B test
+        run: ./mvnw -B clean install test
         env:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}

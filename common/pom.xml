@@ -58,17 +58,31 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
-            <version>${junit.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
-            <version>${junit.version}</version>
         </dependency>
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+            <resource>
+                <filtering>true</filtering>
+                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>io.takari.maven.plugins</groupId>

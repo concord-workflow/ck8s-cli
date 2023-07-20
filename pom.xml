@@ -9,6 +9,9 @@
     <properties>
         <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
 
+        <releaseUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2</releaseUrl>
+        <snapshotUrl>https://oss.sonatype.org/content/repositories/snapshots</snapshotUrl>
+
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
@@ -248,28 +251,12 @@
     </dependencyManagement>
 
     <build>
-        <resources>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${project.basedir}/src/main/resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-            <resource>
-                <filtering>true</filtering>
-                <directory>${project.basedir}/src/main/filtered-resources</directory>
-                <includes>
-                    <include>**/*</include>
-                </includes>
-            </resource>
-        </resources>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>io.takari.maven.plugins</groupId>
                     <artifactId>takari-lifecycle-plugin</artifactId>
-                    <version>2.0.8</version>
+                    <version>2.1.1</version>
                     <extensions>true</extensions>
                     <configuration>
                         <source>${maven.compiler.source}</source>
@@ -288,7 +275,6 @@
                         <tagNameFormat>@{project.version}</tagNameFormat>
                     </configuration>
                 </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
@@ -381,7 +367,7 @@
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>0.1.24</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>

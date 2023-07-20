@@ -1,6 +1,5 @@
 package brig.ck8s.cli.common;
 
-import brig.ck8s.cli.common.MapUtils;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
