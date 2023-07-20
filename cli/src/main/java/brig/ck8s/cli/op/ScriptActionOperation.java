@@ -24,35 +24,35 @@ public class ScriptActionOperation
         ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
         switch (actionType) {
             case UP -> {
-                return scriptAction.perform("ck8sUp");
+                return scriptAction.perform(cliOperationContext, "ck8sUp");
             }
             case DOWN -> {
-                return scriptAction.perform("ck8sDown");
+                return scriptAction.perform(cliOperationContext, "ck8sDown");
             }
             case DNSMASQ_SETUP -> {
-                return scriptAction.perform("dnsmasqSetup");
+                return scriptAction.perform(cliOperationContext, "dnsmasqSetup");
             }
             case DNSMASQ_RESTART -> {
-                return scriptAction.perform("dnsmasqRestart");
+                return scriptAction.perform(cliOperationContext, "dnsmasqRestart");
             }
             case DOCKER_REGISTRY -> {
-                return scriptAction.perform("ck8sDockerRegistry");
+                return scriptAction.perform(cliOperationContext, "ck8sDockerRegistry");
             }
             case INSTALL_CONCORD -> {
-                return scriptAction.perform("installConcord");
+                return scriptAction.perform(cliOperationContext, "installConcord");
             }
             case REINSTALL_CONCORD_AGENT_POOL -> {
-                return scriptAction.perform("reinstallConcordAgentPool");
+                return scriptAction.perform(cliOperationContext, "reinstallConcordAgentPool");
             }
             case CONSOLE -> {
                 ConcordProfile concordCfg = getConcordProfile(cliApp.getProfile());
                 Map<String, String> params = new HashMap<>();
                 params.put("CONCORD_URL", concordCfg.baseUrl());
                 params.put("CONCORD_ADMIN_TOKEN", concordCfg.apiKey());
-                return scriptAction.perform("ck8sConsole", params);
+                return scriptAction.perform(cliOperationContext, "ck8sConsole", params);
             }
             case AWS_KUBE_CONFIG -> {
-                return new AwsKubeconfigAction(ck8s, scriptAction).perform();
+                return new AwsKubeconfigAction(ck8s, scriptAction).perform(cliOperationContext);
             }
             default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
         }

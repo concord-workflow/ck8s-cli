@@ -25,33 +25,35 @@ public class LocalClusterOperation
 
         ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
 
-        scriptAction.perform("ck8sDown");
-        scriptAction.perform("ck8sUp");
+        scriptAction.perform(cliOperationContext, "ck8sDown");
+        scriptAction.perform(cliOperationContext, "ck8sUp");
 
         Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath())
                 .build("local");
 
-        RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), false);
+        if (!cliApp.isTestMode()) {
+            RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), false);
 
-        ExecutorService executor = Executors.newCachedThreadPool();
+            ExecutorService executor = Executors.newCachedThreadPool();
 
-        ConcordProcess process = flowExecutor.execute(Ck8sPayload.builder()
-                .location(payloadLocation)
-                .flow("cert-manager-local")
-                .build());
-        if (process != null) {
-            process.streamLogs(executor);
+            ConcordProcess process = flowExecutor.execute(Ck8sPayload.builder()
+                    .location(payloadLocation)
+                    .flow("cert-manager-local")
+                    .build());
+            if (process != null) {
+                process.streamLogs(executor);
+            }
+
+            process = flowExecutor.execute(Ck8sPayload.builder()
+                    .location(payloadLocation)
+                    .flow("polaris")
+                    .build());
+            if (process != null) {
+                process.streamLogs(executor);
+            }
         }
 
-        process = flowExecutor.execute(Ck8sPayload.builder()
-                .location(payloadLocation)
-                .flow("polaris")
-                .build());
-        if (process != null) {
-            process.streamLogs(executor);
-        }
-
-        scriptAction.perform("assertLocalCluster");
+        scriptAction.perform(cliOperationContext, "assertLocalCluster");
 
         return 0;
     }

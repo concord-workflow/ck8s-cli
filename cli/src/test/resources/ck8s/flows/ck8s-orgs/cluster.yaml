@@ -1,0 +1,19 @@
+version: "v1"
+k8sVersion: "1.23"
+alias: "local"
+clusterName: "local"
+profile: "local"
+account: "local"
+provider: "local"
+server: "https://kubernetes.default.svc"
+environment: "local"
+region: "local"
+domain: "${clusterRequest.alias}.localhost"
+
+certManager:
+  clusterIssuer: "selfsigned-ca-issuer"
+
+standardComponents:
+  - cert-manager
+  - ingress-nginx
+  - polaris

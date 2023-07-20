@@ -62,6 +62,11 @@ public class RunFlowOperation
                 .flow(cliApp.getFlow())
                 .build();
 
+        if (cliApp.isTestMode()) {
+            System.out.println("Running flow: %s on cluster: %s with profile: %s".formatted(flow, clusterAlias, profile));
+            return 0;
+        }
+
         return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(), payload, profile, verbosity, cliApp.isTestMode());
     }
 }

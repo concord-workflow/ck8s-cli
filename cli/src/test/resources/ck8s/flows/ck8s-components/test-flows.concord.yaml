@@ -1,0 +1,6 @@
+flows:
+  show:
+    - task: log
+      in:
+        msg: |
+          Show flow

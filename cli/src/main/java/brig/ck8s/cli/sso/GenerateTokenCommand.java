@@ -1,12 +1,13 @@
 package brig.ck8s.cli.sso;
 
+import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.cfg.CliConfigurationProvider;
-import brig.ck8s.cli.model.CliConfiguration;
-import brig.ck8s.cli.model.ConcordProfile;
 import brig.ck8s.cli.common.IOUtils;
-import brig.ck8s.cli.utils.LogUtils;
 import brig.ck8s.cli.common.MapUtils;
 import brig.ck8s.cli.common.Mapper;
+import brig.ck8s.cli.model.CliConfiguration;
+import brig.ck8s.cli.model.ConcordProfile;
+import brig.ck8s.cli.utils.LogUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -44,6 +45,9 @@ public class GenerateTokenCommand
 
     @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name")
     String profile;
+
+    @CommandLine.ParentCommand
+    private CliApp cliApp;
 
     private static List<ConcordProfile> createConcordTokens(String profile, String accessToken)
     {
@@ -317,6 +321,11 @@ public class GenerateTokenCommand
     public Integer call()
             throws Exception
     {
+        if (cliApp.isTestMode()) {
+            System.out.println("Generating OIDC token for profile: %s".formatted(profile));
+            return 0;
+        }
+
         CliConfiguration.Oidc oidc = CliConfigurationProvider.get().oidc();
         if (oidc == null) {
             LogUtils.error("Please specify oidc configuration in ck8s-cli configuration file");
