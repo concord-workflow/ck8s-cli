@@ -1,6 +1,7 @@
 package brig.ck8s.cli.actions;
 
 import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.op.CliOperationContext;
 import brig.ck8s.cli.utils.CliCommand;
 import brig.ck8s.cli.utils.TempPath;
 
@@ -66,13 +67,17 @@ public class ExecuteScriptAction
         Files.setPosixFilePermissions(path, permissions);
     }
 
-    public int perform(String functionName)
+    public int perform(CliOperationContext cliOperationContext, String functionName)
     {
-        return perform(functionName, Collections.emptyMap());
+        return perform(cliOperationContext, functionName, Collections.emptyMap());
     }
 
-    public int perform(String functionName, Map<String, String> extraEnv)
+    public int perform(CliOperationContext cliOperationContext, String functionName, Map<String, String> extraEnv)
     {
+        if (cliOperationContext.cliApp().isTestMode()) {
+            System.out.println("Executing action: " + functionName);
+            return 0;
+        }
         try (TempPath script = TempPath.createFile("main");
                 TempPath call = TempPath.createFile("call")) {
 

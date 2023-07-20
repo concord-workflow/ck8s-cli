@@ -2,6 +2,7 @@ package brig.ck8s.cli.actions;
 
 import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.model.ClusterInfo;
+import brig.ck8s.cli.op.CliOperationContext;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -26,13 +27,19 @@ public class AwsKubeconfigAction
         this.scriptAction = scriptAction;
     }
 
-    public int perform()
+    public int perform(CliOperationContext cliOperationContext)
     {
         Path kubeHome = Paths.get(System.getProperty("user.home")).resolve(".kube");
         if (Files.isDirectory(kubeHome)) {
             Arrays.stream(Objects.requireNonNull(kubeHome.toFile()
                             .listFiles((f, p) -> p.startsWith("ck8s-config-") && !p.equals("ck8s-config-local"))))
                     .forEach(File::delete);
+        }
+
+        String awsKubeconfigScriptFunction = "awsKubeconfig";
+        if (cliOperationContext.cliApp().isTestMode()) {
+            System.out.println("Executing action: %s".formatted(awsKubeconfigScriptFunction));
+            return 0;
         }
 
         Map<Path, ClusterInfo> clusters = getClusterList(ck8sPath);
@@ -50,7 +57,7 @@ public class AwsKubeconfigAction
             params.put("ACCOUNT", account);
             params.put("ALIAS", ci.alias());
 
-            scriptAction.perform("awsKubeconfig", params);
+            scriptAction.perform(cliOperationContext, awsKubeconfigScriptFunction, params);
         }
 
         return 0;
