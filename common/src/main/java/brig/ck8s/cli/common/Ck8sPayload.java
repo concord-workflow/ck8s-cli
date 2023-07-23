@@ -2,6 +2,7 @@ package brig.ck8s.cli.common;
 
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
@@ -48,6 +49,9 @@ public interface Ck8sPayload
     {
         return Collections.emptyMap();
     }
+
+    @Nullable
+    Ck8sPath cks8sPath();
 
     class Builder
             extends ImmutableCk8sPayload.Builder

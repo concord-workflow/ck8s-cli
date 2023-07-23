@@ -2,7 +2,7 @@ package brig.ck8s.cli.actions;
 
 import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.op.CliOperationContext;
-import brig.ck8s.cli.utils.CliCommand;
+import brig.ck8s.cli.common.CliCommand;
 import brig.ck8s.cli.utils.TempPath;
 
 import java.io.IOException;

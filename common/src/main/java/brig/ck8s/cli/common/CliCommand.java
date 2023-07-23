@@ -1,4 +1,4 @@
-package brig.ck8s.cli.utils;
+package brig.ck8s.cli.common;
 
 import java.io.BufferedReader;
 import java.io.IOException;

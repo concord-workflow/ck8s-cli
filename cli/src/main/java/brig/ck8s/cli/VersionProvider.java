@@ -1,6 +1,6 @@
 package brig.ck8s.cli;
 
-import brig.ck8s.cli.utils.CliCommand;
+import brig.ck8s.cli.common.CliCommand;
 import picocli.CommandLine;
 
 import java.io.IOException;

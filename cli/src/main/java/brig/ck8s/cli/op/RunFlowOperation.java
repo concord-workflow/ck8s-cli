@@ -1,6 +1,7 @@
 package brig.ck8s.cli.op;
 
 import brig.ck8s.cli.CliApp;
+import brig.ck8s.cli.VersionProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
 import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.common.Ck8sPayload;
@@ -57,7 +58,9 @@ public class RunFlowOperation
                 .build(clusterAlias);
 
         Ck8sPayload payload = Ck8sPayload.builder()
+                .cks8sPath(ck8s)
                 .location(payloadLocation)
+                .putArgs("ck8sCliVersion", VersionProvider.getCliVersion())
                 .putAllArgs(cliApp.getExtraVars())
                 .flow(cliApp.getFlow())
                 .build();

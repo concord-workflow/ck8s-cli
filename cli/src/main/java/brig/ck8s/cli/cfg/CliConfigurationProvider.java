@@ -85,6 +85,7 @@ public class CliConfigurationProvider
         }
     }
 
+    @Deprecated
     private static class OldCfgProvider
             implements Supplier<CliConfiguration>
     {
