@@ -1,6 +1,8 @@
 package brig.ck8s.cli.executor;
 
 import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.common.MapUtils;
+import brig.ck8s.cli.common.processors.ConcordProcessors;
 import brig.ck8s.cli.concord.ConcordServer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -31,10 +33,7 @@ import com.walmartlabs.concord.svm.ExecutionListener;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ConcordCliFlowExecutor
 {
@@ -63,10 +62,11 @@ public class ConcordCliFlowExecutor
                 .out(cfg.out());
     }
 
-    private static ProcessInfo processInfo()
+    private static ProcessInfo processInfo(List<String> activeProfiles)
     {
         return ProcessInfo.builder()
                 .sessionToken("test")
+                .activeProfiles(activeProfiles)
                 .build();
     }
 
@@ -91,6 +91,8 @@ public class ConcordCliFlowExecutor
 
     public int execute(Ck8sPayload payload)
     {
+        payload = new ConcordProcessors().process(payload);
+
         try {
             return _execute(payload);
         }
@@ -146,11 +148,14 @@ public class ConcordCliFlowExecutor
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
+        List<String> profiles = MapUtils.getList(payload.concord(), "activeProfiles", Collections.singletonList("default"));
         if (verbosity.verbose()) {
             dumpArguments(args);
+
+            System.out.println("Active profiles: " + profiles);
         }
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(), projectInfo())
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(profiles), projectInfo())
                 .instanceId(instanceId)
                 .build();
 

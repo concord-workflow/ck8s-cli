@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RemoteFlowExecutor
@@ -55,7 +57,20 @@ public class RemoteFlowExecutor
 
         archive(payload.location(), result);
         payload.args().forEach((name, value) -> result.put("arguments." + name, value));
-        result.putAll(payload.concord());
+        result.putAll(serializeConocrdProcessParams(payload.concord()));
+        return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> serializeConocrdProcessParams(Map<String, Object> params) {
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, Object> e : params.entrySet()) {
+            Object value = e.getValue();
+            if (value instanceof List) {
+                value = String.join(",", (List<String>)value);
+            }
+            result.put(e.getKey(), value);
+        }
         return result;
     }
 
