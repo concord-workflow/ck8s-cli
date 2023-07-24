@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>brig.ck8s.cli</groupId>
     <artifactId>parent</artifactId>
-    <version>0.1.31-SNAPSHOT</version>
+    <version>0.1.31</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -13,7 +13,7 @@
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>HEAD</tag>
+        <tag>0.1.31</tag>
     </scm>
 
     <distributionManagement>
@@ -364,7 +364,7 @@
                                     <include>com.fasterxml.jackson.datatype:jackson-datatype-guava</include>
                                 </includes>
                             </bannedDependencies>
-                            <banDuplicatePomDependencyVersions></banDuplicatePomDependencyVersions>
+                            <banDuplicatePomDependencyVersions />
                             <requireUpperBoundDeps>
                                 <excludes>
                                     <exclude>com.google.guava:guava</exclude>
