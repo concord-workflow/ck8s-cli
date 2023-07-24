@@ -38,7 +38,7 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
 
         try {
             List<String> args = Arrays.asList("git", "rev-parse", "--abbrev-ref", "HEAD");
-            return CliCommand.grabOut(args, repoPath);
+            return CliCommand.grabOut(args, repoPath).trim();
         } catch (Exception e) {
             System.out.println("getBranch error: " + e.getMessage());
             return null;
@@ -52,7 +52,7 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
 
         try {
             List<String> args = Arrays.asList("git", "rev-parse", "HEAD");
-            return CliCommand.grabOut(args, repoPath);
+            return CliCommand.grabOut(args, repoPath).trim();
         } catch (Exception e) {
             System.out.println("getSha error: " + e.getMessage());
             return null;
