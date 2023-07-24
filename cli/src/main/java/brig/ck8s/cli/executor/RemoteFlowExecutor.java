@@ -57,12 +57,12 @@ public class RemoteFlowExecutor
 
         archive(payload.location(), result);
         payload.args().forEach((name, value) -> result.put("arguments." + name, value));
-        result.putAll(serializeConocrdProcessParams(payload.concord()));
+        result.putAll(serializeConcordProcessParams(payload.concord()));
         return result;
     }
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> serializeConocrdProcessParams(Map<String, Object> params) {
+    private static Map<String, Object> serializeConcordProcessParams(Map<String, Object> params) {
         Map<String, Object> result = new HashMap<>();
         for (Map.Entry<String, Object> e : params.entrySet()) {
             Object value = e.getValue();
