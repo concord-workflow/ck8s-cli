@@ -19,6 +19,11 @@ public final class MapUtils
         return get(m, path, Collections.emptyList(), List.class);
     }
 
+    public static <T> List<T> getList(Map<String, Object> m, String path, List<T> defaultValue)
+    {
+        return get(m, path, defaultValue, List.class);
+    }
+
     @SuppressWarnings("unchecked")
     public static Map<String, Object> getMap(Map<String, Object> m, String path, Map<String, Object> defaultValue)
     {
