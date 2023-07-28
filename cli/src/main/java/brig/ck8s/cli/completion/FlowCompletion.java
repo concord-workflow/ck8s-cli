@@ -40,7 +40,8 @@ public class FlowCompletion
             return Collections.emptyIterator();
         }
 
-        return Ck8sUtils.streamConcordYaml(Ck8sRepos.from(ck8sDir, ck8sExtDir))
+        return Ck8sUtils.streamConcordYaml(
+                        new Ck8sRepos(ck8sDir, ck8sExtDir))
                 .flatMap(p -> flowNames(p).stream())
                 .collect(Collectors.toSet()).iterator();
     }

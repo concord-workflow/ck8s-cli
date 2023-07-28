@@ -16,18 +16,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class Ck8sUtils
 {
-    public static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
+    private static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
+    private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
-    public static final String CK_8_S_COMPONENTS_TESTS_DIR_NAME = "ck8s-components-tests";
+    private static final String CK_8_S_COMPONENTS_TESTS_DIR_NAME = "ck8s-components-tests";
 
     private static final List<String> ignorePatterns = Arrays.asList(".*\\.pdf$", ".*\\.png$", ".*\\.jpg$");
-
-    private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
     public static Stream<Path> streamConcordYaml(Ck8sRepos ck8sPath)
     {
@@ -38,7 +38,17 @@ public class Ck8sUtils
 
     private static Stream<Path> streamConcordYaml(Path root)
     {
-        if (root == null || !Files.exists(root) || !Files.isDirectory(root)) {
+        return streamConcordYaml(Optional.of(root));
+    }
+
+    private static Stream<Path> streamConcordYaml(Optional<Path> rootOpt)
+    {
+        if (rootOpt.isEmpty()) {
+            return Stream.empty();
+        }
+
+        Path root = rootOpt.get();
+        if (!Files.exists(root) || !Files.isDirectory(root)) {
             return Stream.empty();
         }
 
@@ -62,6 +72,16 @@ public class Ck8sUtils
 
     private static Stream<Path> streamClusterYaml(Path root)
     {
+        return streamClusterYaml(Optional.of(root));
+    }
+
+    private static Stream<Path> streamClusterYaml(Optional<Path> rootOpt)
+    {
+        if (rootOpt.isEmpty()) {
+            return Stream.empty();
+        }
+
+        Path root = rootOpt.get();
         if (root == null || !Files.exists(root) || !Files.isDirectory(root)) {
             return Stream.empty();
         }
@@ -127,7 +147,7 @@ public class Ck8sUtils
         brig.ck8s.cli.common.IOUtils.deleteRecursively(ck8sTestResourcesDir);
     }
 
-    private static void copyComponents(Path sourceCk8sComponents, Path sourceCk8sExtComponents, Path target, String componentsDirName)
+    private static void copyComponents(Path sourceCk8sComponents, Optional<Path> sourceCk8sExtComponentsOpt, Path target, String componentsDirName)
     {
         Path concordDir = target.resolve("concord");
         try {
@@ -159,7 +179,12 @@ public class Ck8sUtils
             throw new RuntimeException("Error copying ck8s components '" + sourceCk8sComponents + "' to '" + componentsDir + "': " + e.getMessage(), e);
         }
 
-        if (sourceCk8sExtComponents != null && Files.isDirectory(sourceCk8sExtComponents)) {
+        if (sourceCk8sExtComponentsOpt.isEmpty()) {
+            return;
+        }
+
+        Path sourceCk8sExtComponents = sourceCk8sExtComponentsOpt.get();
+        if (Files.isDirectory(sourceCk8sExtComponents)) {
             try {
                 copyComponentsYaml(sourceCk8sExtComponents, concordDir);
                 IOUtils.copy(sourceCk8sExtComponents, componentsDir, ignorePatterns, null, StandardCopyOption.REPLACE_EXISTING);

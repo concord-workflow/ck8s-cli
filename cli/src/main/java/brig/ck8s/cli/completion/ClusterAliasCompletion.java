@@ -24,7 +24,7 @@ public class ClusterAliasCompletion
             return Collections.emptyIterator();
         }
 
-        return getClusterList(Ck8sRepos.from(ck8sDir, ck8sExtDir))
+        return getClusterList(new Ck8sRepos(ck8sDir, ck8sExtDir))
                 .values()
                 .stream()
                 .map(ClusterInfo::alias)

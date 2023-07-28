@@ -2,6 +2,8 @@ package brig.ck8s.cli.common;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -18,6 +20,11 @@ public class Ck8sRepos
 
     private final Path ck8s;
     private final Optional<Path> ck8sExt;
+
+    public Ck8sRepos(String ck8s, String ck8sExt)
+    {
+        this(Path.of(ck8s), Optional.ofNullable(ck8sExt).map(Path::of));
+    }
 
     public Ck8sRepos(Path ck8s, Optional<Path> ck8sExt)
     {
@@ -48,6 +55,16 @@ public class Ck8sRepos
         return ck8s.resolve(CK8S_ORGS_DIR);
     }
 
+    public Optional<String> ck8sDirSha()
+    {
+        return getGitRepositorySha(ck8sDir());
+    }
+
+    public Optional<String> ck8sDirBranch()
+    {
+        return getGitRepositoryBranch(ck8sDir());
+    }
+
     public Path ck8sComponents()
     {
         return ck8s.resolve(CK8S_COMPONENTS);
@@ -66,6 +83,18 @@ public class Ck8sRepos
     public Optional<Path> ck8sExtOrgDir()
     {
         return ck8sExt.map(p -> p.resolve(CK8S_EXT_ORGS_DIR));
+    }
+
+    public Optional<String> ck8sExtDirSha()
+    {
+        return ck8sExtDir()
+                .flatMap(this::getGitRepositorySha);
+    }
+
+    public Optional<String> ck8sExtDirBranch()
+    {
+        return ck8sExtDir()
+                .flatMap(this::getGitRepositoryBranch);
     }
 
     public Optional<Path> ck8sExtComponents()
@@ -107,10 +136,42 @@ public class Ck8sRepos
         return p;
     }
 
+    private Optional<String> getGitRepositoryBranch(Path repoPath)
+    {
+        try {
+            List<String> args = Arrays.asList("git", "rev-parse", "--abbrev-ref", "HEAD");
+            return Optional.of(CliCommand.grabOut(args, repoPath).trim());
+        }
+        catch (Exception e) {
+            System.out.println("getBranch error: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<String> getGitRepositorySha(Path repoPath)
+    {
+
+        try {
+            List<String> args = Arrays.asList("git", "rev-parse", "HEAD");
+            return Optional.of(CliCommand.grabOut(args, repoPath).trim());
+        }
+        catch (Exception e) {
+            System.out.println("getSha error: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     private void assertDirectory(String prefix, Path p)
     {
         if (!Files.isDirectory(p)) {
             throw new RuntimeException(prefix + " '" + p + "' is not a directory or does not exists");
         }
+    }
+
+    @FunctionalInterface
+    public interface CheckedFunction<T, R>
+    {
+        R apply(T t)
+                throws Exception;
     }
 }
