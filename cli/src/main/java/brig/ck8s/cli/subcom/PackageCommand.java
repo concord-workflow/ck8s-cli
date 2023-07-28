@@ -4,6 +4,7 @@ import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.VersionProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
 import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.common.processors.ConcordProcessors;
 import brig.ck8s.cli.model.ClusterInfo;
 import brig.ck8s.cli.op.CliOperationContext;
@@ -39,7 +40,17 @@ public class PackageCommand
             description = "concord instance profile name")
     String packageFileTarget;
 
+    @CommandLine.Option(
+            names = {"--ignore-unstable"},
+            description = "ignore unstable ck8s and ck8s-ext src repositories state")
+    boolean ignoreUnstable = false;
+
     public static Ck8sPayload createCk8sPayload(CliOperationContext cliOperationContext, String flowName, Map<String, String> extraArgs, boolean withTests, String... clusterAliases)
+    {
+        return createCk8sPayload(cliOperationContext, flowName, extraArgs, withTests, true, clusterAliases);
+    }
+
+    public static Ck8sPayload createCk8sPayload(CliOperationContext cliOperationContext, String flowName, Map<String, String> extraArgs, boolean withTests, boolean ignoreUnstable, String... clusterAliases)
     {
         CliApp cliApp = cliOperationContext.cliApp();
 
@@ -48,8 +59,9 @@ public class PackageCommand
             deps.addAll(INPUT_PARAMS_ASSERT_DEPENDENCIES);
         }
 
+        Ck8sRepos ck8sPath = cliOperationContext.ck8sPath();
         Ck8sFlowBuilder ck8sFlowBuilder = Ck8sFlowBuilder
-                .builder(cliOperationContext.ck8sPath(), cliApp.getTargetRootPath())
+                .builder(ck8sPath, cliApp.getTargetRootPath())
                 .includeTests(withTests)
                 .withDependencies(deps)
                 .debug(cliOperationContext.verbosity().verbose())
@@ -58,6 +70,20 @@ public class PackageCommand
         Path ck8sPackagePath = cliApp.getCk8sPackagePath();
         if (nonNull(ck8sPackagePath)) {
             ck8sFlowBuilder.withCk8sPackage(ck8sPackagePath);
+        }
+
+        if (!ignoreUnstable && !ck8sPath.ck8sDirRepoStable()) {
+            throw new RuntimeException(
+                    "Can't build package out of non stable ck8s repository dir: %s"
+                            .formatted(ck8sPath.ck8sDir()));
+        }
+
+        if (!ignoreUnstable
+                && ck8sPath.ck8sExtDir().isPresent()
+                && !ck8sPath.ck8sExtDirRepoStable()) {
+            throw new RuntimeException(
+                    "Can't build package out of non stable ck8s-ext repository dir: %s"
+                            .formatted(ck8sPath.ck8sExtDir().get()));
         }
 
         Path packagePath = ck8sFlowBuilder.build();
@@ -88,6 +114,7 @@ public class PackageCommand
                 cliApp.getExtraVars(),
                 // We always add tests when we build package
                 true,
+                ignoreUnstable,
                 clusterAliases);
 
         Path packageTarget;
