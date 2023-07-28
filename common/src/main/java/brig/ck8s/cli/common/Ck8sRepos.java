@@ -1,5 +1,6 @@
 package brig.ck8s.cli.common;
 
+import brig.ck8s.cli.common.metadata.Ck8sMetadata;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Constants;
 
@@ -72,6 +73,11 @@ public class Ck8sRepos
         return ck8s.resolve(CK8S_ORGS_DIR);
     }
 
+    public boolean ck8sDirRepoStable()
+    {
+        return isGitRepositoryStable(ck8sDir());
+    }
+
     public Optional<String> ck8sDirSha()
     {
         return getGitRepositorySha(ck8sDir());
@@ -100,6 +106,13 @@ public class Ck8sRepos
     public Optional<Path> ck8sExtOrgDir()
     {
         return ck8sExt.map(p -> p.resolve(CK8S_EXT_ORGS_DIR));
+    }
+
+    public boolean ck8sExtDirRepoStable()
+    {
+        return ck8sExtDir()
+                .map(this::isGitRepositoryStable)
+                .orElse(false);
     }
 
     public Optional<String> ck8sExtDirSha()
@@ -139,6 +152,11 @@ public class Ck8sRepos
         return clusterYaml.getParent().getParent().resolve("account.yaml");
     }
 
+    public Ck8sMetadata asCk8sMetadata()
+    {
+        return new Ck8sMetadata(this);
+    }
+
     public Path relativize(Path p)
     {
         if (p.startsWith(ck8s)) {
@@ -151,6 +169,15 @@ public class Ck8sRepos
         }
 
         return p;
+    }
+
+    private boolean isGitRepositoryStable(Path repoPath)
+    {
+        return gitRepositoryOperation(
+                "git status",
+                repoPath,
+                git -> git.status().call().getUncommittedChanges().isEmpty())
+                .orElse(false);
     }
 
     private Optional<String> getGitRepositoryBranch(Path repoPath)

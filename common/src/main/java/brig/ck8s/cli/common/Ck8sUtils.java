@@ -1,5 +1,8 @@
 package brig.ck8s.cli.common;
 
+import brig.ck8s.cli.common.metadata.Ck8sMetadata;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.imports.NoopImportManager;
@@ -22,6 +25,10 @@ import java.util.stream.Stream;
 
 public class Ck8sUtils
 {
+    private static ObjectMapper JSON_MAPPER = new ObjectMapper()
+            .registerModule(new Jdk8Module());
+
+    private static final String METADATA_JSON = "metadata.json";
     private static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
     private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
@@ -129,6 +136,20 @@ public class Ck8sUtils
         ConfigurationUtils.set(concordYml, dependencies, "configuration", "dependencies");
 
         return concordYml;
+    }
+
+    public static Ck8sMetadata readCk8sMetadata(Path packageDir)
+            throws IOException
+    {
+        Path metadataFile = packageDir.resolve(METADATA_JSON);
+        return JSON_MAPPER.readValue(metadataFile.toFile(), Ck8sMetadata.class);
+    }
+
+    public static void writeCk8sMetadata(Ck8sRepos ck8sPath, Path packageDir)
+            throws IOException
+    {
+        Path metadataFile = packageDir.resolve(METADATA_JSON);
+        JSON_MAPPER.writeValue(metadataFile.toFile(), ck8sPath.asCk8sMetadata());
     }
 
     public static void copyComponents(Ck8sRepos ck8sPath, Path target)

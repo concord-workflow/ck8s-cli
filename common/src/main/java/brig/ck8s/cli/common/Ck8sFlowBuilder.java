@@ -15,6 +15,7 @@ import static brig.ck8s.cli.common.Ck8sPayload.createClusterConcordYamlFileName;
 import static brig.ck8s.cli.common.Ck8sUtils.copyComponents;
 import static brig.ck8s.cli.common.Ck8sUtils.copyTestComponents;
 import static brig.ck8s.cli.common.Ck8sUtils.removeTestComponents;
+import static brig.ck8s.cli.common.Ck8sUtils.writeCk8sMetadata;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Objects.nonNull;
 
@@ -90,6 +91,12 @@ public class Ck8sFlowBuilder
             copyComponents(ck8sPath, packageDir);
             if (includeTests) {
                 copyTestComponents(ck8sPath, packageDir);
+            }
+            try {
+                writeCk8sMetadata(ck8sPath, packageDir);
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Failed to write ck8s metadata", e);
             }
         }
 
