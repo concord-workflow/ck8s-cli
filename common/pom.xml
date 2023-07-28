@@ -45,7 +45,10 @@
             <artifactId>error_prone_annotations</artifactId>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+        </dependency>
         <!-- Immutables -->
         <dependency>
             <groupId>org.immutables</groupId>
