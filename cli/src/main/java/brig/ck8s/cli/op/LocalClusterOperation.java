@@ -6,6 +6,7 @@ import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.concord.ConcordProcess;
 import brig.ck8s.cli.executor.remote.RemoteFlowExecutor;
+import brig.ck8s.cli.subcom.pack.Ck8sPackageBuilder;
 import com.walmartlabs.concord.ApiException;
 
 import java.util.Map;
@@ -13,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static brig.ck8s.cli.cfg.CliConfigurationProvider.getConcordProfile;
-import static brig.ck8s.cli.subcom.PackageCommand.createCk8sPayload;
 
 public class LocalClusterOperation
         implements CliOperation
@@ -49,12 +49,13 @@ public class LocalClusterOperation
             String flowName)
     {
         try {
-            Ck8sPayload payload = createCk8sPayload(
-                    cliOperationContext,
-                    flowName,
-                    Map.of(),
-                    false,
-                    "local");
+            Ck8sPayload payload = Ck8sPackageBuilder
+                    .builder(cliOperationContext)
+                    .withOverrideFlowName(flowName)
+                    .withOverrideExtraArgs(Map.of())
+                    .withOverrideWithTests(false)
+                    .withOverrideClusterAliases("local")
+                    .build();
             ConcordProcess process = flowExecutor.startRemoteProcess(payload);
             if (process != null) {
                 process.streamLogs(executor);

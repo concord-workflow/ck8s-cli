@@ -13,7 +13,7 @@ import brig.ck8s.cli.op.LocalClusterOperation;
 import brig.ck8s.cli.op.RunFlowOperation;
 import brig.ck8s.cli.op.ScriptActionOperation;
 import brig.ck8s.cli.subcom.GenerateTokenCommand;
-import brig.ck8s.cli.subcom.PackageCommand;
+import brig.ck8s.cli.subcom.pack.PackageCommand;
 import brig.ck8s.cli.subcom.selfupdate.SelfUpdateCommand;
 import brig.ck8s.cli.utils.EnumCompletionCandidates;
 import brig.ck8s.cli.utils.EnumConverter;
@@ -23,6 +23,7 @@ import picocli.CommandLine;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import static java.util.Objects.nonNull;
@@ -106,7 +107,9 @@ public class CliApp
 
     public String getFlow()
     {
-        return cliOperationArgs.flow;
+        return Optional.ofNullable(cliOperationArgs)
+                .map(args -> args.flow)
+                .orElse(null);
     }
 
     public ActionType getActionType()
