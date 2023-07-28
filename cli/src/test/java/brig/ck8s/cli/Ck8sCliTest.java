@@ -1,5 +1,7 @@
 package brig.ck8s.cli;
 
+import brig.ck8s.cli.common.Ck8sUtils;
+import brig.ck8s.cli.common.metadata.Ck8sMetadata;
 import com.walmartlabs.concord.common.IOUtils;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +13,7 @@ import static brig.ck8s.cli.Ck8sCliAssertions.assertRunAction;
 import static brig.ck8s.cli.Ck8sCliAssertions.assertSuccess;
 import static java.nio.file.Files.isDirectory;
 import static java.nio.file.Files.isRegularFile;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Ck8sCliTest
@@ -148,7 +151,9 @@ public class Ck8sCliTest
         assertSuccess(
                 "--ck8s-root " + ck8sPath + " "
                         + "--ck8s-ext-root " + ck8sExtPath + " "
-                        + "package --dest-file ./target/package.zip")
+                        + "package "
+                        + "--dest-file ./target/package.zip" + " "
+                        + "--ignore-unstable")
                 .assertOutContainsMatchingLine("Create Ck8s package: .*");
 
         Path packageFile = Path.of("./target/package.zip");
@@ -172,6 +177,14 @@ public class Ck8sCliTest
         assertTrue(
                 isDirectory(unpackedPackage.resolve("ck8s-components-tests")),
                 "Missing package ck8s-components dir");
+        assertTrue(
+                isRegularFile(unpackedPackage.resolve("metadata.json")),
+                "Missing package metadata file");
+
+        Ck8sMetadata metadata = Ck8sUtils.readCk8sMetadata(unpackedPackage);
+        assertEquals(metadata.ck8SCli().version(), VersionProvider.getCliVersion());
+        assertTrue(metadata.ck8sRepository().isEmpty());
+        assertTrue(metadata.ck8sExtRepository().isEmpty());
 
         assertSuccess("-f show -c local -p default --dry-run "
                 + "--ck8s-root " + ck8sPath + " "
