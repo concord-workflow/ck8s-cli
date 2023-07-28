@@ -19,18 +19,20 @@ public class Ck8sRepos
     private static final Path CK8S_EXT_COMPONENTS = Path.of("ck8s-components");
     private static final Path CK8S_EXT_COMPONENTS_TESTS = Path.of("ck8s-components-tests");
 
+    private final String ck8sCliVersion;
     private final Path ck8s;
     private final Optional<Path> ck8sExt;
 
-    public Ck8sRepos(String ck8s, String ck8sExt)
+    public Ck8sRepos(String ck8sCliVersion, String ck8s, String ck8sExt)
     {
-        this(Path.of(ck8s), Optional.ofNullable(ck8sExt).map(Path::of));
+        this(ck8sCliVersion, Path.of(ck8s), Optional.ofNullable(ck8sExt).map(Path::of));
     }
 
-    public Ck8sRepos(Path ck8s, Optional<Path> ck8sExt)
+    public Ck8sRepos(String ck8sCliVersion, Path ck8s, Optional<Path> ck8sExt)
     {
         assertDirectory("ck8s:", ck8s);
 
+        this.ck8sCliVersion = requireNonNull(ck8sCliVersion, "ck8sCliVersion is null");
         this.ck8s = normalize(ck8s);
         this.ck8sExt = requireNonNull(ck8sExt, "ck8sExt is null")
                 .map(this::normalize)
@@ -44,6 +46,20 @@ public class Ck8sRepos
         }
 
         return p.toAbsolutePath().normalize();
+    }
+
+    private static Optional<Path> dirOrNull(Path p)
+    {
+        if (p == null || !Files.isDirectory(p)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(p);
+    }
+
+    public String getCk8sCliVersion()
+    {
+        return ck8sCliVersion;
     }
 
     public Path ck8sDir()

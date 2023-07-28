@@ -14,6 +14,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static brig.ck8s.cli.VersionProvider.getCliVersion;
+
 public class FlowCompletion
         implements Iterable<String>
 {
@@ -41,7 +43,7 @@ public class FlowCompletion
         }
 
         return Ck8sUtils.streamConcordYaml(
-                        new Ck8sRepos(ck8sDir, ck8sExtDir))
+                        new Ck8sRepos(getCliVersion(), ck8sDir, ck8sExtDir))
                 .flatMap(p -> flowNames(p).stream())
                 .collect(Collectors.toSet()).iterator();
     }
