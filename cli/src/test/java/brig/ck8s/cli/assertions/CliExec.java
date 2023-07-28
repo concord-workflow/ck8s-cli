@@ -66,7 +66,7 @@ class CliExec
                 new PrintStream(this.out, true, UTF_8),
                 new PrintStream(this.err, true, UTF_8));
 
-        this.oryginalRuntime = Runtime.getRuntime();
+        this.oryginalRuntime = getRuntime();
         Runtime interceptedRuntime = spy(oryginalRuntime);
         Mockito.doAnswer(
                         invocationOnMock -> {
@@ -125,8 +125,24 @@ class CliExec
         System.setErr(err);
     }
 
+    private Runtime getRuntime()
+    {
+        synchronized (Runtime.class) {
+            return Runtime.getRuntime();
+        }
+    }
+
     private void overrideRuntime(Runtime runtime)
     {
-        unsafe.putObject(runtimeFieldBase, runtimeFieldOffset, runtime);
+        synchronized (Runtime.class) {
+            long ts = System.currentTimeMillis();
+            do {
+                unsafe.putObject(runtimeFieldBase, runtimeFieldOffset, runtime);
+                if (System.currentTimeMillis() - ts > 5000) {
+                    throw new RuntimeException("Failed to override Runtime for CLi testing");
+                }
+            }
+            while (!getRuntime().equals(runtime));
+        }
     }
 }
