@@ -1,13 +1,13 @@
 package brig.ck8s.cli.common;
 
-import javax.annotation.Nullable;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+
+import static java.util.Objects.requireNonNull;
 
 public class Ck8sRepos
 {
-
     private static final Path CK8S_CORE = Path.of("flows");
     private static final Path CK8S_ORGS_DIR = CK8S_CORE.resolve("ck8s-orgs");
     private static final Path CK8S_COMPONENTS = CK8S_CORE.resolve("ck8s-components");
@@ -15,24 +15,21 @@ public class Ck8sRepos
     private static final Path CK8S_EXT_ORGS_DIR = Path.of("ck8s-orgs");
     private static final Path CK8S_EXT_COMPONENTS = Path.of("ck8s-components");
     private static final Path CK8S_EXT_COMPONENTS_TESTS = Path.of("ck8s-components-tests");
+
     private final Path ck8s;
-    @Nullable
-    private final Path ck8sExt;
+    private final Optional<Path> ck8sExt;
 
-    public Ck8sRepos(Path ck8s, Path ck8sExt)
+    public Ck8sRepos(Path ck8s, Optional<Path> ck8sExt)
     {
+        assertDirectory("ck8s:", ck8s);
+
         this.ck8s = normalize(ck8s);
-        this.ck8sExt = dirOrNull(normalize(ck8sExt));
-
-        assertDirectory("ck8s:", this.ck8s);
+        this.ck8sExt = requireNonNull(ck8sExt, "ck8sExt is null")
+                .map(this::normalize)
+                .filter(Files::isDirectory);
     }
 
-    public static Ck8sRepos from(String ck8sDir, String ck8sExtDir)
-    {
-        return new Ck8sRepos(Path.of(ck8sDir), ck8sExtDir != null ? Path.of(ck8sExtDir) : null);
-    }
-
-    private static Path normalize(Path p)
+    private Path normalize(Path p)
     {
         if (p == null) {
             return null;
@@ -41,45 +38,9 @@ public class Ck8sRepos
         return p.toAbsolutePath().normalize();
     }
 
-    private static Path dirOrNull(Path p)
-    {
-        if (p == null) {
-            return null;
-        }
-
-        if (!Files.isDirectory(p)) {
-            return null;
-        }
-
-        return p;
-    }
-
-    private static void assertDirectory(String prefix, Path p)
-    {
-        if (!Files.isDirectory(p)) {
-            throw new RuntimeException(prefix + " '" + p + "' is not a directory or does not exists");
-        }
-    }
-
     public Path ck8sDir()
     {
         return ck8s;
-    }
-
-    @Nullable
-    public Path ck8sExtDir()
-    {
-        return ck8sExt;
-    }
-
-    @Nullable
-    public Path ck8sExtOrgDir()
-    {
-        if (ck8sExt == null) {
-            return null;
-        }
-
-        return ck8sExt.resolve(CK8S_EXT_ORGS_DIR);
     }
 
     public Path ck8sOrgDir()
@@ -97,24 +58,24 @@ public class Ck8sRepos
         return ck8s.resolve(CK8S_COMPONENTS_TESTS);
     }
 
-    @Nullable
-    public Path ck8sExtComponents()
+    public Optional<Path> ck8sExtDir()
     {
-        if (ck8sExt == null) {
-            return null;
-        }
-
-        return ck8sExt.resolve(CK8S_EXT_COMPONENTS);
+        return ck8sExt;
     }
 
-    @Nullable
-    public Path ck8sExtComponentsTests()
+    public Optional<Path> ck8sExtOrgDir()
     {
-        if (ck8sExt == null) {
-            return null;
-        }
+        return ck8sExt.map(p -> p.resolve(CK8S_EXT_ORGS_DIR));
+    }
 
-        return ck8sExt.resolve(CK8S_EXT_COMPONENTS_TESTS);
+    public Optional<Path> ck8sExtComponents()
+    {
+        return ck8sExt.map(p -> p.resolve(CK8S_EXT_COMPONENTS));
+    }
+
+    public Optional<Path> ck8sExtComponentsTests()
+    {
+        return ck8sExt.map(p -> p.resolve(CK8S_EXT_COMPONENTS_TESTS));
     }
 
     public Path defaultCfg()
@@ -137,10 +98,19 @@ public class Ck8sRepos
         if (p.startsWith(ck8s)) {
             return ck8s.relativize(p);
         }
-        else if (ck8sExt != null && p.startsWith(ck8sExt)) {
-            return ck8sExt.relativize(p);
+        else if (ck8sExt
+                .map(path -> p.startsWith(path))
+                .orElse(false)) {
+            return ck8sExt.map(path -> path.relativize(p)).get();
         }
 
         return p;
+    }
+
+    private void assertDirectory(String prefix, Path p)
+    {
+        if (!Files.isDirectory(p)) {
+            throw new RuntimeException(prefix + " '" + p + "' is not a directory or does not exists");
+        }
     }
 }
