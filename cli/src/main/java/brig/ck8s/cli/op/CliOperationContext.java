@@ -1,6 +1,7 @@
 package brig.ck8s.cli.op;
 
 import brig.ck8s.cli.CliApp;
+import brig.ck8s.cli.VersionProvider;
 import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.utils.LogUtils;
 import com.walmartlabs.concord.cli.Verbosity;
@@ -31,6 +32,7 @@ public record CliOperationContext(Ck8sRepos ck8sPath, Verbosity verbosity, CliAp
     private static Ck8sRepos getCk8sPath(Verbosity verbosity, CliApp cliApp)
     {
         Ck8sRepos ck8s = new Ck8sRepos(
+                VersionProvider.getCliVersion(),
                 cliApp.getCk8sPath(),
                 Optional.ofNullable(cliApp.getCk8sExtPath()));
         if (verbosity.verbose()) {
