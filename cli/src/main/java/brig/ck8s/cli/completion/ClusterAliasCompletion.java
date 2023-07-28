@@ -8,6 +8,7 @@ import brig.ck8s.cli.utils.LogUtils;
 import java.util.Collections;
 import java.util.Iterator;
 
+import static brig.ck8s.cli.VersionProvider.getCliVersion;
 import static brig.ck8s.cli.op.ClusterListOperation.getClusterList;
 
 public class ClusterAliasCompletion
@@ -24,7 +25,7 @@ public class ClusterAliasCompletion
             return Collections.emptyIterator();
         }
 
-        return getClusterList(new Ck8sRepos(ck8sDir, ck8sExtDir))
+        return getClusterList(new Ck8sRepos(getCliVersion(), ck8sDir, ck8sExtDir))
                 .values()
                 .stream()
                 .map(ClusterInfo::alias)
