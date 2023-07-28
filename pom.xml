@@ -32,6 +32,7 @@
         <gson.version>2.10</gson.version>
         <guice.version>5.1.0</guice.version>
         <httpclient.version>4.5.14</httpclient.version>
+        <jgit.version>6.6.0.202305301015-r</jgit.version>
         <immutables.version>2.9.2</immutables.version>
         <jackson.version>2.14.1</jackson.version>
         <jakarta.activation-api.version>2.1.0</jakarta.activation-api.version>
@@ -277,6 +278,11 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>${httpclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jgit</groupId>
+                <artifactId>org.eclipse.jgit</artifactId>
+                <version>${jgit.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.containers</groupId>

@@ -1,9 +1,10 @@
 package brig.ck8s.cli.common;
 
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Constants;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
@@ -138,25 +139,36 @@ public class Ck8sRepos
 
     private Optional<String> getGitRepositoryBranch(Path repoPath)
     {
-        try {
-            List<String> args = Arrays.asList("git", "rev-parse", "--abbrev-ref", "HEAD");
-            return Optional.of(CliCommand.grabOut(args, repoPath).trim());
-        }
-        catch (Exception e) {
-            System.out.println("getBranch error: " + e.getMessage());
-            return Optional.empty();
-        }
+        return gitRepositoryOperation(
+                "get branch",
+                repoPath,
+                git -> git.getRepository().getBranch());
     }
 
     private Optional<String> getGitRepositorySha(Path repoPath)
     {
+        return gitRepositoryOperation(
+                "get sha",
+                repoPath,
+                git -> git.getRepository()
+                        .resolve(Constants.HEAD)
+                        .getName());
+    }
 
+    private <T> Optional<T> gitRepositoryOperation(
+            String operationDesc,
+            Path repoPath,
+            CheckedFunction<Git, T> operation)
+    {
         try {
-            List<String> args = Arrays.asList("git", "rev-parse", "HEAD");
-            return Optional.of(CliCommand.grabOut(args, repoPath).trim());
+            try (Git gitRepo = Git.open(repoPath.toFile())) {
+                return Optional.of(operation.apply(gitRepo));
+            }
         }
         catch (Exception e) {
-            System.out.println("getSha error: " + e.getMessage());
+            System.out.println(
+                    "git operation[%s] error: %s"
+                            .formatted(operationDesc, e.getMessage()));
             return Optional.empty();
         }
     }
