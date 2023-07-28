@@ -23,8 +23,8 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
         Map<String, Object> args = new HashMap<>();
         args.put("processCk8sBranch", getBranch(ck8sPath.ck8sDir()));
         args.put("processCk8sCommit", getSha(ck8sPath.ck8sDir()));
-        args.put("processCk8sExtBranch", getBranch(ck8sPath.ck8sExtDir()));
-        args.put("processCk8sExtCommit", getSha(ck8sPath.ck8sExtDir()));
+        args.put("processCk8sExtBranch", ck8sPath.ck8sExtDir().map(Ck8sInfoProcessor::getBranch).orElse(null));
+        args.put("processCk8sExtCommit", ck8sPath.ck8sExtDir().map(Ck8sInfoProcessor::getSha).orElse(null));
 
         return Ck8sPayload.builder().from(payload)
                 .putAllArgs(args.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
