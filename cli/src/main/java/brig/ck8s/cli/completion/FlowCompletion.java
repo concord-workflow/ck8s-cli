@@ -1,7 +1,7 @@
 package brig.ck8s.cli.completion;
 
 import brig.ck8s.cli.cfg.CliConfigurationProvider;
-import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.common.Ck8sUtils;
 import brig.ck8s.cli.utils.LogUtils;
 import com.walmartlabs.concord.imports.NoopImportManager;
@@ -40,7 +40,7 @@ public class FlowCompletion
             return Collections.emptyIterator();
         }
 
-        return Ck8sUtils.streamConcordYaml(Ck8sPath.from(ck8sDir, ck8sExtDir))
+        return Ck8sUtils.streamConcordYaml(Ck8sRepos.from(ck8sDir, ck8sExtDir))
                 .flatMap(p -> flowNames(p).stream())
                 .collect(Collectors.toSet()).iterator();
     }

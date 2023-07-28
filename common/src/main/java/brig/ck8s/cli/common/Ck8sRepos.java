@@ -1,10 +1,11 @@
 package brig.ck8s.cli.common;
 
 import javax.annotation.Nullable;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class Ck8sPath
+public class Ck8sRepos
 {
 
     private static final Path CK8S_CORE = Path.of("flows");
@@ -18,7 +19,7 @@ public class Ck8sPath
     @Nullable
     private final Path ck8sExt;
 
-    public Ck8sPath(Path ck8s, Path ck8sExt)
+    public Ck8sRepos(Path ck8s, Path ck8sExt)
     {
         this.ck8s = normalize(ck8s);
         this.ck8sExt = dirOrNull(normalize(ck8sExt));
@@ -26,9 +27,9 @@ public class Ck8sPath
         assertDirectory("ck8s:", this.ck8s);
     }
 
-    public static Ck8sPath from(String ck8sDir, String ck8sExtDir)
+    public static Ck8sRepos from(String ck8sDir, String ck8sExtDir)
     {
-        return new Ck8sPath(Path.of(ck8sDir), ck8sExtDir != null ? Path.of(ck8sExtDir) : null);
+        return new Ck8sRepos(Path.of(ck8sDir), ck8sExtDir != null ? Path.of(ck8sExtDir) : null);
     }
 
     private static Path normalize(Path p)
