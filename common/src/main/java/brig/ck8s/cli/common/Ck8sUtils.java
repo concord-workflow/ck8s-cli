@@ -29,7 +29,7 @@ public class Ck8sUtils
 
     private static final String CK8S_CLUSTER_YAML_NAME = "cluster.yaml";
 
-    public static Stream<Path> streamConcordYaml(Ck8sPath ck8sPath)
+    public static Stream<Path> streamConcordYaml(Ck8sRepos ck8sPath)
     {
         return Stream.concat(
                 streamConcordYaml(ck8sPath.ck8sComponents()),
@@ -53,7 +53,7 @@ public class Ck8sUtils
         }
     }
 
-    public static Stream<Path> streamClusterYaml(Ck8sPath ck8sPath)
+    public static Stream<Path> streamClusterYaml(Ck8sRepos ck8sPath)
     {
         return Stream.concat(
                 streamClusterYaml(ck8sPath.ck8sOrgDir()),
@@ -77,12 +77,12 @@ public class Ck8sUtils
         }
     }
 
-    public static Path findClusterYamlByAlias(Ck8sPath ck8sPath, String alias)
+    public static Path findClusterYamlByAlias(Ck8sRepos ck8sPath, String alias)
     {
         return findClusterYamlBy(ck8sPath, cluster -> alias.equals(MapUtils.getString(cluster, "alias")));
     }
 
-    public static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<Map<String, Object>> filter)
+    public static Path findClusterYamlBy(Ck8sRepos ck8sPath, Predicate<Map<String, Object>> filter)
     {
         return streamClusterYaml(ck8sPath)
                 .filter(p -> filter.test(Mapper.yamlMapper().readMap(p)))
@@ -90,7 +90,7 @@ public class Ck8sUtils
                 .orElse(null);
     }
 
-    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug, List<String> additionalDeps)
+    public static Map<String, Object> buildConcordYaml(Ck8sRepos ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug, List<String> additionalDeps)
     {
 
         Path defaultCfg = ck8sPath.defaultCfg();
@@ -111,12 +111,12 @@ public class Ck8sUtils
         return concordYml;
     }
 
-    public static void copyComponents(Ck8sPath ck8sPath, Path target)
+    public static void copyComponents(Ck8sRepos ck8sPath, Path target)
     {
         copyComponents(ck8sPath.ck8sComponents(), ck8sPath.ck8sExtComponents(), target, "ck8s-components");
     }
 
-    public static void copyTestComponents(Ck8sPath ck8sPath, Path target)
+    public static void copyTestComponents(Ck8sRepos ck8sPath, Path target)
     {
         copyComponents(ck8sPath.ck8sComponentsTests(), ck8sPath.ck8sExtComponentsTests(), target, CK_8_S_COMPONENTS_TESTS_DIR_NAME);
     }

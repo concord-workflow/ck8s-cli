@@ -20,12 +20,12 @@ import static java.util.Objects.nonNull;
 
 public class Ck8sFlowBuilder
 {
-    public static Ck8sFlowBuilder builder(Ck8sPath ck8sPath, Path target)
+    public static Ck8sFlowBuilder builder(Ck8sRepos ck8sPath, Path target)
     {
         return new Ck8sFlowBuilder(ck8sPath, target);
     }
 
-    private final Ck8sPath ck8sPath;
+    private final Ck8sRepos ck8sPath;
     private final Path target;
     private boolean includeTests;
     private boolean debug;
@@ -33,7 +33,7 @@ public class Ck8sFlowBuilder
     private Path ck8sPackage;
     private Set<String> clusterAliases = new HashSet<>();
 
-    private Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target)
+    private Ck8sFlowBuilder(Ck8sRepos ck8sPath, Path target)
     {
         this.ck8sPath = ck8sPath;
         this.target = target;

@@ -4,7 +4,7 @@ import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.actions.ActionType;
 import brig.ck8s.cli.actions.AwsKubeconfigAction;
 import brig.ck8s.cli.actions.ExecuteScriptAction;
-import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.model.ConcordProfile;
 
 import java.util.HashMap;
@@ -18,7 +18,7 @@ public class ScriptActionOperation
     public Integer execute(CliOperationContext cliOperationContext)
     {
         CliApp cliApp = cliOperationContext.cliApp();
-        Ck8sPath ck8s = cliOperationContext.ck8sPath();
+        Ck8sRepos ck8s = cliOperationContext.ck8sPath();
         ActionType actionType = cliApp.getActionType();
 
         ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);

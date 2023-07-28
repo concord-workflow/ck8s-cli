@@ -42,7 +42,7 @@ public interface Ck8sPayload
     Path location();
 
     @Nullable
-    Ck8sPath cks8sPath();
+    Ck8sRepos cks8sPath();
 
     @Value.Default
     default Map<String, Object> concord()

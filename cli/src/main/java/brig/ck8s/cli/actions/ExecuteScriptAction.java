@@ -1,8 +1,8 @@
 package brig.ck8s.cli.actions;
 
-import brig.ck8s.cli.common.Ck8sPath;
-import brig.ck8s.cli.op.CliOperationContext;
+import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.common.CliCommand;
+import brig.ck8s.cli.op.CliOperationContext;
 import brig.ck8s.cli.utils.TempPath;
 
 import java.io.IOException;
@@ -21,9 +21,9 @@ import java.util.Set;
 public class ExecuteScriptAction
 {
 
-    private final Ck8sPath ck8s;
+    private final Ck8sRepos ck8s;
 
-    public ExecuteScriptAction(Ck8sPath ck8s)
+    public ExecuteScriptAction(Ck8sRepos ck8s)
     {
         this.ck8s = ck8s;
     }
