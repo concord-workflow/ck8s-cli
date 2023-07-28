@@ -2,6 +2,7 @@ package brig.ck8s.cli.op;
 
 import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.subcom.pack.Ck8sPackageBuilder;
 
 import java.nio.file.Path;
 import java.util.Scanner;
@@ -10,7 +11,6 @@ import java.util.Set;
 import static brig.ck8s.cli.common.Ck8sPayload.createClusterConcordYamlFileName;
 import static brig.ck8s.cli.common.IOUtils.deleteRecursively;
 import static brig.ck8s.cli.executor.FlowExecutorType.resolveFlowExecutor;
-import static brig.ck8s.cli.subcom.PackageCommand.createCk8sPayload;
 import static java.nio.file.Files.move;
 import static java.nio.file.Files.walk;
 import static java.util.Objects.nonNull;
@@ -42,12 +42,9 @@ public class RunFlowOperation
             }
         }
 
-        Ck8sPayload ck8sPayload = createCk8sPayload(
-                cliOperationContext,
-                flow,
-                cliApp.getExtraVars(),
-                cliApp.isWithTests(),
-                clusterAlias);
+        Ck8sPayload ck8sPayload = Ck8sPackageBuilder
+                .builder(cliOperationContext)
+                .build();
 
         Path packageDir = ck8sPayload.location();
         String clusterConcordYamlFileName = createClusterConcordYamlFileName(clusterAlias);
