@@ -1,6 +1,6 @@
 package brig.ck8s.cli.actions;
 
-import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.model.ClusterInfo;
 import brig.ck8s.cli.op.CliOperationContext;
 
@@ -18,10 +18,10 @@ import static brig.ck8s.cli.op.ClusterListOperation.getClusterList;
 public class AwsKubeconfigAction
 {
 
-    private final Ck8sPath ck8sPath;
+    private final Ck8sRepos ck8sPath;
     private final ExecuteScriptAction scriptAction;
 
-    public AwsKubeconfigAction(Ck8sPath ck8sPath, ExecuteScriptAction scriptAction)
+    public AwsKubeconfigAction(Ck8sRepos ck8sPath, ExecuteScriptAction scriptAction)
     {
         this.ck8sPath = ck8sPath;
         this.scriptAction = scriptAction;

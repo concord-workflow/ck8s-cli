@@ -1,7 +1,7 @@
 package brig.ck8s.cli.common.processors;
 
-import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.common.CliCommand;
 
 import java.nio.file.Path;
@@ -15,7 +15,7 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
 
     @Override
     public Ck8sPayload process(Ck8sPayload payload) {
-        Ck8sPath ck8sPath = payload.cks8sPath();
+        Ck8sRepos ck8sPath = payload.cks8sPath();
         if (ck8sPath == null) {
             return payload;
         }

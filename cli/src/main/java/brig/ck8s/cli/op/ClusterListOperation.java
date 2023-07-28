@@ -1,6 +1,6 @@
 package brig.ck8s.cli.op;
 
-import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.common.Ck8sRepos;
 import brig.ck8s.cli.common.Ck8sUtils;
 import brig.ck8s.cli.common.MandatoryValuesMissing;
 import brig.ck8s.cli.common.Mapper;
@@ -18,7 +18,7 @@ import static brig.ck8s.cli.utils.LogUtils.logAsTable;
 public class ClusterListOperation
         implements CliOperation
 {
-    public static Map<Path, ClusterInfo> getClusterList(Ck8sPath ck8sPath)
+    public static Map<Path, ClusterInfo> getClusterList(Ck8sRepos ck8sPath)
     {
         return Ck8sUtils.streamClusterYaml(ck8sPath)
                 .map(p -> new PathForClusterInfo(p, toClusterInfo(p)))
@@ -39,7 +39,7 @@ public class ClusterListOperation
 
     public Integer execute(CliOperationContext cliOperationContext)
     {
-        Ck8sPath ck8sPath = cliOperationContext.ck8sPath();
+        Ck8sRepos ck8sPath = cliOperationContext.ck8sPath();
         Map<Path, ClusterInfo> clusters = getClusterList(ck8sPath);
         String[] caption = new String[] {"Alias", "Name", "Region", "Server", "Path"};
         Stream<String[]> rows = clusters.entrySet().stream()
@@ -49,7 +49,7 @@ public class ClusterListOperation
         return 0;
     }
 
-    private String[] toTableRow(Ck8sPath ck8sPath, Map.Entry<Path, ClusterInfo> e)
+    private String[] toTableRow(Ck8sRepos ck8sPath, Map.Entry<Path, ClusterInfo> e)
     {
         ClusterInfo c = e.getValue();
         return new String[] {c.alias(), c.name(), c.region(), c.server(), ck8sPath.relativize(e.getKey()).toString()};
