@@ -44,6 +44,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <okhttp.version>2.7.5</okhttp.version>
+        <okio.version>1.17.2</okio.version>
         <picocli.version>4.7.1</picocli.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -88,6 +89,11 @@
                 <artifactId>jackson-dataformat-xml</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-jaxb-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
 
             <!-- jackson -->
             <dependency>
@@ -120,6 +126,11 @@
                 <artifactId>okhttp</artifactId>
                 <version>${okhttp.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>${okio.version}</version>
+            </dependency>
             <!-- concord -->
             <dependency>
                 <groupId>com.walmartlabs.concord</groupId>
@@ -144,10 +155,6 @@
                     <exclusion>
                         <groupId>io.takari.bpm</groupId>
                         <artifactId>bpm-engine-impl</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.squareup.okio</groupId>
-                        <artifactId>okio</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
