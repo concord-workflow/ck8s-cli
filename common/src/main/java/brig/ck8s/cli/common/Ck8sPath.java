@@ -6,7 +6,6 @@ import java.nio.file.Path;
 
 public class Ck8sPath
 {
-
     private static final Path CK8S_CORE = Path.of("flows");
     private static final Path CK8S_ORGS_DIR = CK8S_CORE.resolve("ck8s-orgs");
     private static final Path CK8S_COMPONENTS = CK8S_CORE.resolve("ck8s-components");

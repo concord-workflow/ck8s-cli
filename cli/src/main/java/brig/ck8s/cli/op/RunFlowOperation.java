@@ -5,7 +5,10 @@ import brig.ck8s.cli.VersionProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
 import brig.ck8s.cli.common.Ck8sPath;
 import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.common.verify.CheckError;
+import brig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
 import brig.ck8s.cli.executor.FlowExecutor;
+import brig.ck8s.cli.utils.LogUtils;
 import com.walmartlabs.concord.cli.Verbosity;
 
 import java.nio.file.Path;
@@ -51,13 +54,18 @@ public class RunFlowOperation
             deps = List.of("mvn://com.walmartlabs.concord.plugins.basic:input-params-assert:1.102.1-SNAPSHOT");
         }
 
-        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath())
+        Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
+
+        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier)
                 .includeTests(cliApp.isWithTests())
                 .withDependencies(deps)
                 .debug(verbosity.verbose())
                 .build(clusterAlias);
 
+        assertNoErrors(ck8s, verifier.errors());
+
         Ck8sPayload payload = Ck8sPayload.builder()
+                .clusterAlias(clusterAlias)
                 .cks8sPath(ck8s)
                 .location(payloadLocation)
                 .putArgs("ck8sCliVersion", VersionProvider.getCliVersion())
@@ -71,5 +79,16 @@ public class RunFlowOperation
         }
 
         return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(), payload, profile, verbosity, cliApp.isTestMode());
+    }
+
+    private void assertNoErrors(Ck8sPath ck8sPath, List<CheckError> errors) {
+        boolean hasErrors = false;
+        for (CheckError error : errors) {
+            LogUtils.error("processing '" + ck8sPath.relativize(error.concordYaml()) + ": " + error.message());
+            hasErrors = hasErrors || !errors.isEmpty();
+        }
+        if (hasErrors) {
+            throw new RuntimeException("Payload has errors");
+        }
     }
 }

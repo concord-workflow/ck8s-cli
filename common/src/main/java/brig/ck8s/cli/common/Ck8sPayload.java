@@ -34,6 +34,8 @@ public interface Ck8sPayload
         return location().resolve("concord.yml");
     }
 
+    String clusterAlias();
+
     @Nullable
     default String flowName() {
         return MapUtils.getString(args(), "flow");
