@@ -14,7 +14,6 @@ public class FlowRequirementsProcessor extends ConcordYamlProcessor
         if (requirements == null) {
             return rootYaml;
         }
-        MapUtils.delete(rootYaml, "configuration.requirements");
         return MapUtils.merge(rootYaml, Map.of("configuration", Map.of("requirements", requirements)));
     }
 }

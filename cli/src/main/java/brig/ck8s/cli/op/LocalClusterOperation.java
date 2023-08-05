@@ -28,7 +28,7 @@ public class LocalClusterOperation
         scriptAction.perform(cliOperationContext, "ck8sDown");
         scriptAction.perform(cliOperationContext, "ck8sUp");
 
-        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath())
+        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), null)
                 .build("local");
 
         if (!cliApp.isTestMode()) {
