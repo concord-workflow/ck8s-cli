@@ -6,7 +6,6 @@ import com.walmartlabs.concord.cli.Verbosity;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 @Value.Immutable
 @Value.Style(

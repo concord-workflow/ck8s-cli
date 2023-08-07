@@ -20,9 +20,9 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
 
         Map<String, Object> args = new HashMap<>();
         args.put("processCk8sBranch", getBranch(ck8sPath.ck8sDir()));
-        args.put("processCk8sCommit", getSha(ck8sPath.ck8sDir()));
+        args.put("ck8sRef", getSha(ck8sPath.ck8sDir()));
         args.put("processCk8sExtBranch", getBranch(ck8sPath.ck8sExtDir()));
-        args.put("processCk8sExtCommit", getSha(ck8sPath.ck8sExtDir()));
+        args.put("ck8sExtRef", getSha(ck8sPath.ck8sExtDir()));
 
         return Ck8sPayloadForRemote.builder().from(payload)
                 .putAllArgs(args.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
@@ -43,7 +43,7 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
         }
     }
 
-    private static String getSha(Path repoPath) {
+    public static String getSha(Path repoPath) {
         if (repoPath == null) {
             return null;
         }
