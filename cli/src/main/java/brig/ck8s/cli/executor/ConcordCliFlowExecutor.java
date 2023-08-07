@@ -1,9 +1,8 @@
 package brig.ck8s.cli.executor;
 
-import brig.ck8s.cli.common.Ck8sPayload;
-import brig.ck8s.cli.common.MapUtils;
-import brig.ck8s.cli.common.processors.ConcordProcessors;
+import brig.ck8s.cli.common.Ck8sFlows;
 import brig.ck8s.cli.concord.ConcordServer;
+import brig.ck8s.cli.utils.LogUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
@@ -81,37 +80,33 @@ public class ConcordCliFlowExecutor
     {
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
         try {
-            System.out.println("Process arguments:");
-            System.out.println(om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+            LogUtils.info("Process arguments:\n{}", om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public int execute(Ck8sPayload payload)
+    public int execute(Ck8sFlows flows, String flowName, Map<String, Object> extraVars)
     {
-        payload = new ConcordProcessors().process(payload);
-
         try {
-            return _execute(payload);
+            return _execute(flows, flowName, extraVars);
         }
         catch (Exception e) {
             if (verbosity.verbose()) {
-                System.err.print("Error: ");
-                e.printStackTrace(System.err);
+                LogUtils.error("", e);
             }
             else {
-                System.err.println("Error: " + e.getMessage());
+                LogUtils.error("{}", e.getMessage());
             }
             return 1;
         }
     }
 
-    private int _execute(Ck8sPayload payload)
+    private int _execute(Ck8sFlows flows, String flowName, Map<String, Object> extraArgs)
             throws Exception
     {
-        Path targetDir = payload.location();
+        Path targetDir = flows.location();
 
         DependencyManager dependencyManager = new DependencyManager(getDependencyManagerConfiguration());
 
@@ -127,12 +122,11 @@ public class ConcordCliFlowExecutor
         }
         catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
-            System.err.println("Error while processing import " + om.writeValueAsString(e.getImport()) + ": " + e.getMessage());
+            LogUtils.error("while processing import {}: {}", om.writeValueAsString(e.getImport()), e.getMessage());
             return -1;
         }
         catch (Exception e) {
-            System.err.println("Error while loading " + targetDir);
-            e.printStackTrace();
+            LogUtils.error("while loading {}", targetDir, e);
             return -1;
         }
 
@@ -142,17 +136,18 @@ public class ConcordCliFlowExecutor
         Map<String, Object> args = new LinkedHashMap<>();
         args.put("concordUrl", "https://concord.local.localhost");
 
-        Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
+        Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), extraArgs);
         args.putAll(flowAndUserArgs);
+        args.put("flow", flowName);
 
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
-        List<String> profiles = MapUtils.getList(payload.concord(), "activeProfiles", Collections.singletonList("default"));
+        List<String> profiles = Collections.emptyList(); //MapUtils.getList(payload.concord(), "activeProfiles", Collections.singletonList("default"));
         if (verbosity.verbose()) {
             dumpArguments(args);
 
-            System.out.println("Active profiles: " + profiles);
+            LogUtils.info("Active profiles: {}", profiles);
         }
 
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(profiles), projectInfo())
@@ -187,7 +182,7 @@ public class ConcordCliFlowExecutor
         Runner runner = injector.getInstance(Runner.class);
 
         if (cfg.debug()) {
-            System.out.println("Available tasks: " + injector.getInstance(TaskProviders.class).names());
+            LogUtils.info("Available tasks: " + injector.getInstance(TaskProviders.class).names());
         }
 
         // Just to notify listeners
@@ -202,11 +197,10 @@ public class ConcordCliFlowExecutor
         }
         catch (Exception e) {
             if (verbosity.verbose()) {
-                System.err.print("Error: ");
-                e.printStackTrace(System.err);
+                LogUtils.error("", e);
             }
             else {
-                System.err.println("Error: " + e.getMessage());
+                LogUtils.error("{}", e.getMessage());
             }
             return 1;
         }

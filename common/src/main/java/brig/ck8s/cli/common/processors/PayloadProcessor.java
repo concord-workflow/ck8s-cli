@@ -1,8 +1,8 @@
 package brig.ck8s.cli.common.processors;
 
-import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.common.Ck8sPayloadForRemote;
 
 public interface PayloadProcessor {
 
-    Ck8sPayload process(Ck8sPayload payload);
+    Ck8sPayloadForRemote process(Ck8sPayloadForRemote payload);
 }

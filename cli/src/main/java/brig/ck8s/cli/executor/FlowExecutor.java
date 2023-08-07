@@ -1,23 +1,23 @@
 package brig.ck8s.cli.executor;
 
 import brig.ck8s.cli.cfg.CliConfigurationProvider;
-import brig.ck8s.cli.common.Ck8sPayload;
-import com.walmartlabs.concord.cli.Verbosity;
+
+import java.util.Map;
 
 public class FlowExecutor
 {
 
-    public int execute(ExecutorType type, Ck8sPayload payload, String profile, Verbosity verbosity, boolean testMode)
+    public int execute(ExecutorType type, ExecContext execContext, String flowName, Map<String, Object> extraArgs)
     {
         switch (type) {
             case REMOTE -> {
-                RemoteFlowExecutor executor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), testMode);
-                executor.execute(payload);
+                RemoteFlowExecutor executor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(execContext.profile()));
+                executor.execute(execContext, flowName, extraArgs);
                 return 0;
             }
             case CONCORD_CLI -> {
-                ConcordCliFlowExecutor executor = new ConcordCliFlowExecutor(verbosity);
-                return executor.execute(payload);
+                ConcordCliFlowExecutor executor = new ConcordCliFlowExecutor(execContext.verbosity());
+                return executor.execute(execContext.flows(), flowName, extraArgs);
             }
             default -> throw new IllegalArgumentException("Unknown type: " + type);
         }

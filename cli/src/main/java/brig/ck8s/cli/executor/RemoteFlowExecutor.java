@@ -1,6 +1,6 @@
 package brig.ck8s.cli.executor;
 
-import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.common.Ck8sPayloadForRemote;
 import brig.ck8s.cli.common.processors.ConcordProcessors;
 import brig.ck8s.cli.concord.ConcordProcess;
 import brig.ck8s.cli.model.ConcordProfile;
@@ -15,15 +15,14 @@ import com.walmartlabs.concord.common.IOUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import javax.annotation.Nullable;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class RemoteFlowExecutor
@@ -31,13 +30,11 @@ public class RemoteFlowExecutor
 
     private final ConcordProfile concordCfg;
     private final ApiClient apiClient;
-    private final boolean testMode;
 
-    public RemoteFlowExecutor(ConcordProfile concordCfg, boolean testMode)
+    public RemoteFlowExecutor(ConcordProfile concordCfg)
     {
         this.concordCfg = concordCfg;
         this.apiClient = createClient(concordCfg);
-        this.testMode = testMode;
     }
 
     private static ApiClient createClient(ConcordProfile cfg)
@@ -51,25 +48,29 @@ public class RemoteFlowExecutor
                 .setApiKey(cfg.apiKey());
     }
 
-    private static Map<String, Object> toMap(Ck8sPayload payload)
+    private static Map<String, Object> toMap(Ck8sPayloadForRemote payload)
     {
         Map<String, Object> result = new LinkedHashMap<>();
 
-        archive(payload.location(), result);
+        archive(payload.flows().location(), result);
         payload.args().forEach((name, value) -> result.put("arguments." + name, value));
         result.putAll(serializeConcordProcessParams(payload.concord()));
         return result;
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> serializeConcordProcessParams(Map<String, Object> params) {
+    private static Map<String, Object> serializeConcordProcessParams(Ck8sPayloadForRemote.Concord params) {
         Map<String, Object> result = new HashMap<>();
-        for (Map.Entry<String, Object> e : params.entrySet()) {
-            Object value = e.getValue();
-            if (value instanceof List) {
-                value = String.join(",", (List<String>)value);
-            }
-            result.put(e.getKey(), value);
+        if (params.org() != null) {
+            result.put("org", params.org());
+        }
+        if (params.project() != null) {
+            result.put("project", params.project());
+        }
+        if (!params.meta().isEmpty()) {
+            result.put("meta", params.meta());
+        }
+        if (!params.activeProfiles().isEmpty()) {
+            result.put("activeProfiles", String.join(",", params.activeProfiles()));
         }
         return result;
     }
@@ -101,22 +102,31 @@ public class RemoteFlowExecutor
     }
 
     @Nullable
-    public ConcordProcess execute(Ck8sPayload payload)
+    public ConcordProcess execute(ExecContext context, String flowName) {
+        return execute(context, flowName, Collections.emptyMap());
+    }
+
+    @Nullable
+    public ConcordProcess execute(ExecContext context, String flowName, Map<String, Object> extraArgs)
     {
         try {
-            payload = Ck8sPayload.builder().from(payload)
+            Ck8sPayloadForRemote payload = Ck8sPayloadForRemote.from(context.flows())
+                    .flowName(flowName)
+                    .ck8sPath(context.ck8sPath())
+                    .args(extraArgs)
                     .putArgs("concordUrl", concordCfg.baseUrl())
+                    .putArgs("flow", flowName)
                     .build();
 
             payload = new ConcordProcessors().process(payload);
 
-            if (testMode) {
+            if (context.testMode()) {
                 StringBuilder args = new StringBuilder();
                 for (Map.Entry<String, Object> e : payload.args().entrySet()) {
                     args.append(String.format("-F arguments.%s=%s ", e.getKey(), e.getValue()));
                 }
-                Path archivePath = payload.location().resolve("payload.zip");
-                archiveToFile(payload.location(), archivePath);
+                Path archivePath = payload.flows().location().resolve("payload.zip");
+                archiveToFile(payload.flows().location(), archivePath);
 
                 String curl = String.format("curl -s --http1.1 -H 'Authorization: %s' -F archive=@%s %s %s/api/v1/process",
                         concordCfg.apiKey(), archivePath, args, concordCfg.baseUrl());
@@ -135,7 +145,7 @@ public class RemoteFlowExecutor
         }
     }
 
-    private ConcordProcess startProcess(Ck8sPayload payload)
+    private ConcordProcess startProcess(Ck8sPayloadForRemote payload)
             throws ApiException
     {
         ApiResponse<StartProcessResponse> resp = ClientUtils.postData(apiClient, "/api/v1/process", toMap(payload), StartProcessResponse.class);

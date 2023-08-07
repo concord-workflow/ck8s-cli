@@ -62,7 +62,7 @@ public class Ck8sFlowBuilder
         return this;
     }
 
-    public Path build(String clusterAlias)
+    public Ck8sFlows build(String clusterAlias)
     {
         Path clusterYaml = Ck8sUtils.findClusterYamlByAlias(ck8sPath, clusterAlias);
         if (clusterYaml == null) {
@@ -92,7 +92,10 @@ public class Ck8sFlowBuilder
             copyTestComponents(ck8sPath, flows);
         }
 
-        return flows;
+        return Ck8sFlows.builder()
+                .clusterAlias(clusterAlias)
+                .location(flows)
+                .build();
     }
 
     private void copyComponents(Ck8sPath ck8sPath, Path target)

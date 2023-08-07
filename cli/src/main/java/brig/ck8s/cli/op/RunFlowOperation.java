@@ -3,19 +3,16 @@ package brig.ck8s.cli.op;
 import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.VersionProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
+import brig.ck8s.cli.common.Ck8sFlows;
 import brig.ck8s.cli.common.Ck8sPath;
-import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.common.verify.CheckError;
 import brig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
+import brig.ck8s.cli.executor.ExecContext;
 import brig.ck8s.cli.executor.FlowExecutor;
 import brig.ck8s.cli.utils.LogUtils;
 import com.walmartlabs.concord.cli.Verbosity;
 
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Objects.nonNull;
 
@@ -56,7 +53,7 @@ public class RunFlowOperation
 
         Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
 
-        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier)
+        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier)
                 .includeTests(cliApp.isWithTests())
                 .withDependencies(deps)
                 .debug(verbosity.verbose())
@@ -64,21 +61,25 @@ public class RunFlowOperation
 
         assertNoErrors(ck8s, verifier.errors());
 
-        Ck8sPayload payload = Ck8sPayload.builder()
-                .clusterAlias(clusterAlias)
-                .cks8sPath(ck8s)
-                .location(payloadLocation)
-                .putArgs("ck8sCliVersion", VersionProvider.getCliVersion())
-                .putAllArgs(cliApp.getExtraVars())
-                .flow(cliApp.getFlow())
-                .build();
-
+        // TODO: restore original logic: executor also has testMode
         if (cliApp.isTestMode()) {
-            System.out.println("Running flow: %s on cluster: %s with profile: %s".formatted(flow, clusterAlias, profile));
+            LogUtils.info("Running flow: {} on cluster: {} with profile: {}", flow, clusterAlias, profile);
             return 0;
         }
 
-        return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(), payload, profile, verbosity, cliApp.isTestMode());
+        Map<String, Object> args = new HashMap<>(cliApp.getExtraVars());
+        args.put("ck8sCliVersion", VersionProvider.getCliVersion());
+
+        ExecContext execContext = ExecContext.builder()
+                .ck8sPath(ck8s)
+                .flows(ck8sFlows)
+                .verbosity(verbosity)
+                .profile(profile)
+                .testMode(cliApp.isTestMode())
+                .build();
+
+        return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(),
+                execContext, cliApp.getFlow(), args);
     }
 
     private void assertNoErrors(Ck8sPath ck8sPath, List<CheckError> errors) {

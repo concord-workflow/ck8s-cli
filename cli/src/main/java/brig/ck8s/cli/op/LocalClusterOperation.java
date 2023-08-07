@@ -4,12 +4,12 @@ import brig.ck8s.cli.CliApp;
 import brig.ck8s.cli.actions.ExecuteScriptAction;
 import brig.ck8s.cli.cfg.CliConfigurationProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
+import brig.ck8s.cli.common.Ck8sFlows;
 import brig.ck8s.cli.common.Ck8sPath;
-import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.concord.ConcordProcess;
+import brig.ck8s.cli.executor.ExecContext;
 import brig.ck8s.cli.executor.RemoteFlowExecutor;
 
-import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,26 +28,26 @@ public class LocalClusterOperation
         scriptAction.perform(cliOperationContext, "ck8sDown");
         scriptAction.perform(cliOperationContext, "ck8sUp");
 
-        Path payloadLocation = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), null)
+        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), null)
                 .build("local");
 
         if (!cliApp.isTestMode()) {
-            RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile), false);
+            RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile));
 
             ExecutorService executor = Executors.newCachedThreadPool();
 
-            ConcordProcess process = flowExecutor.execute(Ck8sPayload.builder()
-                    .location(payloadLocation)
-                    .flow("cert-manager-local")
-                    .build());
+            ExecContext ctx = ExecContext.builder()
+                    .ck8sPath(ck8s)
+                    .flows(ck8sFlows)
+                    .verbosity(cliOperationContext.verbosity())
+                    .build();
+
+            ConcordProcess process = flowExecutor.execute(ctx, "cert-manager-local");
             if (process != null) {
                 process.streamLogs(executor);
             }
 
-            process = flowExecutor.execute(Ck8sPayload.builder()
-                    .location(payloadLocation)
-                    .flow("polaris")
-                    .build());
+            process = flowExecutor.execute(ctx, "polaris");
             if (process != null) {
                 process.streamLogs(executor);
             }

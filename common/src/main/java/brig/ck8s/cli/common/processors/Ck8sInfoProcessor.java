@@ -1,8 +1,6 @@
 package brig.ck8s.cli.common.processors;
 
-import brig.ck8s.cli.common.Ck8sPath;
-import brig.ck8s.cli.common.Ck8sPayload;
-import brig.ck8s.cli.common.CliCommand;
+import brig.ck8s.cli.common.*;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -14,8 +12,8 @@ import java.util.stream.Collectors;
 public class Ck8sInfoProcessor implements PayloadProcessor {
 
     @Override
-    public Ck8sPayload process(Ck8sPayload payload) {
-        Ck8sPath ck8sPath = payload.cks8sPath();
+    public Ck8sPayloadForRemote process(Ck8sPayloadForRemote payload) {
+        Ck8sPath ck8sPath = payload.ck8sPath();
         if (ck8sPath == null) {
             return payload;
         }
@@ -26,7 +24,7 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
         args.put("processCk8sExtBranch", getBranch(ck8sPath.ck8sExtDir()));
         args.put("processCk8sExtCommit", getSha(ck8sPath.ck8sExtDir()));
 
-        return Ck8sPayload.builder().from(payload)
+        return Ck8sPayloadForRemote.builder().from(payload)
                 .putAllArgs(args.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
                 .build();
     }
