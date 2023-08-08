@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.ybrig.ck8s.cli</groupId>
     <artifactId>parent</artifactId>
-    <version>0.1.35</version>
+    <version>0.1.36-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>ck8s-cli</name>
@@ -25,7 +25,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</developerConnection>
-        <tag>0.1.35</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
