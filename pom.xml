@@ -52,6 +52,7 @@
         <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
         <takari.javaSourceVersion>17</takari.javaSourceVersion>
         <version.xmlbind.api>4.0.0</version.xmlbind.api>
+        <gpg.passphrase></gpg.passphrase>
     </properties>
 
     <dependencyManagement>
@@ -431,6 +432,24 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <passphrase>${gpg.passphrase}</passphrase>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
