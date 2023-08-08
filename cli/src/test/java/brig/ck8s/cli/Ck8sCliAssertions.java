@@ -2,6 +2,7 @@ package brig.ck8s.cli;
 
 import brig.ck8s.cli.assertions.CliAssertions;
 import brig.ck8s.cli.assertions.CliExecAssertion;
+import dev.ybrig.ck8s.cli.Main;
 
 public class Ck8sCliAssertions
 {
