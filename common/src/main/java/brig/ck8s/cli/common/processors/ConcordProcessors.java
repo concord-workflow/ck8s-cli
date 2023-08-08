@@ -1,6 +1,6 @@
 package brig.ck8s.cli.common.processors;
 
-import brig.ck8s.cli.common.Ck8sPayloadForRemote;
+import brig.ck8s.cli.common.Ck8sPayload;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,9 +14,9 @@ public class ConcordProcessors {
             new FlowMetaProcessor(),
             new Ck8sInfoProcessor());
 
-    public Ck8sPayloadForRemote process(Ck8sPayloadForRemote payload) {
+    public Ck8sPayload process(String flowName, Ck8sPayload payload) {
         for (PayloadProcessor p : payloadProcessors) {
-            payload = p.process(payload);
+            payload = p.process(flowName, payload);
         }
         return payload;
     }

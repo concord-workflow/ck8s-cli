@@ -1,6 +1,6 @@
 package brig.ck8s.cli.common.processors;
 
-import brig.ck8s.cli.common.Ck8sPayloadForRemote;
+import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.common.MapUtils;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -14,7 +14,7 @@ import java.util.Map;
 public class FlowExclusiveProcessor extends ConcordYamlProcessor
 {
     @Override
-    protected Map<String, Object> processRootYaml(Ck8sPayloadForRemote payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
+    protected Map<String, Object> processRootYaml(Ck8sPayload payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
         ExclusiveMode exclusive = pd.configuration().exclusive();
         if (exclusive == null) {
             return rootYaml;

@@ -1,6 +1,6 @@
 package brig.ck8s.cli.common.processors;
 
-import brig.ck8s.cli.common.Ck8sPayloadForRemote;
+import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.common.MapUtils;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
@@ -13,7 +13,7 @@ import java.util.Map;
 public class FlowMetaProcessor extends ConcordYamlProcessor
 {
     @Override
-    protected Map<String, Object> processRootYaml(Ck8sPayloadForRemote payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
+    protected Map<String, Object> processRootYaml(Ck8sPayload payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
         Map<String, Object> meta = pd.configuration().meta();
         if (meta.isEmpty()) {
             return rootYaml;

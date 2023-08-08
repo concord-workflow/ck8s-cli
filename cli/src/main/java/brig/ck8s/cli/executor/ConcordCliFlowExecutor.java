@@ -1,6 +1,6 @@
 package brig.ck8s.cli.executor;
 
-import brig.ck8s.cli.common.Ck8sFlows;
+import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.concord.ConcordServer;
 import brig.ck8s.cli.utils.LogUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -87,10 +87,10 @@ public class ConcordCliFlowExecutor
         }
     }
 
-    public int execute(Ck8sFlows flows, String flowName, Map<String, Object> extraVars)
+    public int execute(Ck8sPayload payload, String flowName)
     {
         try {
-            return _execute(flows, flowName, extraVars);
+            return _execute(payload, flowName);
         }
         catch (Exception e) {
             if (verbosity.verbose()) {
@@ -103,10 +103,10 @@ public class ConcordCliFlowExecutor
         }
     }
 
-    private int _execute(Ck8sFlows flows, String flowName, Map<String, Object> extraArgs)
+    private int _execute(Ck8sPayload payload, String flowName)
             throws Exception
     {
-        Path targetDir = flows.location();
+        Path targetDir = payload.flows().location();
 
         DependencyManager dependencyManager = new DependencyManager(getDependencyManagerConfiguration());
 
@@ -136,14 +136,14 @@ public class ConcordCliFlowExecutor
         Map<String, Object> args = new LinkedHashMap<>();
         args.put("concordUrl", "https://concord.local.localhost");
 
-        Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), extraArgs);
+        Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
         args.putAll(flowAndUserArgs);
         args.put("flow", flowName);
 
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
-        List<String> profiles = Collections.emptyList(); //MapUtils.getList(payload.concord(), "activeProfiles", Collections.singletonList("default"));
+        List<String> profiles = payload.concord().activeProfiles();
         if (verbosity.verbose()) {
             dumpArguments(args);
 

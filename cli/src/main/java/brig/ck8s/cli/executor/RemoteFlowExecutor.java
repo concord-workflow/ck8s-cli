@@ -1,7 +1,6 @@
 package brig.ck8s.cli.executor;
 
-import brig.ck8s.cli.common.Ck8sPayloadForRemote;
-import brig.ck8s.cli.common.processors.ConcordProcessors;
+import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.concord.ConcordProcess;
 import brig.ck8s.cli.model.ConcordProfile;
 import brig.ck8s.cli.utils.LogUtils;
@@ -48,7 +47,7 @@ public class RemoteFlowExecutor
                 .setApiKey(cfg.apiKey());
     }
 
-    private static Map<String, Object> toMap(Ck8sPayloadForRemote payload)
+    private static Map<String, Object> toMap(Ck8sPayload payload)
     {
         Map<String, Object> result = new LinkedHashMap<>();
 
@@ -58,7 +57,7 @@ public class RemoteFlowExecutor
         return result;
     }
 
-    private static Map<String, Object> serializeConcordProcessParams(Ck8sPayloadForRemote.Concord params) {
+    private static Map<String, Object> serializeConcordProcessParams(Ck8sPayload.Concord params) {
         Map<String, Object> result = new HashMap<>();
         if (params.org() != null) {
             result.put("org", params.org());
@@ -102,23 +101,13 @@ public class RemoteFlowExecutor
     }
 
     @Nullable
-    public ConcordProcess execute(ExecContext context, String flowName) {
-        return execute(context, flowName, Collections.emptyMap());
-    }
-
-    @Nullable
-    public ConcordProcess execute(ExecContext context, String flowName, Map<String, Object> extraArgs)
+    public ConcordProcess execute(ExecContext context, String flowName)
     {
         try {
-            Ck8sPayloadForRemote payload = Ck8sPayloadForRemote.from(context.flows())
-                    .flowName(flowName)
-                    .ck8sPath(context.ck8sPath())
-                    .args(extraArgs)
+            Ck8sPayload payload = Ck8sPayload.builder().from(context.payload())
                     .putArgs("concordUrl", concordCfg.baseUrl())
                     .putArgs("flow", flowName)
                     .build();
-
-            payload = new ConcordProcessors().process(payload);
 
             if (context.testMode()) {
                 StringBuilder args = new StringBuilder();
@@ -145,7 +134,7 @@ public class RemoteFlowExecutor
         }
     }
 
-    private ConcordProcess startProcess(Ck8sPayloadForRemote payload)
+    private ConcordProcess startProcess(Ck8sPayload payload)
             throws ApiException
     {
         ApiResponse<StartProcessResponse> resp = ClientUtils.postData(apiClient, "/api/v1/process", toMap(payload), StartProcessResponse.class);

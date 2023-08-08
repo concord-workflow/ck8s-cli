@@ -10,9 +10,12 @@ import java.util.Map;
 @Value.Immutable
 @Value.Style(
         jdkOnly = true)
-public interface Ck8sPayloadForRemote {
+public interface Ck8sPayload {
 
-    String flowName();
+//    @Nullable
+//    default String flowName() {
+//        return MapUtils.getString(args(), "flow");
+//    }
 
     Ck8sPath ck8sPath();
 
@@ -32,12 +35,9 @@ public interface Ck8sPayloadForRemote {
         return Concord.builder().build();
     }
 
-    static ImmutableCk8sPayloadForRemote.Builder from(Ck8sFlows flows) {
-        return builder().flows(flows);
-    }
-
-    static ImmutableCk8sPayloadForRemote.Builder builder() {
-        return ImmutableCk8sPayloadForRemote.builder();
+    static Builder builder()
+    {
+        return new Builder();
     }
 
     @Value.Immutable
@@ -62,5 +62,18 @@ public interface Ck8sPayloadForRemote {
         static ImmutableConcord.Builder builder() {
             return ImmutableConcord.builder();
         }
+    }
+
+    class Builder
+            extends ImmutableCk8sPayload.Builder
+    {
+
+//        public Builder flow(String name)
+//        {
+//            if (name != null) {
+//                return putArgs("flow", name);
+//            }
+//            return this;
+//        }
     }
 }

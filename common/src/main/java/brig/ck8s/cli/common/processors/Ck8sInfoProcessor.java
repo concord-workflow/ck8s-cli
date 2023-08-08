@@ -12,11 +12,8 @@ import java.util.stream.Collectors;
 public class Ck8sInfoProcessor implements PayloadProcessor {
 
     @Override
-    public Ck8sPayloadForRemote process(Ck8sPayloadForRemote payload) {
+    public Ck8sPayload process(String flowName, Ck8sPayload payload) {
         Ck8sPath ck8sPath = payload.ck8sPath();
-        if (ck8sPath == null) {
-            return payload;
-        }
 
         Map<String, Object> args = new HashMap<>();
         args.put("processCk8sBranch", getBranch(ck8sPath.ck8sDir()));
@@ -24,7 +21,7 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
         args.put("processCk8sExtBranch", getBranch(ck8sPath.ck8sExtDir()));
         args.put("ck8sExtRef", getSha(ck8sPath.ck8sExtDir()));
 
-        return Ck8sPayloadForRemote.builder().from(payload)
+        return Ck8sPayload.builder().from(payload)
                 .putAllArgs(args.entrySet().stream().filter(e -> e.getValue() != null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
                 .build();
     }

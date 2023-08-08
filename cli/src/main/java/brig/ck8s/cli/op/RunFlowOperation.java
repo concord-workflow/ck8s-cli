@@ -5,6 +5,8 @@ import brig.ck8s.cli.VersionProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
 import brig.ck8s.cli.common.Ck8sFlows;
 import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.common.Ck8sPayload;
+import brig.ck8s.cli.common.processors.ConcordProcessors;
 import brig.ck8s.cli.common.verify.CheckError;
 import brig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
 import brig.ck8s.cli.executor.ExecContext;
@@ -70,16 +72,23 @@ public class RunFlowOperation
         Map<String, Object> args = new HashMap<>(cliApp.getExtraVars());
         args.put("ck8sCliVersion", VersionProvider.getCliVersion());
 
-        ExecContext execContext = ExecContext.builder()
-                .ck8sPath(ck8s)
+        Ck8sPayload payload = Ck8sPayload.builder()
                 .flows(ck8sFlows)
+                .ck8sPath(ck8s)
+                .args(args)
+                .build();
+
+        payload = new ConcordProcessors().process(flow, payload);
+
+        ExecContext execContext = ExecContext.builder()
+                .payload(payload)
                 .verbosity(verbosity)
                 .profile(profile)
                 .testMode(cliApp.isTestMode())
                 .build();
 
         return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(),
-                execContext, cliApp.getFlow(), args);
+                execContext, cliApp.getFlow());
     }
 
     private void assertNoErrors(Ck8sPath ck8sPath, List<CheckError> errors) {

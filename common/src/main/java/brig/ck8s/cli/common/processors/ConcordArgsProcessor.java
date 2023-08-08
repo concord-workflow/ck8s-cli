@@ -1,7 +1,6 @@
 package brig.ck8s.cli.common.processors;
 
-import brig.ck8s.cli.common.Ck8sFlows;
-import brig.ck8s.cli.common.Ck8sPayloadForRemote;
+import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.common.Ck8sUtils;
 import brig.ck8s.cli.common.MapUtils;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -9,19 +8,14 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import java.util.Collections;
 import java.util.Map;
 
-import static brig.ck8s.cli.common.Ck8sPayloadForRemote.*;
+import static brig.ck8s.cli.common.Ck8sPayload.*;
 
 public class ConcordArgsProcessor implements PayloadProcessor
 {
 
     @Override
-    public Ck8sPayloadForRemote process(Ck8sPayloadForRemote payload)
+    public Ck8sPayload process(String flowName, Ck8sPayload payload)
     {
-        String flowName = payload.flowName();
-        if (flowName == null) {
-            return payload;
-        }
-
         ProcessDefinition pd = Ck8sUtils.findYaml(payload.flows().flowsPath(), flowName);
         if (pd == null) {
             return payload;
@@ -37,7 +31,7 @@ public class ConcordArgsProcessor implements PayloadProcessor
 
         String globalExclusiveGroup = MapUtils.getString(flowConcordArgs, "globalExclusiveGroup", "");
 
-        return Ck8sPayloadForRemote.builder().from(payload)
+        return Ck8sPayload.builder().from(payload)
                 .concord(concordArgs)
                 .putArgs("hasGlobalLock", !globalExclusiveGroup.trim().isEmpty())
                 .putArgs("globalExclusiveGroup", globalExclusiveGroup)

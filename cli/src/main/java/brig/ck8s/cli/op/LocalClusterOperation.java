@@ -6,6 +6,7 @@ import brig.ck8s.cli.cfg.CliConfigurationProvider;
 import brig.ck8s.cli.common.Ck8sFlowBuilder;
 import brig.ck8s.cli.common.Ck8sFlows;
 import brig.ck8s.cli.common.Ck8sPath;
+import brig.ck8s.cli.common.Ck8sPayload;
 import brig.ck8s.cli.concord.ConcordProcess;
 import brig.ck8s.cli.executor.ExecContext;
 import brig.ck8s.cli.executor.RemoteFlowExecutor;
@@ -36,10 +37,15 @@ public class LocalClusterOperation
 
             ExecutorService executor = Executors.newCachedThreadPool();
 
-            ExecContext ctx = ExecContext.builder()
-                    .ck8sPath(ck8s)
+            Ck8sPayload payload = Ck8sPayload.builder()
                     .flows(ck8sFlows)
+                    .ck8sPath(ck8s)
+                    .build();
+
+            ExecContext ctx = ExecContext.builder()
+                    .payload(payload)
                     .verbosity(cliOperationContext.verbosity())
+                    .testMode(cliApp.isTestMode())
                     .build();
 
             ConcordProcess process = flowExecutor.execute(ctx, "cert-manager-local");
