@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.ybrig.ck8s.cli</groupId>
     <artifactId>parent</artifactId>
-    <version>0.1.34-SNAPSHOT</version>
+    <version>0.1.34</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -13,7 +13,7 @@
 
     <scm>
         <developerConnection>${scm.connection}</developerConnection>
-        <tag>HEAD</tag>
+        <tag>0.1.34</tag>
     </scm>
 
     <properties>
@@ -52,7 +52,7 @@
         <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
         <takari.javaSourceVersion>17</takari.javaSourceVersion>
         <version.xmlbind.api>4.0.0</version.xmlbind.api>
-        <gpg.passphrase></gpg.passphrase>
+        <gpg.passphrase />
     </properties>
 
     <dependencyManagement>
