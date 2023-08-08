@@ -18,15 +18,26 @@
         </license>
     </licenses>
 
+    <scm>
+        <url>https://github.com/concord-workflow/ck8s-cli</url>
+        <developerConnection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>team</id>
+            <name>Ck8s Development Team</name>
+            <roles>
+                <role>Project Lead</role>
+            </roles>
+        </developer>
+    </developers>
+
     <modules>
         <module>cli</module>
         <module>common</module>
     </modules>
-
-    <scm>
-        <developerConnection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</developerConnection>
-        <tag>HEAD</tag>
-    </scm>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
