@@ -23,6 +23,14 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
+      - id: install-secret-key
+        name: Install gpg secret key
+        run: |
+          # Install gpg secret key
+          cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
+          # Verify gpg secret key
+          gpg --list-secret-keys --keyid-format LONG
+
       - name: Build & Test
-        run: ./mvnw -B clean install
+        run: ./mvnw -B clean install --no-transfer-progress --batch-mode -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
 
