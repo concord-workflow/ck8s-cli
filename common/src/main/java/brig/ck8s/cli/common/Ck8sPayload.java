@@ -12,11 +12,6 @@ import java.util.Map;
         jdkOnly = true)
 public interface Ck8sPayload {
 
-//    @Nullable
-//    default String flowName() {
-//        return MapUtils.getString(args(), "flow");
-//    }
-
     Ck8sPath ck8sPath();
 
     Ck8sFlows flows();
@@ -35,9 +30,9 @@ public interface Ck8sPayload {
         return Concord.builder().build();
     }
 
-    static Builder builder()
+    static ImmutableCk8sPayload.Builder builder()
     {
-        return new Builder();
+        return ImmutableCk8sPayload.builder();
     }
 
     @Value.Immutable
@@ -62,18 +57,5 @@ public interface Ck8sPayload {
         static ImmutableConcord.Builder builder() {
             return ImmutableConcord.builder();
         }
-    }
-
-    class Builder
-            extends ImmutableCk8sPayload.Builder
-    {
-
-//        public Builder flow(String name)
-//        {
-//            if (name != null) {
-//                return putArgs("flow", name);
-//            }
-//            return this;
-//        }
     }
 }
