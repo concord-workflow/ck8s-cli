@@ -6,17 +6,35 @@
     <version>0.1.35-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <name>ck8s-cli</name>
+    <description>Allows running Ck8s Concord flows</description>
+    <url>https://github.com/concord-workflow/ck8s-cli</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <modules>
         <module>cli</module>
         <module>common</module>
     </modules>
 
     <scm>
-        <developerConnection>${scm.connection}</developerConnection>
+        <developerConnection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
     <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <takari.javaSourceVersion>17</takari.javaSourceVersion>
+
         <commons.lang.version>3.12.0</commons.lang.version>
         <commons.compress.version>1.21</commons.compress.version>
         <concord.version>1.103.0</concord.version>
@@ -33,26 +51,15 @@
         <junit.version>5.9.1</junit.version>
         <logback.version>1.2.10</logback.version>
 
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <okhttp.version>2.7.5</okhttp.version>
         <okio.version>1.17.2</okio.version>
         <picocli.version>4.7.1</picocli.version>
 
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-        <releaseUrl>https://oss.sonatype.org/service/local/staging/deploy/maven2</releaseUrl>
-        <scm.connection>scm:git:https://github.com/concord-workflow/ck8s-cli.git</scm.connection>
-
         <skipITs>true</skipITs>
 
         <slf4j.version>1.7.36</slf4j.version>
-        <snapshotUrl>https://oss.sonatype.org/content/repositories/snapshots</snapshotUrl>
         <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
-        <takari.javaSourceVersion>17</takari.javaSourceVersion>
         <version.xmlbind.api>4.0.0</version.xmlbind.api>
-        <gpg.passphrase />
     </properties>
 
     <dependencyManagement>
@@ -445,9 +452,6 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>3.1.0</version>
-                        <configuration>
-                            <passphrase>${gpg.passphrase}</passphrase>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -462,6 +466,7 @@
             </build>
         </profile>
     </profiles>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
