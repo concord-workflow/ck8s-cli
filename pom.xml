@@ -41,11 +41,10 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <takari.javaSourceVersion>17</takari.javaSourceVersion>
 
         <commons.lang.version>3.12.0</commons.lang.version>
         <commons.compress.version>1.21</commons.compress.version>

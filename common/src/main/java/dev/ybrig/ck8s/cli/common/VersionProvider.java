@@ -9,7 +9,7 @@ public final class VersionProvider {
     {
         Properties props = new Properties();
         try {
-            props.load(VersionProvider.class.getClassLoader().getResourceAsStream("project.properties"));
+            props.load(VersionProvider.class.getClassLoader().getResourceAsStream("dev/ybrig/ck8s/cli/common/project.properties"));
         }
         catch (IOException e) {
             throw new RuntimeException(e);

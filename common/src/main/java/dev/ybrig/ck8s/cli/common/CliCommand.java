@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -142,7 +143,51 @@ public class CliCommand
         }
     }
 
-    public record Result(int code, String stdout, String stderr)
-    {
-    }
+    public static final class Result {
+        private final int code;
+        private final String stdout;
+        private final String stderr;
+
+        public Result(int code, String stdout, String stderr) {
+            this.code = code;
+            this.stdout = stdout;
+            this.stderr = stderr;
+        }
+
+        public int code() {
+            return code;
+        }
+
+        public String stdout() {
+            return stdout;
+        }
+
+        public String stderr() {
+            return stderr;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Result) obj;
+            return this.code == that.code &&
+                    Objects.equals(this.stdout, that.stdout) &&
+                    Objects.equals(this.stderr, that.stderr);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(code, stdout, stderr);
+        }
+
+        @Override
+        public String toString() {
+            return "Result[" +
+                    "code=" + code + ", " +
+                    "stdout=" + stdout + ", " +
+                    "stderr=" + stderr + ']';
+        }
+
+        }
 }

@@ -1,10 +1,10 @@
 package dev.ybrig.ck8s.cli.op;
 
-import dev.ybrig.ck8s.cli.model.ClusterInfo;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.Ck8sUtils;
 import dev.ybrig.ck8s.cli.common.MandatoryValuesMissing;
 import dev.ybrig.ck8s.cli.common.Mapper;
+import dev.ybrig.ck8s.cli.model.ClusterInfo;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
 import java.nio.file.Path;
@@ -55,5 +55,21 @@ public class ClusterListOperation
         return new String[] {c.alias(), c.name(), c.region(), c.server(), ck8sPath.relativize(e.getKey()).toString()};
     }
 
-    record PathForClusterInfo(Path clusterYaml, ClusterInfo clusterInfo) {}
+    static final class PathForClusterInfo {
+        private final Path clusterYaml;
+        private final ClusterInfo clusterInfo;
+
+        PathForClusterInfo(Path clusterYaml, ClusterInfo clusterInfo) {
+            this.clusterYaml = clusterYaml;
+            this.clusterInfo = clusterInfo;
+        }
+
+        public Path clusterYaml() {
+            return clusterYaml;
+        }
+
+        public ClusterInfo clusterInfo() {
+            return clusterInfo;
+        }
+    }
 }

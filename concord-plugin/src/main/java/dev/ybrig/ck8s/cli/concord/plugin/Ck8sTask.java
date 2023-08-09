@@ -170,8 +170,8 @@ public class Ck8sTask
         }
 
         TaskResult result = concordTask.execute(new MapBackedVariables(input));
-        if (result instanceof TaskResult.SimpleResult sr) {
-            sr.value("flow", flowName);
+        if (result instanceof TaskResult.SimpleResult) {
+            ((TaskResult.SimpleResult)result).value("flow", flowName);
         }
         return result;
     }

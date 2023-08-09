@@ -22,14 +22,16 @@ public class FlowCallParamsLogger
     @Override
     public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd)
     {
-        if (!(cmd instanceof StepCommand<?> stepCommand)) {
+        if (!(cmd instanceof StepCommand<?>)) {
             return Result.CONTINUE;
         }
+        StepCommand<?> stepCommand = (StepCommand<?>) cmd;
 
         Step step = stepCommand.getStep();
-        if (!(step instanceof FlowCall flowCall)) {
+        if (!(step instanceof FlowCall)) {
             return Result.CONTINUE;
         }
+        FlowCall flowCall = (FlowCall) step;
 
         if (flowCall.getOptions() == null) {
             return Result.CONTINUE;

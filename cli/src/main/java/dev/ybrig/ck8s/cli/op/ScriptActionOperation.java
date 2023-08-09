@@ -22,38 +22,40 @@ public class ScriptActionOperation
 
         ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
         switch (actionType) {
-            case UP -> {
+            case UP: {
                 return scriptAction.perform(cliOperationContext, "ck8sUp");
             }
-            case DOWN -> {
+            case DOWN: {
                 return scriptAction.perform(cliOperationContext, "ck8sDown");
             }
-            case DNSMASQ_SETUP -> {
+            case DNSMASQ_SETUP: {
                 return scriptAction.perform(cliOperationContext, "dnsmasqSetup");
             }
-            case DNSMASQ_RESTART -> {
+            case DNSMASQ_RESTART: {
                 return scriptAction.perform(cliOperationContext, "dnsmasqRestart");
             }
-            case DOCKER_REGISTRY -> {
+            case DOCKER_REGISTRY: {
                 return scriptAction.perform(cliOperationContext, "ck8sDockerRegistry");
             }
-            case INSTALL_CONCORD -> {
+            case INSTALL_CONCORD: {
                 return scriptAction.perform(cliOperationContext, "installConcord");
             }
-            case REINSTALL_CONCORD_AGENT_POOL -> {
+            case REINSTALL_CONCORD_AGENT_POOL: {
                 return scriptAction.perform(cliOperationContext, "reinstallConcordAgentPool");
             }
-            case CONSOLE -> {
+            case CONSOLE: {
                 ConcordProfile concordCfg = CliConfigurationProvider.getConcordProfile(cliApp.getProfile());
                 Map<String, String> params = new HashMap<>();
                 params.put("CONCORD_URL", concordCfg.baseUrl());
                 params.put("CONCORD_ADMIN_TOKEN", concordCfg.apiKey());
                 return scriptAction.perform(cliOperationContext, "ck8sConsole", params);
             }
-            case AWS_KUBE_CONFIG -> {
+            case AWS_KUBE_CONFIG: {
                 return new AwsKubeconfigAction(ck8s, scriptAction).perform(cliOperationContext);
             }
-            default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
+            default: {
+                throw new IllegalArgumentException("Unknown action type: " + actionType);
+            }
         }
     }
 }

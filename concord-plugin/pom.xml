@@ -105,6 +105,19 @@
                     <proc>proc</proc>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
+                <version>0.3.3</version>
+                <executions>
+                    <execution>
+                        <id>index</id>
+                        <goals>
+                            <goal>main-index</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
