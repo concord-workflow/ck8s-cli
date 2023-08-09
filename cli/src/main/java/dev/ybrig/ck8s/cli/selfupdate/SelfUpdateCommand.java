@@ -1,7 +1,7 @@
 package dev.ybrig.ck8s.cli.selfupdate;
 
 import dev.ybrig.ck8s.cli.CliApp;
-import dev.ybrig.ck8s.cli.VersionProvider;
+import dev.ybrig.ck8s.cli.common.VersionProvider;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import picocli.CommandLine;
 
@@ -27,7 +27,7 @@ public class SelfUpdateCommand
     public Integer call()
             throws Exception
     {
-        String currentVersion = VersionProvider.getCliVersion();
+        String currentVersion = VersionProvider.get();
         String latestVersion = new GitHubLatestReleaseFinder().find("concord-workflow", "ck8s-cli");
 
         LogUtils.info("Current version: {}, latest version: {}", currentVersion, latestVersion);

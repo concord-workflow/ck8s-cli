@@ -1,7 +1,6 @@
 package dev.ybrig.ck8s.cli.op;
 
 import dev.ybrig.ck8s.cli.CliApp;
-import dev.ybrig.ck8s.cli.VersionProvider;
 import dev.ybrig.ck8s.cli.executor.ExecContext;
 import dev.ybrig.ck8s.cli.executor.FlowExecutor;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
@@ -69,13 +68,9 @@ public class RunFlowOperation
             return 0;
         }
 
-        Map<String, Object> args = new HashMap<>(cliApp.getExtraVars());
-        args.put("ck8sCliVersion", VersionProvider.getCliVersion());
-
         Ck8sPayload payload = Ck8sPayload.builder()
                 .flows(ck8sFlows)
                 .ck8sPath(ck8s)
-                .args(args)
                 .build();
 
         payload = new ConcordProcessors().process(flow, payload);

@@ -12,7 +12,8 @@ public class ConcordProcessors {
             new ConcordArgsProcessor(),
             new FlowExclusiveProcessor(),
             new FlowMetaProcessor(),
-            new Ck8sInfoProcessor());
+            new Ck8sInfoProcessor(),
+            new Ck8sCliVersionProcessor());
 
     public Ck8sPayload process(String flowName, Ck8sPayload payload) {
         for (PayloadProcessor p : payloadProcessors) {
