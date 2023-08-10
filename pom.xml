@@ -365,7 +365,7 @@
                     <configuration>
                         <localCheckout>false</localCheckout>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <goals>deploy</goals>
+                        <goals>install</goals>
                         <tagNameFormat>@{project.version}</tagNameFormat>
                     </configuration>
                 </plugin>
