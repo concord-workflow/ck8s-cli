@@ -5,7 +5,7 @@ import dev.ybrig.ck8s.cli.common.Ck8sFlowBuilder;
 import dev.ybrig.ck8s.cli.common.Ck8sFlows;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
-import dev.ybrig.ck8s.cli.common.processors.ConcordProcessors;
+import dev.ybrig.ck8s.cli.common.processors.DefaultProcessors;
 import dev.ybrig.ck8s.cli.common.verify.CheckError;
 import dev.ybrig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
 import dev.ybrig.ck8s.cli.common.MapUtils;
@@ -109,7 +109,7 @@ public class Ck8sTask
                 .putArgs("flow", p.flow())
                 .build();
 
-        payload = new ConcordProcessors().process(p.flow(), payload);
+        payload = new DefaultProcessors().process(payload, p.flow());
 
         return executeProcess(p.flow(), targetDir, payload, p.suspend());
     }

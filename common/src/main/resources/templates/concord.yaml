@@ -11,15 +11,20 @@ configuration:
     - "mvn://com.walmartlabs.concord.plugins.basic:resource-tasks:1.101.0"
   meta:
     flow: 'n/a'
-#  requirements: <REQUIREMENTS>
+
+profiles:
+  remote:
+    configuration:
+      arguments:
+        ignoreMe: "we need remote profile in main concord.yaml"
 
 flows:
   default:
-    - if: ${orDefault('hasGlobalLock', 'false') == 'true'}
+    - if: ${hasVariable('globalExclusiveGroup') && !globalExclusiveGroup.trim().isEmpty()}
       then:
         - task: "lock"
           in:
-            name: "${concord.globalExclusiveGroup}"
+            name: "${globalExclusiveGroup}"
             scope: "ORG"
 
     - if: ${hasVariable('flow')}

@@ -1,5 +1,6 @@
 package dev.ybrig.ck8s.cli.common.processors;
 
+import com.walmartlabs.concord.runtime.v2.model.Profile;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.Ck8sUtils;
 import dev.ybrig.ck8s.cli.common.MapUtils;
@@ -8,18 +9,23 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import java.util.Collections;
 import java.util.Map;
 
-public class ConcordArgsProcessor implements PayloadProcessor
+public class ProfileProcessor implements PayloadProcessor
 {
 
     @Override
-    public Ck8sPayload process(String flowName, Ck8sPayload payload)
+    public Ck8sPayload process(Ck8sPayload payload, String flowName)
     {
         ProcessDefinition pd = Ck8sUtils.findYaml(payload.flows().flowsPath(), flowName);
         if (pd == null) {
             return payload;
         }
 
-        Map<String, Object> flowConcordArgs = MapUtils.getMap(pd.configuration().arguments(), "concord", Collections.emptyMap());
+        Profile profile = pd.profiles().get("remote");
+        if (profile == null) {
+            return payload;
+        }
+
+        Map<String, Object> flowConcordArgs = profile.configuration().arguments();
 
         Ck8sPayload.Concord concordArgs = Ck8sPayload.Concord.builder().from(payload.concord())
                 .org(Ck8sUtils.orgName(payload.ck8sPath(), payload.flows().clusterAlias()))
@@ -31,7 +37,6 @@ public class ConcordArgsProcessor implements PayloadProcessor
 
         return Ck8sPayload.builder().from(payload)
                 .concord(concordArgs)
-                .putArgs("hasGlobalLock", !globalExclusiveGroup.trim().isEmpty())
                 .putArgs("globalExclusiveGroup", globalExclusiveGroup)
                 .build();
     }

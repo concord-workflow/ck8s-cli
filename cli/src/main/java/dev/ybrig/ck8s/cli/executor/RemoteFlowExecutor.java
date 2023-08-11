@@ -1,5 +1,6 @@
 package dev.ybrig.ck8s.cli.executor;
 
+import dev.ybrig.ck8s.cli.common.processors.DefaultProcessors;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
@@ -100,10 +101,12 @@ public class RemoteFlowExecutor
     }
 
     @Nullable
-    public ConcordProcess execute(ExecContext context, String flowName)
+    public ConcordProcess execute(ExecContext context, Ck8sPayload payload, String flowName)
     {
         try {
-            Ck8sPayload payload = Ck8sPayload.builder().from(context.payload())
+            payload = new DefaultProcessors().process(payload, flowName);
+
+            payload = Ck8sPayload.builder().from(payload)
                     .putArgs("concordUrl", concordCfg.baseUrl())
                     .putArgs("flow", flowName)
                     .build();

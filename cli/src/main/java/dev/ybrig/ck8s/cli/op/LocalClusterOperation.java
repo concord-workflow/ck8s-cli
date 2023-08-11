@@ -43,17 +43,16 @@ public class LocalClusterOperation
                     .build();
 
             ExecContext ctx = ExecContext.builder()
-                    .payload(payload)
                     .verbosity(cliOperationContext.verbosity())
                     .testMode(cliApp.isTestMode())
                     .build();
 
-            ConcordProcess process = flowExecutor.execute(ctx, "cert-manager-local");
+            ConcordProcess process = flowExecutor.execute(ctx, payload, "cert-manager-local");
             if (process != null) {
                 process.streamLogs(executor);
             }
 
-            process = flowExecutor.execute(ctx, "polaris");
+            process = flowExecutor.execute(ctx, payload, "polaris");
             if (process != null) {
                 process.streamLogs(executor);
             }

@@ -1,6 +1,7 @@
 package dev.ybrig.ck8s.cli.executor;
 
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.processors.CliProcessors;
 import dev.ybrig.ck8s.cli.concord.ConcordServer;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -106,6 +107,8 @@ public class ConcordCliFlowExecutor
     private int _execute(Ck8sPayload payload, String flowName)
             throws Exception
     {
+        payload = new CliProcessors().process(payload, flowName);
+
         Path targetDir = payload.flows().location();
 
         DependencyManager dependencyManager = new DependencyManager(getDependencyManagerConfiguration());

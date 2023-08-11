@@ -10,6 +10,9 @@ import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
 
 import java.util.Map;
 
+/**
+ * grab meta info from target concord.yaml
+ */
 public class FlowMetaProcessor extends ConcordYamlProcessor
 {
     @Override

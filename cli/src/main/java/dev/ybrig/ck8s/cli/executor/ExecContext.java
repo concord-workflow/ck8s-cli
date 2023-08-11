@@ -11,8 +11,6 @@ import javax.annotation.Nullable;
         jdkOnly = true)
 public interface ExecContext {
 
-    Ck8sPayload payload();
-
     Verbosity verbosity();
 
     @Nullable

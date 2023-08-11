@@ -8,7 +8,6 @@ import dev.ybrig.ck8s.cli.common.Ck8sFlowBuilder;
 import dev.ybrig.ck8s.cli.common.Ck8sFlows;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
-import dev.ybrig.ck8s.cli.common.processors.ConcordProcessors;
 import dev.ybrig.ck8s.cli.common.verify.CheckError;
 import dev.ybrig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
 import com.walmartlabs.concord.cli.Verbosity;
@@ -73,17 +72,14 @@ public class RunFlowOperation
                 .ck8sPath(ck8s)
                 .build();
 
-        payload = new ConcordProcessors().process(flow, payload);
-
         ExecContext execContext = ExecContext.builder()
-                .payload(payload)
                 .verbosity(verbosity)
                 .profile(profile)
                 .testMode(cliApp.isTestMode())
                 .build();
 
         return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(),
-                execContext, cliApp.getFlow());
+                execContext, payload, cliApp.getFlow());
     }
 
     private void assertNoErrors(Ck8sPath ck8sPath, List<CheckError> errors) {
