@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class Ck8sInfoProcessor implements PayloadProcessor {
 
     @Override
-    public Ck8sPayload process(Ck8sPayload payload, String flowName) {
+    public Ck8sPayload process(ProcessorsContext context, Ck8sPayload payload) {
         Ck8sPath ck8sPath = payload.ck8sPath();
 
         Map<String, Object> args = new HashMap<>();

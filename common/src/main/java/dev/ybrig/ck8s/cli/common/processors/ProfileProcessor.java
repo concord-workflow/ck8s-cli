@@ -13,9 +13,9 @@ public class ProfileProcessor implements PayloadProcessor
 {
 
     @Override
-    public Ck8sPayload process(Ck8sPayload payload, String flowName)
+    public Ck8sPayload process(ProcessorsContext context, Ck8sPayload payload)
     {
-        ProcessDefinition pd = Ck8sUtils.findYaml(payload.flows().flowsPath(), flowName);
+        ProcessDefinition pd = Ck8sUtils.findYaml(payload.flows().flowsPath(), context.flowName());
         if (pd == null) {
             return payload;
         }

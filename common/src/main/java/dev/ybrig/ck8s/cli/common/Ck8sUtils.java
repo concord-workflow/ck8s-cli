@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Ck8sUtils
@@ -24,7 +25,7 @@ public class Ck8sUtils
                 streamConcordYaml(ck8sPath.ck8sExtComponents()));
     }
 
-    private static Stream<Path> streamConcordYaml(Path root)
+    public static Stream<Path> streamConcordYaml(Path root)
     {
         if (root == null || !Files.exists(root) || !Files.isDirectory(root)) {
             return Stream.empty();
@@ -34,7 +35,8 @@ public class Ck8sUtils
             return walk
                     .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().matches(Ck8sFlowBuilder.CONCORD_YAML_PATTERN))
-                    .toList().stream();
+                    .collect(Collectors.toList())
+                    .stream();
         }
         catch (IOException e) {
             throw new RuntimeException("stream concord yaml error: " + e.getMessage());
@@ -58,7 +60,8 @@ public class Ck8sUtils
             return walk
                     .filter(Files::isRegularFile)
                     .filter(p -> CK8S_CLUSTER_YAML_NAME.equals(p.getFileName().toString()))
-                    .toList().stream();
+                    .collect(Collectors.toList())
+                    .stream();
         }
         catch (IOException e) {
             throw new RuntimeException("stream cluster yaml error: " + e.getMessage());

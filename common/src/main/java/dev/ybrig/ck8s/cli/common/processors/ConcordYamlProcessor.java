@@ -11,8 +11,8 @@ import java.util.Map;
 public abstract class ConcordYamlProcessor implements PayloadProcessor {
 
     @Override
-    public Ck8sPayload process(Ck8sPayload payload, String flowName) {
-        ProcessDefinition flowProcessDefinition = Ck8sUtils.findYaml(payload.flows().flowsPath(), flowName);
+    public Ck8sPayload process(ProcessorsContext context, Ck8sPayload payload) {
+        ProcessDefinition flowProcessDefinition = Ck8sUtils.findYaml(payload.flows().flowsPath(), context.flowName());
         if (flowProcessDefinition == null) {
             return payload;
         }

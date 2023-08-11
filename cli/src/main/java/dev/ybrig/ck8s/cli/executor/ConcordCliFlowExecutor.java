@@ -1,7 +1,9 @@
 package dev.ybrig.ck8s.cli.executor;
 
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.DefaultDependencies;
 import dev.ybrig.ck8s.cli.common.processors.CliProcessors;
+import dev.ybrig.ck8s.cli.common.processors.ProcessorsContext;
 import dev.ybrig.ck8s.cli.concord.ConcordServer;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
