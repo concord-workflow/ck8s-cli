@@ -20,12 +20,11 @@ public class ProfileProcessor implements PayloadProcessor
             return payload;
         }
 
+        Map<String, Object> flowConcordArgs = Collections.emptyMap();
         Profile profile = pd.profiles().get("remote");
-        if (profile == null) {
-            return payload;
+        if (profile != null) {
+            flowConcordArgs = profile.configuration().arguments();
         }
-
-        Map<String, Object> flowConcordArgs = profile.configuration().arguments();
 
         Ck8sPayload.Concord concordArgs = Ck8sPayload.Concord.builder().from(payload.concord())
                 .org(Ck8sUtils.orgName(payload.ck8sPath(), payload.flows().clusterAlias()))

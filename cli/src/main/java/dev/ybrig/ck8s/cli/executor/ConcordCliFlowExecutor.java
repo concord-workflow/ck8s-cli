@@ -159,8 +159,20 @@ public class ConcordCliFlowExecutor
                 .instanceId(instanceId)
                 .build();
 
+        if (!verbosity.verbose()) {
+            LogUtils.info("Resolving process dependencies...");
+        }
+
+        long t1 = System.currentTimeMillis();
+        Collection<String> dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
+                .resolveDeps(processDefinition.configuration().dependencies());
+
+        if (!verbosity.verbose()) {
+            System.out.println("Dependency resolution took " + (System.currentTimeMillis() - t1) + "ms");
+        }
+
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
-                .dependencies(new DependencyResolver(dependencyManager, verbosity.verbose()).resolveDeps(processDefinition.configuration().dependencies()))
+                .dependencies(dependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
 
