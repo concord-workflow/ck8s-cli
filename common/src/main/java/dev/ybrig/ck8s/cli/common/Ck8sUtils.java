@@ -128,7 +128,15 @@ public class Ck8sUtils
         return merged;
     }
 
-    public static ProcessDefinition findYaml(Path flowsDir, String flowName)
+    public static ProcessDefinition assertYaml(Path flowsDir, String flowName) {
+        ProcessDefinition pd = findYaml(flowsDir, flowName);
+        if (pd != null) {
+            return pd;
+        }
+        throw new RuntimeException("Flow '" + flowName + "' not found");
+    }
+
+    private static ProcessDefinition findYaml(Path flowsDir, String flowName)
     {
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
 

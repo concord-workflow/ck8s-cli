@@ -12,11 +12,7 @@ public abstract class ConcordYamlProcessor implements PayloadProcessor {
 
     @Override
     public Ck8sPayload process(ProcessorsContext context, Ck8sPayload payload) {
-        ProcessDefinition flowProcessDefinition = Ck8sUtils.findYaml(payload.flows().flowsPath(), context.flowName());
-        if (flowProcessDefinition == null) {
-            return payload;
-        }
-
+        ProcessDefinition flowProcessDefinition = Ck8sUtils.assertYaml(payload.flows().flowsPath(), context.flowName());
         Path rootConcordYamlPath = payload.flows().rootConcordYaml();
         Map<String, Object> rootYaml = Mapper.yamlMapper().readMap(rootConcordYamlPath);
         rootYaml = processRootYaml(payload, flowProcessDefinition, rootYaml);

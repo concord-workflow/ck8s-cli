@@ -15,10 +15,7 @@ public class ProfileProcessor implements PayloadProcessor
     @Override
     public Ck8sPayload process(ProcessorsContext context, Ck8sPayload payload)
     {
-        ProcessDefinition pd = Ck8sUtils.findYaml(payload.flows().flowsPath(), context.flowName());
-        if (pd == null) {
-            return payload;
-        }
+        ProcessDefinition pd = Ck8sUtils.assertYaml(payload.flows().flowsPath(), context.flowName());
 
         Map<String, Object> flowConcordArgs = Collections.emptyMap();
         Profile profile = pd.profiles().get("remote");
