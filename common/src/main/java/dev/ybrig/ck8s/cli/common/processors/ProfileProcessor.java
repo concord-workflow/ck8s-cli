@@ -41,20 +41,20 @@ public class ProfileProcessor implements PayloadProcessor
 
     static String orgName(Ck8sPayload payload) {
         if (defaultOrgAlias.contains(payload.flows().clusterAlias())) {
-            return "Default";
+            return null;
         }
         return Ck8sUtils.orgName(payload.ck8sPath(), payload.flows().clusterAlias());
     }
 
     static String projectName(String clusterAlias, Map<String, Object> flowConcordArgs) {
+        if (defaultOrgAlias.contains(clusterAlias)) {
+            return null;
+        }
+
         String projectName = clusterAlias;
         String flowProjectName = MapUtils.getString(flowConcordArgs, "project");
         if (flowProjectName != null) {
-            if (defaultOrgAlias.contains(clusterAlias)) {
-                projectName = flowProjectName;
-            } else {
-                projectName = projectName + "-" + flowProjectName;
-            }
+            projectName = projectName + "-" + flowProjectName;
         }
         return projectName;
     }
