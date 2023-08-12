@@ -31,7 +31,7 @@ public class Ck8sFlowBuilder
 
     private static Map<String, Object> concordYamlTemplate()
     {
-        URL url = Ck8sFlowBuilder.class.getResource("/templates/concord.yaml");
+        URL url = Ck8sFlowBuilder.class.getResource("/dev/ybrig/ck8s/cli/common/templates/concord.yaml");
         if (url == null) {
             throw new RuntimeException("Can't find concord.yml template. This is most likely a bug.");
         }
