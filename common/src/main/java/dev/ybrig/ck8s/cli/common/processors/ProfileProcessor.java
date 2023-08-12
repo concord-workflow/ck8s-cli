@@ -6,8 +6,8 @@ import dev.ybrig.ck8s.cli.common.Ck8sUtils;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
-import java.util.Collections;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class ProfileProcessor implements PayloadProcessor
 {
@@ -24,7 +24,7 @@ public class ProfileProcessor implements PayloadProcessor
         }
 
         Ck8sPayload.Concord concordArgs = Ck8sPayload.Concord.builder().from(payload.concord())
-                .org(Ck8sUtils.orgName(payload.ck8sPath(), payload.flows().clusterAlias()))
+                .org(orgName(payload))
                 .project(projectName(payload.flows().clusterAlias(), flowConcordArgs))
                 .activeProfiles(MapUtils.getList(flowConcordArgs, "activeProfiles", Collections.emptyList()))
                 .build();
@@ -37,11 +37,24 @@ public class ProfileProcessor implements PayloadProcessor
                 .build();
     }
 
+    private static final Set<String> defaultOrgAlias = new HashSet<>(Arrays.asList("ci", "local"));
+
+    static String orgName(Ck8sPayload payload) {
+        if (defaultOrgAlias.contains(payload.flows().clusterAlias())) {
+            return "Default";
+        }
+        return Ck8sUtils.orgName(payload.ck8sPath(), payload.flows().clusterAlias());
+    }
+
     static String projectName(String clusterAlias, Map<String, Object> flowConcordArgs) {
         String projectName = clusterAlias;
         String flowProjectName = MapUtils.getString(flowConcordArgs, "project");
         if (flowProjectName != null) {
-            projectName = projectName + "-" + flowProjectName;
+            if (defaultOrgAlias.contains(clusterAlias)) {
+                projectName = flowProjectName;
+            } else {
+                projectName = projectName + "-" + flowProjectName;
+            }
         }
         return projectName;
     }
