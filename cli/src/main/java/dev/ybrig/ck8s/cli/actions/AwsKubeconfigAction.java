@@ -44,6 +44,10 @@ public class AwsKubeconfigAction
 
         Map<Path, ClusterInfo> clusters = getClusterList(ck8sPath);
         for (Map.Entry<Path, ClusterInfo> e : clusters.entrySet()) {
+            if (cliOperationContext.cliApp().getClusterAlias() != null && !e.getValue().alias().equals(cliOperationContext.cliApp().getClusterAlias())) {
+                continue;
+            }
+
             Path clusterYaml = e.getKey();
             String account = ck8sPath.accountCfgForCluster(clusterYaml).getParent().getFileName().toString();
             if ("local".equals(account)) {
