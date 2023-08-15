@@ -70,6 +70,7 @@ public class RunFlowOperation
         Ck8sPayload payload = Ck8sPayload.builder()
                 .flows(ck8sFlows)
                 .ck8sPath(ck8s)
+                .args(cliApp.getExtraVars())
                 .build();
 
         ExecContext execContext = ExecContext.builder()
