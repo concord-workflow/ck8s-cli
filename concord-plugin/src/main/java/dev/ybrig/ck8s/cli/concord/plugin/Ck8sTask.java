@@ -58,7 +58,10 @@ public class Ck8sTask
     }
 
     public void prepare(String ck8sRef, String ck8sExtRef) throws Exception {
-        Ck8sTaskParams p = Ck8sTaskParams.of(new MapBackedVariables(Collections.emptyMap()), context.defaultVariables());
+        Map<String, Object> params = new HashMap<>();
+        params.put("ck8sRef", ck8sRef);
+        params.put("ck8sExtRef", ck8sExtRef);
+        Ck8sTaskParams p = Ck8sTaskParams.of(new MapBackedVariables(params), context.defaultVariables());
 
         if (Files.notExists(Path.of("ck8s"))) {
             cloneRepo(p.ck8sRepoUrl(), p.ck8sRepoRef(), p.ck8sToken(), "ck8s");
