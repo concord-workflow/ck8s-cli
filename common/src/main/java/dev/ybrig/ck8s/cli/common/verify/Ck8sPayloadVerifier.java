@@ -12,7 +12,8 @@ public class Ck8sPayloadVerifier implements Ck8sFlowBuilderListener {
     private final List<Ck8sPayloadChecker> checkers = Arrays.asList(
 //            new DuplicateConcordArgsCheck(), // we should ignore args with the same values...
             new DuplicateConcordYamlCheck(),
-            new DuplicateConcordFlowCheck()
+            new DuplicateConcordFlowCheck(),
+            new UndefinedFlowCallCheck()
     );
 
     @Override
