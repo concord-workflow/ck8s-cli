@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 public class UndefinedFlowCallCheck extends AbstractChecker {
 
+    private static final Set<String> ignoreFlowNames = Collections.singleton("aepTests");
+
     private final ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
 
     private final Set<String> allFlows = new HashSet<>();
@@ -53,6 +55,9 @@ public class UndefinedFlowCallCheck extends AbstractChecker {
         List<CheckError> errors = super.errors();
         for (Map.Entry<Path, List<FlowCall>> e : undefinedFlowCalls.entrySet()) {
             for (FlowCall flowCall : e.getValue()) {
+                if (ignoreFlowNames.contains(flowCall.getFlowName())) {
+                    continue;
+                }
                 errors.add(CheckError.of(e.getKey(), "Call to undefined flow '" + flowCall.getFlowName() + "'"));
             }
         }
