@@ -16,7 +16,7 @@
         <dependency>
             <groupId>dev.ybrig.ck8s.cli</groupId>
             <artifactId>ck8s-cli-common</artifactId>
-            <version>0.1.44-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
