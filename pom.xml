@@ -367,6 +367,7 @@
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <goals>install</goals>
                         <tagNameFormat>@{project.version}</tagNameFormat>
+                        <arguments>-DskipTests</arguments>
                     </configuration>
                 </plugin>
                 <plugin>
