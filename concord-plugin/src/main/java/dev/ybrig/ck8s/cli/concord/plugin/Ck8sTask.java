@@ -104,7 +104,7 @@ public class Ck8sTask
                 .ck8sPath(ck8sPath)
                 .flows(ck8sFlows)
                 .args(p.arguments())
-                .concord(Ck8sPayload.Concord.builder().meta(p.meta()).build())
+                .concord(Ck8sPayload.Concord.builder().meta(p.meta()).project(p.project()).build())
                 .putArgs("flow", p.flow())
                 .build();
 

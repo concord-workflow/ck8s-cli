@@ -71,14 +71,13 @@ public class Ck8sTaskParams
         return variables.getMap("meta", Collections.emptyMap());
     }
 
+    public String project() {
+        return variables.getString("project");
+    }
+
     public String flow()
     {
         return variables.assertString("flow");
-    }
-
-    public String project()
-    {
-        return variables.getString("project");
     }
 
     public boolean suspend()

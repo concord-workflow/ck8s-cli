@@ -17,7 +17,7 @@ public class ProfileProcessor implements PayloadProcessor
     {
         ProcessDefinition pd = Ck8sUtils.assertYaml(payload.flows().flowsPath(), context.flowName());
 
-        Map<String, Object> flowConcordArgs = Collections.emptyMap();
+        Map<String, Object> flowConcordArgs = Collections.singletonMap("project", payload.concord().project());
         Profile profile = pd.profiles().get("remote");
         if (profile != null) {
             flowConcordArgs = profile.configuration().arguments();
