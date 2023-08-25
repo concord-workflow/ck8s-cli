@@ -323,7 +323,7 @@ public class GenerateTokenCommand
             throws Exception
     {
         if (cliApp.isTestMode()) {
-            System.out.println("Generating OIDC token for profile: %s".formatted(profile));
+            System.out.println(String.format("Generating OIDC token for profile: %s", profile));
             return 0;
         }
 

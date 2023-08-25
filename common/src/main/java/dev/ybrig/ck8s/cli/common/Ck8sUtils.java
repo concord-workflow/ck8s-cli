@@ -92,6 +92,19 @@ public class Ck8sUtils
         return MapUtils.assertString(org, "organization.name");
     }
 
+    public static Map<String, Object> clusterConfiguration(Ck8sPath ck8sPath, String clusterAlias) {
+        Path clusterYaml = findClusterYamlByAlias(ck8sPath, clusterAlias);
+        if (clusterYaml == null) {
+            throw new RuntimeException("Can't find cluster.yaml for '" + clusterAlias + "' alias");
+        }
+
+        Path defaultCfg = ck8sPath.defaultCfg();
+        Path organizationYamlPath = ck8sPath.orgCfgForCluster(clusterYaml);
+        Path accountYamlPath = ck8sPath.accountCfgForCluster(clusterYaml);
+
+        return merge(defaultCfg, organizationYamlPath, accountYamlPath, clusterYaml);
+    }
+
     public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug,
                                                        List<String> additionalDeps)
     {

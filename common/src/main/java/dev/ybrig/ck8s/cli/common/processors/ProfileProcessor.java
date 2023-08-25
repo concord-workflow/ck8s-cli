@@ -6,7 +6,6 @@ import dev.ybrig.ck8s.cli.common.Ck8sUtils;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class ProfileProcessor implements PayloadProcessor
@@ -23,9 +22,13 @@ public class ProfileProcessor implements PayloadProcessor
             flowConcordArgs = profile.configuration().arguments();
         }
 
+        Map<String, Object> clusterConfiguration = Ck8sUtils.clusterConfiguration(payload.ck8sPath(), payload.flows().clusterAlias());
+        boolean projectPerCluster = "external".equals(MapUtils.getString(clusterConfiguration, "concord.server.type", "internal"));
+        System.out.println(">>>2>" + projectPerCluster);
+
         Ck8sPayload.Concord concordArgs = Ck8sPayload.Concord.builder().from(payload.concord())
-                .org(orgName(payload))
-                .project(projectName(payload.flows().clusterAlias(), flowConcordArgs))
+                .org(orgName(projectPerCluster, payload))
+                .project(projectName(projectPerCluster, payload.flows().clusterAlias(), flowConcordArgs))
                 .activeProfiles(MapUtils.getList(flowConcordArgs, "activeProfiles", Collections.emptyList()))
                 .build();
 
@@ -37,25 +40,23 @@ public class ProfileProcessor implements PayloadProcessor
                 .build();
     }
 
-    private static final Set<String> defaultOrgAlias = new HashSet<>(Arrays.asList("ci", "local"));
-
-    static String orgName(Ck8sPayload payload) {
-        if (defaultOrgAlias.contains(payload.flows().clusterAlias())) {
-            return "Default";
+    static String orgName(boolean projectPerCluster, Ck8sPayload payload) {
+        if (projectPerCluster) {
+            return Ck8sUtils.orgName(payload.ck8sPath(), payload.flows().clusterAlias());
         }
-        return Ck8sUtils.orgName(payload.ck8sPath(), payload.flows().clusterAlias());
+        return "Default";
     }
 
-    static String projectName(String clusterAlias, Map<String, Object> flowConcordArgs) {
-        if (defaultOrgAlias.contains(clusterAlias)) {
-            return MapUtils.getString(flowConcordArgs, "project");
+    static String projectName(boolean projectPerCluster, String clusterAlias, Map<String, Object> flowConcordArgs) {
+        if (projectPerCluster) {
+            String projectName = clusterAlias;
+            String flowProjectName = MapUtils.getString(flowConcordArgs, "project");
+            if (flowProjectName != null) {
+                projectName = projectName + "-" + flowProjectName;
+            }
+            return projectName;
         }
 
-        String projectName = clusterAlias;
-        String flowProjectName = MapUtils.getString(flowConcordArgs, "project");
-        if (flowProjectName != null) {
-            projectName = projectName + "-" + flowProjectName;
-        }
-        return projectName;
+        return MapUtils.getString(flowConcordArgs, "project");
     }
 }

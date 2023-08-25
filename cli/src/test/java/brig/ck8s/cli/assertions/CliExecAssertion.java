@@ -25,7 +25,7 @@ public class CliExecAssertion
     {
         return assertExitCode(
                 code -> expectedExitCode == code,
-                code -> "Expected exit code: %s but got: %s".formatted(expectedExitCode, code));
+                code -> String.format("Expected exit code: %s but got: %s", expectedExitCode, code));
     }
 
     public CliExecAssertion asserErrEmpty()
@@ -69,7 +69,7 @@ public class CliExecAssertion
 
     private void assertStreamContainsLine(String steamName, String streamContents, String expectedLineRegexp)
     {
-        assertTrue(!streamContents.trim().isEmpty(), "Stream: %s is empty".formatted(steamName));
+        assertTrue(!streamContents.trim().isEmpty(), String.format("Stream: %s is empty", steamName));
         Pattern linePattern = Pattern.compile(expectedLineRegexp);
         Optional<Matcher> matchingLine = Arrays.asList(streamContents.split(lineSeparator()))
                 .stream()
@@ -78,7 +78,6 @@ public class CliExecAssertion
                 .findFirst();
         assertTrue(
                 matchingLine.isPresent(),
-                "Stream: %1$s does not contain line matching: %2$s\n%1$s\n%3$s"
-                        .formatted(steamName, expectedLineRegexp, streamContents));
+                String.format("Stream: %1$s does not contain line matching: %2$s\n%1$s\n%3$s", steamName, expectedLineRegexp, streamContents));
     }
 }

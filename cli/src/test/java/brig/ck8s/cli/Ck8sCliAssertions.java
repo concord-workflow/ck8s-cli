@@ -18,8 +18,8 @@ public class Ck8sCliAssertions
 
     public static CliExecAssertion assertRunAction(String actionName, String expected)
     {
-        return assertSuccess("-a %s --dry-run".formatted(actionName))
-                .assertOutContainsMatchingLine("Executing action: %s".formatted(expected));
+        return assertSuccess(String.format("-a %s --dry-run", actionName))
+                .assertOutContainsMatchingLine(String.format("Executing action: %s", expected));
     }
 
     private static String[] parseArgs(String cliArgs) {
