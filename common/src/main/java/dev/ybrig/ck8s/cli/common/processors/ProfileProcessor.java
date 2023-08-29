@@ -24,7 +24,6 @@ public class ProfileProcessor implements PayloadProcessor
 
         Map<String, Object> clusterConfiguration = Ck8sUtils.clusterConfiguration(payload.ck8sPath(), payload.flows().clusterAlias());
         boolean projectPerCluster = "external".equals(MapUtils.getString(clusterConfiguration, "concord.server.type", "internal"));
-        System.out.println(">>>2>" + projectPerCluster);
 
         Ck8sPayload.Concord concordArgs = Ck8sPayload.Concord.builder().from(payload.concord())
                 .org(orgName(projectPerCluster, payload))
