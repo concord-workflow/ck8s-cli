@@ -164,7 +164,10 @@ public class Ck8sTask
         input.put("meta", payload.concord().meta());
 
         if (debug) {
-            log.info("Starting new process\nflow: {}, args: {}, concordArgs: {}", flowName, payload.args(), payload.concord());
+            log.info("Starting new process\nflow: {}\nargs:\n{}\nconcordArgs: {}",
+                    flowName,
+                    Mapper.yamlMapper().writeAsString(payload.args()),
+                    Mapper.yamlMapper().writeAsString(payload.concord()));
             log.info("concord task input: {}", input);
         }
 
@@ -185,4 +188,5 @@ public class Ck8sTask
             throw new RuntimeException("Payload has errors");
         }
     }
+
 }
