@@ -2,6 +2,7 @@ package dev.ybrig.ck8s.cli.common.processors;
 
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -9,6 +10,14 @@ import java.util.List;
 @Value.Style(
         jdkOnly = true)
 public interface ProcessorsContext {
+
+    @Value.Default
+    default String defaultOrg() {
+        return "Default";
+    }
+
+    @Nullable
+    String defaultProject();
 
     String flowName();
 

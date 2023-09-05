@@ -27,4 +27,10 @@ public interface ConcordProfile
 
     @Nullable
     String apiKey();
+
+    @Nullable
+    String defaultOrg();
+
+    @Nullable
+    String defaultProject();
 }

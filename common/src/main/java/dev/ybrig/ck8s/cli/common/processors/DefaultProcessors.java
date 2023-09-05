@@ -18,10 +18,21 @@ public class DefaultProcessors {
             new DependenciesProcessor());
 
     public Ck8sPayload process(Ck8sPayload payload, String flowName) {
-        ProcessorsContext context = ProcessorsContext.builder()
+        return process(payload, flowName, null, null);
+    }
+
+    public Ck8sPayload process(Ck8sPayload payload, String flowName, String defaultOrg, String defaultProject) {
+        ImmutableProcessorsContext.Builder contextBuilder = ProcessorsContext.builder()
                 .flowName(flowName)
-                .addAllDefaultDependencies(DefaultDependencies.load(payload.ck8sPath()))
-                .build();
+                .addAllDefaultDependencies(DefaultDependencies.load(payload.ck8sPath()));
+
+        if (defaultOrg != null && defaultProject != null) {
+            contextBuilder
+                    .defaultOrg(defaultOrg)
+                    .defaultProject(defaultProject);
+        }
+
+        ProcessorsContext context = contextBuilder.build();
 
         for (PayloadProcessor p : payloadProcessors) {
             payload = p.process(context, payload);
