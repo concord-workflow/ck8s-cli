@@ -3,11 +3,9 @@ package dev.ybrig.ck8s.cli.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 public final class IOUtils
 {
@@ -54,6 +52,59 @@ public final class IOUtils
         }
     }
 
+    public static void copy(Path src, Path dst, List<String> skipContents, CopyOption... options) throws IOException {
+        _copy(src, src, dst, skipContents, options);
+    }
+
+    private static void _copy(Path root, Path src, Path dst, List<String> ignorePattern, CopyOption... options) throws IOException {
+        Files.walkFileTree(src, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                if (dir != src && anyMatch(src.relativize(dir).toString(), ignorePattern)) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file != src && anyMatch(src.relativize(file).toString(), ignorePattern)) {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                Path a = file;
+                Path b = dst.resolve(src.relativize(file));
+
+                Path parent = b.getParent();
+                if (!Files.exists(parent)) {
+                    Files.createDirectories(parent);
+                }
+
+                if (Files.isSymbolicLink(file)) {
+                    Path link = Files.readSymbolicLink(file);
+                    Path target = file.getParent().resolve(link).normalize();
+
+                    if (!target.startsWith(root)) {
+                        throw new IOException("Symlinks outside the base directory are not supported: " + file + " -> " + target);
+                    }
+
+                    if (Files.notExists(target)) {
+                        // missing target
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    Files.createSymbolicLink(b, link);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                Files.copy(a, b, options);
+
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
     public static String toString(InputStream input)
     {
         try {
@@ -63,4 +114,13 @@ public final class IOUtils
             throw new RuntimeException(e);
         }
     }
+
+    private static boolean anyMatch(String what, List<String> patterns) {
+        if (patterns == null) {
+            return false;
+        }
+
+        return patterns.stream().anyMatch(what::matches);
+    }
+
 }

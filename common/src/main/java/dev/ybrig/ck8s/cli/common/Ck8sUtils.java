@@ -1,7 +1,5 @@
 package dev.ybrig.ck8s.cli.common;
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
-import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
@@ -113,7 +111,7 @@ public class Ck8sUtils
         Path accountYamlPath = ck8sPath.accountCfgForCluster(clusterYaml);
 
         Map<String, Object> concordYml = new HashMap<>(concordYmlTemplate);
-        ConfigurationUtils.set(concordYml, debug, "configuration", "debug");
+        MapUtils.set(concordYml, debug, "configuration.debug");
         Map<String, Object> merged = merge(defaultCfg, organizationYamlPath, accountYamlPath, clusterYaml);
         MapUtils.set(concordYml, merged, "configuration.arguments.clusterRequest");
 
@@ -127,7 +125,7 @@ public class Ck8sUtils
         List<String> dependencies = new ArrayList<>(currentDependencies);
         dependencies.addAll(additionalDeps);
 
-        ConfigurationUtils.set(concordYml, dependencies, "configuration", "dependencies");
+        MapUtils.set(concordYml, dependencies, "configuration.dependencies");
     }
 
     private static Map<String, Object> merge(Path... yamls)
@@ -151,7 +149,7 @@ public class Ck8sUtils
 
     private static ProcessDefinition findYaml(Path flowsDir, String flowName)
     {
-        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+        ProjectLoaderV2 loader = new ProjectLoaderV2((imports, dest, listener) -> Collections.emptyList());
 
         try (Stream<Path> walk = Files.walk(flowsDir)) {
             return walk

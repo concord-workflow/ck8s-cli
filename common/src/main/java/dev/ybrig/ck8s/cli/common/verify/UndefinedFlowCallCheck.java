@@ -1,6 +1,5 @@
 package dev.ybrig.ck8s.cli.common.verify;
 
-import com.walmartlabs.concord.imports.NoopImportManager;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.*;
 
@@ -12,7 +11,7 @@ public class UndefinedFlowCallCheck extends AbstractChecker {
 
     private static final Set<String> ignoreFlowNames = Collections.singleton("aepTests");
 
-    private final ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+    private final ProjectLoaderV2 loader = new ProjectLoaderV2((imports, dest, listener) -> Collections.emptyList());
 
     private final Set<String> allFlows = new HashSet<>();
     private final Map<Path, List<FlowCall>> undefinedFlowCalls = new HashMap<>();

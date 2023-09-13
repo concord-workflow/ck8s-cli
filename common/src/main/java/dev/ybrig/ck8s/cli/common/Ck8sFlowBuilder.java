@@ -134,7 +134,7 @@ public class Ck8sFlowBuilder
 
         try {
             copyComponentsYaml(sourceCk8sComponents, concordDir);
-            com.walmartlabs.concord.common.IOUtils.copy(sourceCk8sComponents, componentsDir, FILE_IGNORE_PATTERNS, null, StandardCopyOption.REPLACE_EXISTING);
+            IOUtils.copy(sourceCk8sComponents, componentsDir, FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
         }
         catch (IOException e) {
             throw new RuntimeException("Error copying ck8s components '" + sourceCk8sComponents + "' to '" + componentsDir + "': " + e.getMessage(), e);
@@ -143,7 +143,7 @@ public class Ck8sFlowBuilder
         if (sourceCk8sExtComponents != null && Files.isDirectory(sourceCk8sExtComponents)) {
             try {
                 copyComponentsYaml(sourceCk8sExtComponents, concordDir);
-                com.walmartlabs.concord.common.IOUtils.copy(sourceCk8sExtComponents, componentsDir, FILE_IGNORE_PATTERNS, null, StandardCopyOption.REPLACE_EXISTING);
+                IOUtils.copy(sourceCk8sExtComponents, componentsDir, FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             }
             catch (IOException e) {
                 throw new RuntimeException("Error copying ck8sExt components '" + sourceCk8sExtComponents + "' to '" + componentsDir + "': " + e.getMessage());
@@ -175,5 +175,4 @@ public class Ck8sFlowBuilder
         catch (IOException e) {
             throw new RuntimeException("Error copy '" + source + "' to '" + target + "':" + e.getMessage());
         }
-    }
-}
+    }}

@@ -1,8 +1,7 @@
 package dev.ybrig.ck8s.cli.common;
 
-import com.walmartlabs.concord.common.ConfigurationUtils;
-
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +56,7 @@ public final class MapUtils
 
     public static <T> T get(Map<String, Object> m, String path, T defaultValue, Class<T> type)
     {
-        Object value = ConfigurationUtils.get(m, path.split("\\."));
+        Object value = get(m, path.split("\\."));
         if (value == null) {
             return defaultValue;
         }
@@ -82,16 +81,121 @@ public final class MapUtils
 
     public static Map<String, Object> merge(Map<String, Object> a, Map<String, Object> b)
     {
-        return ConfigurationUtils.deepMerge(a, b);
+        return deepMerge(a, b);
     }
 
     public static void set(Map<String, Object> m, Object b, String path)
     {
-        ConfigurationUtils.set(m, b, path.split("\\."));
+        set(m, b, path.split("\\."));
     }
 
     public static void delete(Map<String, Object> m, String path)
     {
-        ConfigurationUtils.delete(m, path.split("\\."));
+        delete(m, path.split("\\."));
+    }
+
+    public static Object get(Map<String, Object> m, String[] path) {
+        int depth = path != null ? path.length : 0;
+        return get(m, depth, path);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object get(Map<String, Object> m, int depth, String[] path) {
+        if (m == null) {
+            return null;
+        }
+
+        if (depth == 0) {
+            return m;
+        }
+
+        for (int i = 0; i < depth - 1; i++) {
+            Object v = m.get(path[i]);
+            if (v == null) {
+                return null;
+            }
+
+            if (!(v instanceof Map)) {
+                throw new IllegalArgumentException("Invalid data type, expected JSON object, got: " + v.getClass());
+            }
+
+            m = (Map<String, Object>) v;
+        }
+
+        return m.get(path[depth - 1]);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void set(Map<String, Object> a, Object b, String[] path) {
+        Object holder = get(a, path.length - 1, path);
+
+        if (holder != null && !(holder instanceof Map)) {
+            throw new IllegalArgumentException("Value should be contained in a JSON object: " + String.join("/", path));
+        }
+
+        Map<String, Object> m = (Map<String, Object>) holder;
+
+        // TODO automatically create the value holder?
+        assert m != null;
+        m.put(path[path.length - 1], b);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void delete(Map<String, Object> a, String[] path) {
+        Object holder = get(a, path.length - 1, path);
+        if (holder == null) {
+            return;
+        }
+
+        if (!(holder instanceof Map)) {
+            throw new IllegalArgumentException("Value should be contained in a JSON object: " + String.join("/", path));
+        }
+
+        Map<String, Object> m = (Map<String, Object>) holder;
+        m.remove(path[path.length - 1]);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, Object> b) {
+        Map<String, Object> result = new LinkedHashMap<>(a != null ? a : Collections.emptyMap());
+
+        for (String k : b.keySet()) {
+            Object av = result.get(k);
+            Object bv = b.get(k);
+
+            Object o = bv;
+            if (av instanceof Map && bv instanceof Map) {
+                o = deepMerge((Map<String, Object>) av, (Map<String, Object>) bv);
+            }
+
+            // preserve the order of the keys
+            if (result.containsKey(k)) {
+                result.replace(k, o);
+            } else {
+                result.put(k, o);
+            }
+        }
+        return result;
+    }
+
+    public static boolean has(Map<String, Object> m, String[] path) {
+        if (m == null) {
+            return false;
+        }
+
+        if (path.length == 0) {
+            return false;
+        }
+
+        for (int i = 0; i < path.length - 1; i++) {
+            Object v = m.get(path[i]);
+            if (!(v instanceof Map)) {
+                return false;
+            }
+
+            m = (Map<String, Object>) v;
+        }
+
+        return m.containsKey(path[path.length - 1]);
     }
 }

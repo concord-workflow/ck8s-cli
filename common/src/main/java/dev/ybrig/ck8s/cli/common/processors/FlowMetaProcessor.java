@@ -3,10 +3,7 @@ package dev.ybrig.ck8s.cli.common.processors;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
+import dev.ybrig.ck8s.cli.common.eval.ExpressionEvaluator;
 
 import java.util.Map;
 
@@ -23,12 +20,8 @@ public class FlowMetaProcessor extends ConcordYamlProcessor
         }
 
         Map<String, Object> variables = MapUtils.merge(pd.configuration().arguments(), payload.args());
-        EvalContext evalContext = EvalContext.builder()
-                .variables(new MapBackedVariables(variables))
-                .build();
 
-        DefaultExpressionEvaluator expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders());
-        Map<String, Object> evalMeta = expressionEvaluator.evalAsMap(evalContext, meta);
+        Map<String, Object> evalMeta = ExpressionEvaluator.getInstance().evalMap(variables, meta);
 
         return MapUtils.merge(rootYaml, Map.of("configuration", Map.of("meta", evalMeta)));
     }

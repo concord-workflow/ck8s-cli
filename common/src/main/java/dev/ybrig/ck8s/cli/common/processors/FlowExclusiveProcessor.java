@@ -1,13 +1,10 @@
 package dev.ybrig.ck8s.cli.common.processors;
 
-import dev.ybrig.ck8s.cli.common.Ck8sPayload;
-import dev.ybrig.ck8s.cli.common.MapUtils;
 import com.walmartlabs.concord.runtime.v2.model.ExclusiveMode;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
-import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
-import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
-import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
+import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.MapUtils;
+import dev.ybrig.ck8s.cli.common.eval.ExpressionEvaluator;
 
 import java.util.Map;
 
@@ -21,12 +18,7 @@ public class FlowExclusiveProcessor extends ConcordYamlProcessor
         }
 
         Map<String, Object> m = MapUtils.merge(pd.configuration().arguments(), payload.args());
-        EvalContext evalContext = EvalContext.builder()
-                .variables(new MapBackedVariables(m))
-                .build();
-
-        DefaultExpressionEvaluator expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders());
-        String group = expressionEvaluator.eval(evalContext, exclusive.group(), String.class);
+        String group = ExpressionEvaluator.getInstance().eval(m, exclusive.group(), String.class);
 
         MapUtils.delete(rootYaml, "configuration.exclusive");
         return MapUtils.merge(rootYaml, Map.of("configuration", Map.of("exclusive", ExclusiveMode.of(group, exclusive.mode()))));

@@ -41,27 +41,17 @@
             <artifactId>error_prone_annotations</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Immutables -->
         <dependency>
             <groupId>org.immutables</groupId>
             <artifactId>value</artifactId>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-common</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord</groupId>
-            <artifactId>concord-imports</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.walmartlabs.concord.runtime.v2</groupId>
-            <artifactId>concord-runner-v2</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
