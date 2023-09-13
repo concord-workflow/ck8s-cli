@@ -15,6 +15,10 @@ public class Ck8sInfoProcessor implements PayloadProcessor {
 
     @Override
     public Ck8sPayload process(ProcessorsContext context, Ck8sPayload payload) {
+        if (payload.args().containsKey("ck8sRef")) {
+            return payload;
+        }
+
         Ck8sPath ck8sPath = payload.ck8sPath();
 
         Map<String, Object> args = new HashMap<>();
