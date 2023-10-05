@@ -1,10 +1,10 @@
 package dev.ybrig.ck8s.cli.selfupdate;
 
-import dev.ybrig.ck8s.cli.common.MapUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.ybrig.ck8s.cli.common.MapUtils;
 
 import java.io.InputStream;
 import java.net.URI;

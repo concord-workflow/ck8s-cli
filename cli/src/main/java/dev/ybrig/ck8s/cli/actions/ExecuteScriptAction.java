@@ -1,8 +1,8 @@
 package dev.ybrig.ck8s.cli.actions;
 
-import dev.ybrig.ck8s.cli.op.CliOperationContext;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.CliCommand;
+import dev.ybrig.ck8s.cli.op.CliOperationContext;
 import dev.ybrig.ck8s.cli.utils.TempPath;
 
 import java.io.IOException;
@@ -11,12 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ExecuteScriptAction
 {

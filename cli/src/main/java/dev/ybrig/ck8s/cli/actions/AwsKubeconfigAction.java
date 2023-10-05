@@ -1,8 +1,8 @@
 package dev.ybrig.ck8s.cli.actions;
 
+import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.model.ClusterInfo;
 import dev.ybrig.ck8s.cli.op.CliOperationContext;
-import dev.ybrig.ck8s.cli.common.Ck8sPath;
 
 import java.io.File;
 import java.nio.file.Files;

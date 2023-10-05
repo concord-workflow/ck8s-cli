@@ -1,9 +1,9 @@
 package dev.ybrig.ck8s.cli.op;
 
+import com.walmartlabs.concord.cli.Verbosity;
 import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
-import com.walmartlabs.concord.cli.Verbosity;
 
 import static java.util.Objects.requireNonNull;
 

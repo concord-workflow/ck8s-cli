@@ -1,8 +1,8 @@
 package dev.ybrig.ck8s.cli.cfg;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.common.Mapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 import picocli.CommandLine;
 
 import java.util.Map;

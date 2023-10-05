@@ -1,12 +1,12 @@
 package dev.ybrig.ck8s.cli.completion;
 
+import com.walmartlabs.concord.imports.NoopImportManager;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.Ck8sUtils;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
-import com.walmartlabs.concord.imports.NoopImportManager;
-import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 
 import java.nio.file.Path;
 import java.util.Collections;

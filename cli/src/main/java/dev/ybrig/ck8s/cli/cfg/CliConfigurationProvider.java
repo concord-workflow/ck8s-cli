@@ -1,9 +1,9 @@
 package dev.ybrig.ck8s.cli.cfg;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import dev.ybrig.ck8s.cli.common.Mapper;
 import dev.ybrig.ck8s.cli.model.CliConfiguration;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
-import dev.ybrig.ck8s.cli.common.Mapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.InputStream;
 import java.nio.file.Files;

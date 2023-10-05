@@ -1,9 +1,9 @@
 package dev.ybrig.ck8s.cli.completion;
 
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
+import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.model.ClusterInfo;
 import dev.ybrig.ck8s.cli.op.ClusterListOperation;
-import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
 import java.util.Collections;

@@ -1,8 +1,8 @@
 package dev.ybrig.ck8s.cli.op;
 
+import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.actions.ExecuteScriptAction;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
-import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.common.Ck8sFlowBuilder;
 import dev.ybrig.ck8s.cli.common.Ck8sFlows;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;

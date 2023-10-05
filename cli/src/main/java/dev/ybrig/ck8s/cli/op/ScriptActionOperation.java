@@ -5,8 +5,8 @@ import dev.ybrig.ck8s.cli.actions.ActionType;
 import dev.ybrig.ck8s.cli.actions.AwsKubeconfigAction;
 import dev.ybrig.ck8s.cli.actions.ExecuteScriptAction;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
-import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
+import dev.ybrig.ck8s.cli.model.ConcordProfile;
 
 import java.util.HashMap;
 import java.util.Map;

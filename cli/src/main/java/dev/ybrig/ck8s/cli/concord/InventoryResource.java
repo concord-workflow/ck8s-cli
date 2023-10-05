@@ -1,8 +1,8 @@
 package dev.ybrig.ck8s.cli.concord;
 
-import dev.ybrig.ck8s.cli.utils.LogUtils;
 import com.walmartlabs.concord.client.CreateInventoryResponse;
 import com.walmartlabs.concord.client.InventoryEntry;
+import dev.ybrig.ck8s.cli.utils.LogUtils;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 

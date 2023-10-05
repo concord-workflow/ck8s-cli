@@ -1,6 +1,5 @@
 package dev.ybrig.ck8s.cli.concord;
 
-import dev.ybrig.ck8s.cli.utils.LogUtils;
 import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.Call;
 import com.walmartlabs.concord.ApiClient;
@@ -8,6 +7,7 @@ import com.walmartlabs.concord.ApiException;
 import com.walmartlabs.concord.client.ProcessApi;
 import com.walmartlabs.concord.client.ProcessEntry;
 import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import dev.ybrig.ck8s.cli.utils.LogUtils;
 
 import java.lang.reflect.Type;
 import java.util.*;
