@@ -5,13 +5,7 @@ import dev.ybrig.ck8s.cli.cfg.CliDefaultParamValuesProvider;
 import dev.ybrig.ck8s.cli.completion.ClusterAliasCompletion;
 import dev.ybrig.ck8s.cli.completion.FlowCompletion;
 import dev.ybrig.ck8s.cli.completion.ProfilesCompletion;
-import dev.ybrig.ck8s.cli.op.CliOperation;
-import dev.ybrig.ck8s.cli.op.CliOperationContext;
-import dev.ybrig.ck8s.cli.op.ClusterListOperation;
-import dev.ybrig.ck8s.cli.op.DefaultOperation;
-import dev.ybrig.ck8s.cli.op.LocalClusterOperation;
-import dev.ybrig.ck8s.cli.op.RunFlowOperation;
-import dev.ybrig.ck8s.cli.op.ScriptActionOperation;
+import dev.ybrig.ck8s.cli.op.*;
 import dev.ybrig.ck8s.cli.selfupdate.SelfUpdateCommand;
 import dev.ybrig.ck8s.cli.sso.GenerateTokenCommand;
 import dev.ybrig.ck8s.cli.utils.EnumCompletionCandidates;
@@ -57,6 +51,9 @@ public class CliApp
 
     @CommandLine.Option(names = {"--withTests"}, description = "include test flows to concord payload")
     boolean withTests = false;
+
+    @CommandLine.Option(names = {"--secretsProvider"}, description = "secrets provider")
+    SecretsProvider secretsProvider;
 
     @CommandLine.Option(names = {"--withInputAssert"}, description = "assert flow call input parameters aat runtime")
     boolean withInputAssert = false;
@@ -128,6 +125,10 @@ public class CliApp
     public boolean isWithTests()
     {
         return withTests;
+    }
+
+    public SecretsProvider getSecretsProvider() {
+        return secretsProvider;
     }
 
     public boolean isWithInputAssert()
@@ -206,5 +207,9 @@ public class CliApp
         {
             super(ActionType.class);
         }
+    }
+
+    public enum SecretsProvider {
+        local
     }
 }

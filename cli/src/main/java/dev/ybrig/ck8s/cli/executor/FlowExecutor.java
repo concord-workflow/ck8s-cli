@@ -16,7 +16,7 @@ public class FlowExecutor
             }
             case CONCORD_CLI: {
                 ConcordCliFlowExecutor executor = new ConcordCliFlowExecutor(execContext.verbosity());
-                return executor.execute(payload, flowName);
+                return executor.execute(execContext, payload, flowName);
             }
             default: {
                 throw new IllegalArgumentException("Unknown type: " + type);

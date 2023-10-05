@@ -1,10 +1,11 @@
 package dev.ybrig.ck8s.cli.executor;
 
 import com.walmartlabs.concord.cli.Verbosity;
-import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+
+import static dev.ybrig.ck8s.cli.CliApp.SecretsProvider;
 
 @Value.Immutable
 @Value.Style(
@@ -20,6 +21,9 @@ public interface ExecContext {
     default boolean testMode() {
         return false;
     }
+
+    @Nullable
+    SecretsProvider secretsProvider();
 
     static ImmutableExecContext.Builder builder() {
         return ImmutableExecContext.builder();

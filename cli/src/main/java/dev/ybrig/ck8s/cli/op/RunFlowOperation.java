@@ -1,18 +1,21 @@
 package dev.ybrig.ck8s.cli.op;
 
+import com.walmartlabs.concord.cli.Verbosity;
 import dev.ybrig.ck8s.cli.CliApp;
-import dev.ybrig.ck8s.cli.executor.ExecContext;
-import dev.ybrig.ck8s.cli.executor.FlowExecutor;
-import dev.ybrig.ck8s.cli.utils.LogUtils;
 import dev.ybrig.ck8s.cli.common.Ck8sFlowBuilder;
 import dev.ybrig.ck8s.cli.common.Ck8sFlows;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.verify.CheckError;
 import dev.ybrig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
-import com.walmartlabs.concord.cli.Verbosity;
+import dev.ybrig.ck8s.cli.executor.ExecContext;
+import dev.ybrig.ck8s.cli.executor.FlowExecutor;
+import dev.ybrig.ck8s.cli.utils.LogUtils;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Set;
 
 import static java.util.Objects.nonNull;
 
@@ -77,6 +80,7 @@ public class RunFlowOperation
                 .verbosity(verbosity)
                 .profile(profile)
                 .testMode(cliApp.isTestMode())
+                .secretsProvider(cliApp.getSecretsProvider())
                 .build();
 
         return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(),

@@ -1,11 +1,5 @@
 package dev.ybrig.ck8s.cli.executor;
 
-import dev.ybrig.ck8s.cli.common.Ck8sPayload;
-import dev.ybrig.ck8s.cli.common.DefaultDependencies;
-import dev.ybrig.ck8s.cli.common.processors.CliProcessors;
-import dev.ybrig.ck8s.cli.common.processors.ProcessorsContext;
-import dev.ybrig.ck8s.cli.concord.ConcordServer;
-import dev.ybrig.ck8s.cli.utils.LogUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
@@ -32,6 +26,10 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
+import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.processors.CliProcessors;
+import dev.ybrig.ck8s.cli.concord.ConcordServer;
+import dev.ybrig.ck8s.cli.utils.LogUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -90,10 +88,10 @@ public class ConcordCliFlowExecutor
         }
     }
 
-    public int execute(Ck8sPayload payload, String flowName)
+    public int execute(ExecContext execContext, Ck8sPayload payload, String flowName)
     {
         try {
-            return _execute(payload, flowName);
+            return _execute(execContext, payload, flowName);
         }
         catch (Exception e) {
             if (verbosity.verbose()) {
@@ -106,7 +104,7 @@ public class ConcordCliFlowExecutor
         }
     }
 
-    private int _execute(Ck8sPayload payload, String flowName)
+    private int _execute(ExecContext execContext, Ck8sPayload payload, String flowName)
             throws Exception
     {
         payload = new CliProcessors().process(payload, flowName);
@@ -144,7 +142,9 @@ public class ConcordCliFlowExecutor
         Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
         args.putAll(flowAndUserArgs);
         args.put("flow", flowName);
-
+        if (execContext.secretsProvider() != null) {
+            ConfigurationUtils.set(args, execContext.secretsProvider().name(), "clusterRequest", "secretsProvider");
+        }
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
