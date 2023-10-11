@@ -27,12 +27,15 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.IOUtils;
 import dev.ybrig.ck8s.cli.common.processors.CliProcessors;
 import dev.ybrig.ck8s.cli.concord.ConcordServer;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 public class ConcordCliFlowExecutor
@@ -169,6 +172,12 @@ public class ConcordCliFlowExecutor
 
         if (!verbosity.verbose()) {
             System.out.println("Dependency resolution took " + (System.currentTimeMillis() - t1) + "ms");
+        }
+
+        // process local libs
+        Path libsPath = Path.of(System.getProperty("user.dir")).resolve("lib");
+        if (Files.exists(libsPath)) {
+            IOUtils.copy(libsPath, targetDir.resolve(Constants.Files.LIBRARIES_DIR_NAME), null, StandardCopyOption.REPLACE_EXISTING);
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()

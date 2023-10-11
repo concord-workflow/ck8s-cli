@@ -68,6 +68,9 @@ public class CliApp
     @CommandLine.Option(names = {"-t", "--dry-run"}, description = "Test mode: Only display the command that will be executed")
     boolean testMode = false;
 
+    @CommandLine.Option(names = {"--skip-confirm"}, description = "Skip confirmation prompts and perform the action without user confirmation. Use this option to automate the process without manual approvals")
+    boolean skipConfirm = false;
+
     @CommandLine.Option(names = {"--version"}, versionHelp = true, description = "display version info")
     boolean versionInfoRequested;
 
@@ -159,6 +162,10 @@ public class CliApp
     public Path getCk8sExtPath()
     {
         return ck8sPathOptions.getCk8sExtPath();
+    }
+
+    public boolean isSkipConfirm() {
+        return skipConfirm;
     }
 
     @Override

@@ -32,6 +32,9 @@ public final class LogUtils
     {
         FormattingTuple m = MessageFormatter.arrayFormat(log, args);
         System.err.println(ANSI_RED_BOLD + "ERROR: " + m.getMessage() + ANSI_RESET);
+        if (m.getThrowable() != null) {
+            m.getThrowable().printStackTrace(System.err);
+        }
     }
 
     public static void logAsTable(List<String[]> rows)

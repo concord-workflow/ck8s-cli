@@ -34,9 +34,9 @@ public class RunFlowOperation
         String profile = cliApp.getProfile();
         String clusterAlias = cliApp.getClusterAlias();
 
-        boolean needConfirmation = nonNull(flow)
+        boolean needConfirmation = !cliOperationContext.cliApp().isSkipConfirm() && nonNull(flow)
                 && flowPatternsToConfirm.stream()
-                .anyMatch(flow::matches);
+                .anyMatch(flow::matches) ;
         if (needConfirmation) {
             String msg = String.format("Are you sure you want to execute '%s' on '%s' cluster? (y/N): ", flow, clusterAlias);
             System.out.print(msg);
