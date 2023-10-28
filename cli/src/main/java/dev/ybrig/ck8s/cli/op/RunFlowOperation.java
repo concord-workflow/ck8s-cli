@@ -55,6 +55,11 @@ public class RunFlowOperation
                 .ck8sFlows(ck8sFlows)
                 .build();
 
+        if (cliApp.isTestMode()) {
+            LogUtils.info("Running flow: {} on cluster: {} with profile: {}", flow, cliOperationContext.cliApp().getClusterAlias(), cliOperationContext.cliApp().getProfile());
+            return 0;
+        }
+
         FlowExecutor flowExecutor = new FlowExecutorFactory().create(cliOperationContext);
         return flowExecutor.execute(payload, flow, Collections.emptyList());
     }

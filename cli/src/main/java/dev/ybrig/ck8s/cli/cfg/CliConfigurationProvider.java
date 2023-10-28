@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 public class CliConfigurationProvider
 {
 
-    private static final List<Supplier<CliConfiguration>> providers = List.of(new MainProvider(), new OldCfgProvider(), new DefaultsProvider());
+    private static final List<Supplier<CliConfiguration>> providers = List.of(new MainProvider(), new DefaultsProvider());
     private static final MainProvider provider = new MainProvider();
     private static CliConfiguration cfg;
 
@@ -81,33 +81,6 @@ public class CliConfigurationProvider
             }
             catch (Exception e) {
                 throw new RuntimeException("Can't save configuration to '" + path + "': " + e.getMessage());
-            }
-        }
-    }
-
-    @Deprecated
-    private static class OldCfgProvider
-            implements Supplier<CliConfiguration>
-    {
-
-        @Override
-        public CliConfiguration get()
-        {
-            Path path = Path.of(System.getProperty("user.home")).resolve(".ck8s").resolve("concord-config.yaml");
-            if (!Files.exists(path)) {
-                return null;
-            }
-
-            try {
-                List<ConcordProfile> profiles = Mapper.yamlMapper().read(path, new TypeReference<>()
-                {
-                });
-                return CliConfiguration.builder()
-                        .concordProfiles(profiles)
-                        .build();
-            }
-            catch (Exception e) {
-                throw new RuntimeException("Can't load configuration from '" + path + "': " + e.getMessage());
             }
         }
     }
