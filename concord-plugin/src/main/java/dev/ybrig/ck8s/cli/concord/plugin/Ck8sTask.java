@@ -56,21 +56,6 @@ public class Ck8sTask
         }
     }
 
-    public void prepare(String ck8sRef, String ck8sExtRef) throws Exception {
-        Map<String, Object> params = new HashMap<>();
-        params.put("ck8sRef", ck8sRef);
-        params.put("ck8sExtRef", ck8sExtRef);
-        Ck8sTaskParams p = Ck8sTaskParams.of(new MapBackedVariables(params), context.defaultVariables());
-
-        if (Files.notExists(Path.of("ck8s"))) {
-            cloneRepo(p.ck8sRepoUrl(), p.ck8sRepoRef(), p.ck8sToken(), "ck8s");
-        }
-
-        if (Files.notExists(Path.of("ck8s-ext"))) {
-            cloneRepo(p.ck8sExtRepoUrl(), p.ck8sExtRepoRef(), p.ck8sExtToken(), "ck8s-ext");
-        }
-    }
-
     @Override
     public TaskResult execute(Variables input)
             throws Exception
@@ -95,20 +80,31 @@ public class Ck8sTask
         Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
         Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8sPath, targetDir, verifier)
                 .includeTests(p.includeTests())
-                .debug(debug)
-                .build(p.clusterAlias());
+                .build();
 
         assertNoErrors(ck8sPath, verifier.errors());
 
+        String concordInstanceAlias = context.variables().getString("concordInstanceAlias");
+        ConcordYaml concordYaml = new ConcordYamlBuilder(ck8sPath, ck8sFlows, p.flow())
+//                .additionalDependencies(deps)
+                .concordInstanceAlias(concordInstanceAlias)
+                .userInput(p.arguments())
+                .build(p.clusterAlias(), debug);
+
         Ck8sPayload payload = Ck8sPayload.builder()
+                .clusterAlias(p.clusterAlias())
                 .ck8sPath(ck8sPath)
+                .concordYaml(concordYaml)
                 .flows(ck8sFlows)
                 .args(p.arguments())
-                .concord(Ck8sPayload.Concord.builder().meta(p.meta()).project(p.project()).build())
+                .concord(Ck8sPayload.Concord.builder()
+                        .meta(p.meta())
+                        .project(p.project())
+                        .build())
                 .putArgs("flow", p.flow())
                 .build();
 
-        payload = new DefaultProcessors().process(payload, p.flow());
+        payload = new DefaultProcessors().process(payload, p.flow(), concordInstanceAlias);
 
         return executeProcess(p.flow(), targetDir, payload, p.suspend());
     }

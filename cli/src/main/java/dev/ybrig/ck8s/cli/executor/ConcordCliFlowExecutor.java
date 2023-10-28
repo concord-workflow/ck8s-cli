@@ -12,14 +12,14 @@ import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
-import com.walmartlabs.concord.imports.ImportManager;
-import com.walmartlabs.concord.imports.ImportManagerFactory;
-import com.walmartlabs.concord.imports.ImportProcessingException;
+import com.walmartlabs.concord.imports.*;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
+import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
@@ -27,8 +27,8 @@ import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.ConcordYaml;
 import dev.ybrig.ck8s.cli.common.IOUtils;
-import dev.ybrig.ck8s.cli.common.processors.CliProcessors;
 import dev.ybrig.ck8s.cli.concord.ConcordServer;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
@@ -38,18 +38,19 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
-public class ConcordCliFlowExecutor
-{
+public class ConcordCliFlowExecutor implements FlowExecutor {
 
     private static final String DEFAULT_IMPORTS_SOURCE = "https://github.com";
     private static final String DEFAULT_VERSION = "main";
     private static final String DEFAULT_VAULT_ID = "default";
 
     private final Verbosity verbosity;
+    private final String secretsProvider;
 
-    public ConcordCliFlowExecutor(Verbosity verbosity)
+    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider)
     {
         this.verbosity = verbosity;
+        this.secretsProvider = secretsProvider;
     }
 
     private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo)
@@ -91,10 +92,11 @@ public class ConcordCliFlowExecutor
         }
     }
 
-    public int execute(ExecContext execContext, Ck8sPayload payload, String flowName)
+    @Override
+    public int execute(Ck8sPayload payload, String flowName, List<String> activeProfiles)
     {
         try {
-            return _execute(execContext, payload, flowName);
+            return _execute(payload, flowName, activeProfiles);
         }
         catch (Exception e) {
             if (verbosity.verbose()) {
@@ -107,12 +109,18 @@ public class ConcordCliFlowExecutor
         }
     }
 
-    private int _execute(ExecContext execContext, Ck8sPayload payload, String flowName)
+    private int _execute(Ck8sPayload payload, String flowName, List<String> activeProfiles)
             throws Exception
     {
-        payload = new CliProcessors().process(payload, flowName);
+        Path targetDir = payload.ck8sFlows().location();
 
-        Path targetDir = payload.flows().location();
+        ConcordYaml concordYaml = ConcordYaml.builder()
+                .entryPoint("normalFlow")
+                .debug(payload.debug())
+                .arguments(payload.arguments())
+                .putArguments("flow", flowName)
+                .build();
+        concordYaml.write(payload.ck8sFlows().location());
 
         DependencyManager dependencyManager = new DependencyManager(getDependencyManagerConfiguration());
 
@@ -141,25 +149,25 @@ public class ConcordCliFlowExecutor
         UUID instanceId = UUID.randomUUID();
         Map<String, Object> args = new LinkedHashMap<>();
         args.put("concordUrl", "https://concord.local.localhost");
-
-        Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.args());
-        args.putAll(flowAndUserArgs);
-        args.put("flow", flowName);
-        if (execContext.secretsProvider() != null) {
-            ConfigurationUtils.set(args, execContext.secretsProvider().name(), "clusterRequest", "secretsProvider");
+        if (secretsProvider != null) {
+            ConfigurationUtils.set(args, secretsProvider, "clusterRequest", "secretsProvider");
         }
+
+        Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.arguments());
+        args.putAll(flowAndUserArgs);
+
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
 
-        List<String> profiles = payload.concord().activeProfiles();
         if (verbosity.verbose()) {
-            dumpArguments(args);
+            dumpArguments(payload.arguments());
 
-            LogUtils.info("Active profiles: {}", profiles);
+            LogUtils.info("Active profiles: {}", activeProfiles);
         }
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(profiles), projectInfo())
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo())
                 .instanceId(instanceId)
+                .entryPoint("normalFlow")
                 .build();
 
         if (!verbosity.verbose()) {
@@ -212,9 +220,9 @@ public class ConcordCliFlowExecutor
         }
 
         // Just to notify listeners
-//        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
-//        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-//        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
+        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
+        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
+        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
 
         ConcordServer.start();
 

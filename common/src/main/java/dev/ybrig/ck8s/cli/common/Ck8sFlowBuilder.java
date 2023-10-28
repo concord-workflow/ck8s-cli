@@ -1,16 +1,15 @@
 package dev.ybrig.ck8s.cli.common;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
-public class Ck8sFlowBuilder
-{
+public class Ck8sFlowBuilder {
     public static final String CONCORD_YAML_PATTERN = "ck8s-.*\\.concord\\.yaml";
 
     private static final List<String> FILE_IGNORE_PATTERNS = Arrays.asList(".*\\.pdf$", ".*\\.png$", ".*\\.jpg$");
@@ -18,9 +17,11 @@ public class Ck8sFlowBuilder
     private final Ck8sPath ck8sPath;
     private final Path target;
     private boolean includeTests;
-    private boolean debug;
-    private List<String> additionalDependencies = Collections.emptyList();
     private final Ck8sFlowBuilderListener listener;
+
+    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target) {
+        this(ck8sPath, target, (src, dest) -> {});
+    }
 
     public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target, Ck8sFlowBuilderListener listener)
     {
@@ -29,46 +30,14 @@ public class Ck8sFlowBuilder
         this.listener = listener;
     }
 
-    private static Map<String, Object> concordYamlTemplate()
-    {
-        URL url = Ck8sFlowBuilder.class.getResource("/dev/ybrig/ck8s/cli/common/templates/concord.yaml");
-        if (url == null) {
-            throw new RuntimeException("Can't find concord.yml template. This is most likely a bug.");
-        }
-
-        try {
-            return Mapper.yamlMapper().readMap(url);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Error reading concord template. This is most likely a bug.", e);
-        }
-    }
-
     public Ck8sFlowBuilder includeTests(boolean include)
     {
         this.includeTests = include;
         return this;
     }
 
-    public Ck8sFlowBuilder withDependencies(List<String> additionalDependencies)
+    public Ck8sFlows build()
     {
-        this.additionalDependencies = additionalDependencies;
-        return this;
-    }
-
-    public Ck8sFlowBuilder debug(boolean debug)
-    {
-        this.debug = debug;
-        return this;
-    }
-
-    public Ck8sFlows build(String clusterAlias)
-    {
-        Path clusterYaml = Ck8sUtils.findClusterYamlByAlias(ck8sPath, clusterAlias);
-        if (clusterYaml == null) {
-            throw new RuntimeException("The cluster alias '" + clusterAlias + "' doesn't map to any ck8s cluster yaml file.");
-        }
-
         try {
             IOUtils.deleteRecursively(target);
         }
@@ -84,16 +53,12 @@ public class Ck8sFlowBuilder
             throw new RuntimeException("Can't create target '" + target + "': " + e.getMessage());
         }
 
-        Map<String, Object> concordYaml = Ck8sUtils.buildConcordYaml(ck8sPath, clusterYaml, concordYamlTemplate(), debug, additionalDependencies);
-        Mapper.yamlMapper().write(flows.resolve("concord.yml"), concordYaml);
-
         copyComponents(ck8sPath, flows);
         if (includeTests) {
             copyTestComponents(ck8sPath, flows);
         }
 
         return Ck8sFlows.builder()
-                .clusterAlias(clusterAlias)
                 .location(flows)
                 .build();
     }
@@ -175,4 +140,5 @@ public class Ck8sFlowBuilder
         catch (IOException e) {
             throw new RuntimeException("Error copy '" + source + "' to '" + target + "':" + e.getMessage());
         }
-    }}
+    }
+}

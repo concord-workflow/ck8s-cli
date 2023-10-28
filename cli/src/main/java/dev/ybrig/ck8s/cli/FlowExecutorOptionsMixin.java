@@ -1,6 +1,6 @@
 package dev.ybrig.ck8s.cli;
 
-import dev.ybrig.ck8s.cli.executor.FlowExecutor;
+import dev.ybrig.ck8s.cli.executor.ExecutorType;
 import dev.ybrig.ck8s.cli.utils.EnumCompletionCandidates;
 import dev.ybrig.ck8s.cli.utils.EnumConverter;
 import picocli.CommandLine;
@@ -11,37 +11,37 @@ public class FlowExecutorOptionsMixin
         extends BaseMixin<FlowExecutorOptionsMixin>
 {
 
-    private FlowExecutor.ExecutorType type = FlowExecutor.ExecutorType.REMOTE;
+    private ExecutorType type = ExecutorType.REMOTE;
 
-    public FlowExecutor.ExecutorType getType()
+    public ExecutorType getType()
     {
         return rootMixin().type;
     }
 
     @CommandLine.Option(names = {
             "--flow-executor"}, description = "flow executor: ${COMPLETION-CANDIDATES}", completionCandidates = ExecutorTypeCompletionCandidates.class, converter = ExecutorTypeTypeConverter.class)
-    public void setType(FlowExecutor.ExecutorType type)
+    public void setType(ExecutorType type)
     {
         rootMixin().type = type;
     }
 
     static class ExecutorTypeCompletionCandidates
-            extends EnumCompletionCandidates<FlowExecutor.ExecutorType>
+            extends EnumCompletionCandidates<ExecutorType>
     {
 
         public ExecutorTypeCompletionCandidates()
         {
-            super(FlowExecutor.ExecutorType.class);
+            super(ExecutorType.class);
         }
     }
 
     static class ExecutorTypeTypeConverter
-            extends EnumConverter<FlowExecutor.ExecutorType>
+            extends EnumConverter<ExecutorType>
     {
 
         public ExecutorTypeTypeConverter()
         {
-            super(FlowExecutor.ExecutorType.class);
+            super(ExecutorType.class);
         }
     }
 }

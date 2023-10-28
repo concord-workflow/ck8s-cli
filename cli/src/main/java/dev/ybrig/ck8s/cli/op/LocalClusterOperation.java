@@ -8,8 +8,8 @@ import dev.ybrig.ck8s.cli.common.Ck8sFlows;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
-import dev.ybrig.ck8s.cli.executor.ExecContext;
 import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutor;
+import dev.ybrig.ck8s.cli.model.ConcordProfile;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,39 +20,38 @@ public class LocalClusterOperation
     @Override
     public Integer execute(CliOperationContext cliOperationContext)
     {
-        CliApp cliApp = cliOperationContext.cliApp();
         Ck8sPath ck8s = cliOperationContext.ck8sPath();
-        String profile = cliApp.getProfile();
 
         ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
 
         scriptAction.perform(cliOperationContext, "ck8sDown");
         scriptAction.perform(cliOperationContext, "ck8sUp");
 
+        String clusterAlias = "local";
+
+        CliApp cliApp = cliOperationContext.cliApp();
         Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), null)
-                .build("local");
+                .build();
 
         if (!cliApp.isTestMode()) {
-            RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(CliConfigurationProvider.getConcordProfile(profile));
+
+            Ck8sPayload payload = Ck8sPayload.builder()
+                    .debug(cliOperationContext.verbosity().verbose())
+                    .arguments(cliApp.getExtraVars())
+                    .ck8sFlows(ck8sFlows)
+                    .build();
 
             ExecutorService executor = Executors.newCachedThreadPool();
 
-            Ck8sPayload payload = Ck8sPayload.builder()
-                    .flows(ck8sFlows)
-                    .ck8sPath(ck8s)
-                    .build();
+            ConcordProfile profile = CliConfigurationProvider.getConcordProfile(cliApp.getProfile());
+            RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(profile.baseUrl(), profile.apiKey());
 
-            ExecContext ctx = ExecContext.builder()
-                    .verbosity(cliOperationContext.verbosity())
-                    .testMode(cliApp.isTestMode())
-                    .build();
-
-            ConcordProcess process = flowExecutor.execute(ctx, payload, "cert-manager-local");
+            ConcordProcess process = flowExecutor.execute(clusterAlias, payload, "cert-manager-local");
             if (process != null) {
                 process.streamLogs(executor);
             }
 
-            process = flowExecutor.execute(ctx, payload, "polaris");
+            process = flowExecutor.execute(clusterAlias, payload, "polaris");
             if (process != null) {
                 process.streamLogs(executor);
             }

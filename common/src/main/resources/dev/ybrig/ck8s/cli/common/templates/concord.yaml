@@ -5,9 +5,13 @@ configuration:
     recordTaskOutVars: true
     recordEvents: true
   arguments:
+    concordInstanceAlias: "${System.getenv('CONCORD_INSTANCE_ALIAS')}"
+    concordLogicalInstanceAlias: "${System.getenv('CONCORD_LOGICAL_INSTANCE_ALIAS')}"
     clusterRequest: <CLUSTER_REQUEST>
   meta:
     flow: 'n/a'
+  requirements:
+    agent: <AGENT_REQUIREMENTS>
 
 profiles:
   remote:

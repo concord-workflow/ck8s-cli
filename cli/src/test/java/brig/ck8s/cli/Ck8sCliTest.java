@@ -2,9 +2,7 @@ package brig.ck8s.cli;
 
 import org.junit.jupiter.api.Test;
 
-import static brig.ck8s.cli.Ck8sCliAssertions.assertFailed;
-import static brig.ck8s.cli.Ck8sCliAssertions.assertRunAction;
-import static brig.ck8s.cli.Ck8sCliAssertions.assertSuccess;
+import static brig.ck8s.cli.Ck8sCliAssertions.*;
 
 public class Ck8sCliTest
 {
