@@ -1,12 +1,9 @@
 package dev.ybrig.ck8s.cli.common;
 
-import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
-import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,66 +63,42 @@ public class Ck8sUtils
         }
     }
 
-    public static Path findClusterYamlByAlias(Ck8sPath ck8sPath, String alias)
+    public static Path findClusterYamlByAnyAlias(Ck8sPath ck8sPath, String alias)
     {
-        return findClusterYamlBy(ck8sPath, cluster -> alias.equals(MapUtils.getString(cluster, "alias")));
+        return findClusterYamlBy(ck8sPath, cluster -> {
+            if (alias.equals(cluster.alias())) {
+                return true;
+            }
+
+            return cluster.clusterGroup()
+                    .map(g -> g.isActive() && alias.equals(g.alias()))
+                    .orElse(false);
+        });
     }
 
-    public static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<Map<String, Object>> filter)
+    private static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<ClusterConfiguration> filter)
     {
         return streamClusterYaml(ck8sPath)
-                .filter(p -> filter.test(Mapper.yamlMapper().readMap(p)))
+                .filter(p -> filter.test(new ClusterConfiguration(Mapper.yamlMapper().readMap(p))))
                 .findFirst()
                 .orElse(null);
     }
 
-    public static String orgName(Ck8sPath ck8sPath, String clusterAlias) {
-        Path clusterYaml = findClusterYamlByAlias(ck8sPath, clusterAlias);
+    public static Map<String, Object> buildClusterRequest(Ck8sPath ck8sPath, String clusterAlias) {
+        Path clusterYaml = Ck8sUtils.findClusterYamlByAnyAlias(ck8sPath, clusterAlias);
         if (clusterYaml == null) {
-            throw new RuntimeException("Can't find cluster.yaml for '" + clusterAlias + "' alias");
+            throw new RuntimeException("The cluster alias '" + clusterAlias + "' doesn't map to any ck8s cluster yaml file.");
         }
 
-        Path organizationYamlPath = ck8sPath.orgCfgForCluster(clusterYaml);
-        Map<String, Object> org = Mapper.yamlMapper().readMap(organizationYamlPath);
-        return MapUtils.assertString(org, "organization.name");
+        return buildClusterRequest(ck8sPath, clusterYaml);
     }
 
-    public static Map<String, Object> clusterConfiguration(Ck8sPath ck8sPath, String clusterAlias) {
-        Path clusterYaml = findClusterYamlByAlias(ck8sPath, clusterAlias);
-        if (clusterYaml == null) {
-            throw new RuntimeException("Can't find cluster.yaml for '" + clusterAlias + "' alias");
-        }
-
+    public static Map<String, Object> buildClusterRequest(Ck8sPath ck8sPath, Path clusterYaml) {
         Path defaultCfg = ck8sPath.defaultCfg();
         Path organizationYamlPath = ck8sPath.orgCfgForCluster(clusterYaml);
         Path accountYamlPath = ck8sPath.accountCfgForCluster(clusterYaml);
 
         return merge(defaultCfg, organizationYamlPath, accountYamlPath, clusterYaml);
-    }
-
-    public static Map<String, Object> buildConcordYaml(Ck8sPath ck8sPath, Path clusterYaml, Map<String, Object> concordYmlTemplate, boolean debug,
-                                                       List<String> additionalDeps)
-    {
-        Path defaultCfg = ck8sPath.defaultCfg();
-        Path organizationYamlPath = ck8sPath.orgCfgForCluster(clusterYaml);
-        Path accountYamlPath = ck8sPath.accountCfgForCluster(clusterYaml);
-
-        Map<String, Object> concordYml = new HashMap<>(concordYmlTemplate);
-        MapUtils.set(concordYml, debug, "configuration.debug");
-        Map<String, Object> merged = merge(defaultCfg, organizationYamlPath, accountYamlPath, clusterYaml);
-        MapUtils.set(concordYml, merged, "configuration.arguments.clusterRequest");
-
-        updateDependencies(additionalDeps, concordYml);
-
-        return concordYml;
-    }
-
-    private static void updateDependencies(List<String> additionalDeps, Map<String, Object> concordYml) {
-        List<String> currentDependencies = MapUtils.getList(concordYml, "configuration.dependencies");
-        List<String> dependencies = new ArrayList<>(currentDependencies);
-        dependencies.addAll(additionalDeps);
-
-        MapUtils.set(concordYml, dependencies, "configuration.dependencies");
     }
 
     private static Map<String, Object> merge(Path... yamls)
@@ -137,37 +110,5 @@ public class Ck8sUtils
             }
         }
         return merged;
-    }
-
-    public static ProcessDefinition assertYaml(Path flowsDir, String flowName) {
-        ProcessDefinition pd = findYaml(flowsDir, flowName);
-        if (pd != null) {
-            return pd;
-        }
-        throw new RuntimeException("Flow '" + flowName + "' not found");
-    }
-
-    private static ProcessDefinition findYaml(Path flowsDir, String flowName)
-    {
-        ProjectLoaderV2 loader = new ProjectLoaderV2((imports, dest, listener) -> Collections.emptyList());
-
-        try (Stream<Path> walk = Files.walk(flowsDir)) {
-            return walk
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().matches(Ck8sFlowBuilder.CONCORD_YAML_PATTERN))
-                    .map(p -> {
-                        try {
-                            return loader.loadFromFile(p).getProjectDefinition();
-                        }
-                        catch (IOException e) {
-                            throw new RuntimeException("Error loading " + p + ":" + e);
-                        }
-                    })
-                    .filter(pd -> pd.flows().containsKey(flowName))
-                    .findFirst().orElse(null);
-        }
-        catch (IOException e) {
-            throw new RuntimeException("find yaml for flow '" + flowName + "' error: " + e.getMessage());
-        }
     }
 }

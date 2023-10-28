@@ -1,28 +1,23 @@
 package dev.ybrig.ck8s.cli.concord;
 
-import com.google.gson.reflect.TypeToken;
-import com.squareup.okhttp.Call;
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.client.ProcessApi;
-import com.walmartlabs.concord.client.ProcessEntry;
-import com.walmartlabs.concord.client.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ProcessApi;
+import com.walmartlabs.concord.client2.ProcessEntry;
+import com.walmartlabs.concord.client2.ProcessEntry.StatusEnum;
+import com.walmartlabs.concord.client2.ProcessV2Api;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
-import java.lang.reflect.Type;
+import java.io.InputStream;
 import java.util.*;
 
 public class ProcessLogStreamer
         implements Runnable
 {
 
-    private static final String PATH_TEMPLATE = "/api/v1/process/%s/log";
     private static final long ERROR_DELAY = 5000;
     private static final long REQUEST_DELAY = 3000;
     private static final long RANGE_INCREMENT = 1024;
-    private static final Type BYTE_ARRAY_TYPE = new TypeToken<byte[]>()
-    {
-    }.getType();
+
     private static final Set<StatusEnum> FINAL_STATUSES = new HashSet<>(Arrays.asList(
             StatusEnum.FINISHED,
             StatusEnum.CANCELLED,
@@ -55,18 +50,13 @@ public class ProcessLogStreamer
     @Override
     public void run()
     {
-        Set<String> auths = client.getAuthentications().keySet();
-        String[] authNames = auths.toArray(new String[0]);
+        ProcessApi processApi = new ProcessApi(client);
+        ProcessV2Api processV2Api = new ProcessV2Api(client);
 
         while (!Thread.currentThread().isInterrupted()) {
-            try {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Range", "bytes=" + rangeStart + "-" + (rangeEnd != null ? rangeEnd : ""));
+            try (InputStream is = processApi.getProcessLog(instanceId, "bytes=" + rangeStart + "-" + (rangeEnd != null ? rangeEnd : ""))) {
+                byte[] ab = is.readAllBytes();
 
-                String path = String.format(PATH_TEMPLATE, instanceId);
-                Call c = client.buildCall(path, "GET", new ArrayList<>(), new ArrayList<>(), null, headers, new HashMap<>(), authNames, null);
-
-                byte[] ab = client.<byte[]>execute(c, BYTE_ARRAY_TYPE).getData();
                 if (ab.length > 0) {
                     String data = new String(ab);
                     for (String line : data.split("\n")) {
@@ -76,10 +66,8 @@ public class ProcessLogStreamer
 
                     rangeStart += ab.length;
                     rangeEnd = rangeStart + RANGE_INCREMENT;
-                }
-                else {
-                    ProcessApi processApi = new ProcessApi(client);
-                    ProcessEntry e = processApi.get(instanceId);
+                } else {
+                    ProcessEntry e = processV2Api.getProcess(instanceId, Collections.emptySet());
                     StatusEnum s = e.getStatus();
                     if (FINAL_STATUSES.contains(s)) {
                         LogUtils.info("Process {} is completed, stopping the log streaming...", instanceId);
@@ -88,8 +76,7 @@ public class ProcessLogStreamer
                 }
 
                 sleep(REQUEST_DELAY);
-            }
-            catch (ApiException e) {
+            } catch (Exception e) {
                 LogUtils.info("Error while streaming the process' ({}) log: {}. Retrying in {}ms...", instanceId, e.getMessage(), ERROR_DELAY);
                 sleep(ERROR_DELAY);
             }

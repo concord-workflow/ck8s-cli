@@ -1,6 +1,6 @@
 package dev.ybrig.ck8s.cli.concord;
 
-import com.walmartlabs.concord.ApiClient;
+import com.walmartlabs.concord.client2.ApiClient;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;

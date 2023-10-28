@@ -10,13 +10,7 @@ import java.util.stream.Stream;
         jdkOnly = true)
 public interface Ck8sFlows {
 
-    String clusterAlias();
-
     Path location();
-
-    default Path rootConcordYaml() {
-        return location().resolve("concord.yml");
-    }
 
     default Path flowsPath() {
         return location().resolve("concord");

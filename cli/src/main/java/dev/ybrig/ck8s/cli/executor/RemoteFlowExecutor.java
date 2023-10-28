@@ -1,155 +1,139 @@
 package dev.ybrig.ck8s.cli.executor;
 
-import com.walmartlabs.concord.ApiClient;
-import com.walmartlabs.concord.ApiException;
-import com.walmartlabs.concord.ApiResponse;
-import com.walmartlabs.concord.client.ClientUtils;
-import com.walmartlabs.concord.client.ConcordApiClient;
-import com.walmartlabs.concord.client.StartProcessResponse;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.impl.HttpEntity;
+import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
+import com.walmartlabs.concord.client2.impl.ResponseBodyHandler;
 import com.walmartlabs.concord.common.IOUtils;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
-import dev.ybrig.ck8s.cli.common.processors.DefaultProcessors;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
-import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
-import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class RemoteFlowExecutor
-{
+public class RemoteFlowExecutor {
 
-    private final ConcordProfile concordCfg;
     private final ApiClient apiClient;
 
-    public RemoteFlowExecutor(ConcordProfile concordCfg)
-    {
-        this.concordCfg = concordCfg;
-        this.apiClient = createClient(concordCfg);
+    public RemoteFlowExecutor(String baseUrl, String apiKey) {
+        this.apiClient = createClient(baseUrl, apiKey);
     }
 
-    private static ApiClient createClient(ConcordProfile cfg)
-    {
-        if (cfg.apiKey() == null) {
-            throw new RuntimeException("Can't create concord client for '" + cfg.alias() + "': api key is empty");
+    private static ApiClient createClient(String baseUrl, String apiKey) {
+        if (apiKey == null) {
+            throw new RuntimeException("Can't create concord client for: api key is empty");
         }
 
-        return new ConcordApiClient(cfg.baseUrl())
-                .setVerifyingSsl(false)
-                .setApiKey(cfg.apiKey());
+        return new DefaultApiClientFactory(baseUrl, Duration.of(30, ChronoUnit.SECONDS), false)
+                .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
     }
 
-    private static Map<String, Object> toMap(Ck8sPayload payload)
-    {
+    private static Map<String, Object> toMap(Ck8sPayload payload) {
         Map<String, Object> result = new LinkedHashMap<>();
 
-        archive(payload.flows().location(), result);
-        payload.args().forEach((name, value) -> result.put("arguments." + name, value));
-        result.putAll(serializeConcordProcessParams(payload.concord()));
+        archive(payload.ck8sFlows().location(), result);
+        result.put("arguments", payload.arguments());
+        result.put("debug", payload.debug());
         return result;
     }
 
-    private static Map<String, Object> serializeConcordProcessParams(Ck8sPayload.Concord params) {
-        Map<String, Object> result = new HashMap<>();
-        if (params.org() != null) {
-            result.put("org", params.org());
-        }
-        if (params.project() != null) {
-            result.put("project", params.project());
-        }
-        if (!params.meta().isEmpty()) {
-            result.put("meta", params.meta());
-        }
-        if (!params.activeProfiles().isEmpty()) {
-            result.put("activeProfiles", String.join(",", params.activeProfiles()));
-        }
-        return result;
-    }
-
-    private static void archive(Path path, Map<String, Object> input)
-    {
+    public ConcordProcess execute(String clientClusterAlias, Ck8sPayload payload, String flowName) {
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-                IOUtils.zip(zip, path);
-            }
-            input.put("archive", out.toByteArray());
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void archiveToFile(Path src, Path dest)
-    {
-        try {
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
-                IOUtils.zip(zip, src);
-            }
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Nullable
-    public ConcordProcess execute(ExecContext context, Ck8sPayload payload, String flowName)
-    {
-        try {
-            payload = new DefaultProcessors().process(payload, flowName, concordCfg.defaultOrg(), concordCfg.defaultProject());
-
-            payload = Ck8sPayload.builder().from(payload)
-                    .putArgs("concordUrl", concordCfg.baseUrl())
-                    .putArgs("flow", flowName)
-                    .build();
-
-            if (context.testMode()) {
-                StringBuilder args = new StringBuilder();
-                for (Map.Entry<String, Object> e : payload.args().entrySet()) {
-                    args.append(String.format("-F arguments.%s=%s ", e.getKey(), e.getValue()));
-                }
-                Path archivePath = payload.flows().location().resolve("payload.zip");
-                archiveToFile(payload.flows().location(), archivePath);
-
-                String curl = String.format("curl -s --http1.1 -H 'Authorization: %s' -F archive=@%s %s %s/api/v1/process",
-                        concordCfg.apiKey(), archivePath, args, concordCfg.baseUrl());
-
-                LogUtils.info("Test mode is on. Use this command to start your process:\n{}", curl);
-                return null;
-            }
-            else {
-                ConcordProcess process = startProcess(payload);
-                LogUtils.info("process: {}", String.format("%s/#/process/%s/log", concordCfg.baseUrl(), process.instanceId()));
-                return process;
-            }
-        }
-        catch (Exception e) {
+            ConcordProcess process = startProcess(clientClusterAlias, payload, flowName);
+            LogUtils.info("process: {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()));
+            return process;
+        } catch (Exception e) {
             throw new RuntimeException("Error starting concord process: " + e.getMessage());
         }
     }
 
-    private ConcordProcess startProcess(Ck8sPayload payload)
-            throws ApiException
-    {
-        ApiResponse<StartProcessResponse> resp = ClientUtils.postData(apiClient, "/api/v1/process", toMap(payload), StartProcessResponse.class);
+    private ConcordProcess startProcess(String clientClusterAlias, Ck8sPayload ck8sPayload, String flowName) throws ApiException {
+        Map<String, Object> payload = toMap(ck8sPayload);
+        payload.put("clientClusterAlias", clientClusterAlias);
+        payload.put("flow", flowName);
 
-        int code = resp.getStatusCode();
+        HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
+
+        HttpRequest request = apiClient.requestBuilder()
+                .timeout(Duration.of(30, ChronoUnit.SECONDS))
+                .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process"))
+                .header("Content-Type", entity.contentType().toString())
+                .method("POST", HttpRequest.BodyPublishers.ofInputStream(() -> {
+                    try {
+                        return entity.getContent();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }))
+                .build();
+
+        HttpResponse<InputStream> response;
+        try {
+            response = apiClient.getHttpClient().send(
+                    request,
+                    HttpResponse.BodyHandlers.ofInputStream());
+        } catch (Exception e) {
+            throw new RuntimeException("Error sending request: " + e.getMessage());
+        }
+
+        int code = response.statusCode();
         if (code < 200 || code >= 300) {
             if (code == 403) {
-                throw new ApiException("Forbidden: " + resp.getData());
+                String body;
+                try (InputStream is = response.body()) {
+                    body = new String(is.readAllBytes());
+                } catch (Exception e) {
+                    throw new RuntimeException("Error starting concord process: " + e.getMessage());
+                }
+
+                throw new ApiException("Forbidden: " + body);
             }
 
             throw new ApiException("Request error: " + code);
         }
 
-        return new ConcordProcess(apiClient, resp.getData().getInstanceId());
+        try {
+            StartProcessResponse startProcessResponse = ResponseBodyHandler.handle(apiClient.getObjectMapper(), response, new TypeReference<StartProcessResponse>() {
+            });
+            return new ConcordProcess(apiClient, startProcessResponse.getInstanceId());
+        } catch (Exception e) {
+            throw new RuntimeException("Error parsing response: " + e.getMessage());
+        }
+    }
+
+    private static void archive(Path path, Map<String, Object> input) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
+                IOUtils.zip(zip, path);
+            }
+            input.put("ck8sFlows", out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void archiveToFile(Path src, Path dest) {
+        try {
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
+                IOUtils.zip(zip, src);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

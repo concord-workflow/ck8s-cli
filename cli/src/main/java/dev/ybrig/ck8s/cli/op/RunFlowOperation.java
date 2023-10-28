@@ -1,21 +1,14 @@
 package dev.ybrig.ck8s.cli.op;
 
-import com.walmartlabs.concord.cli.Verbosity;
 import dev.ybrig.ck8s.cli.CliApp;
-import dev.ybrig.ck8s.cli.common.Ck8sFlowBuilder;
-import dev.ybrig.ck8s.cli.common.Ck8sFlows;
-import dev.ybrig.ck8s.cli.common.Ck8sPath;
-import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.*;
 import dev.ybrig.ck8s.cli.common.verify.CheckError;
 import dev.ybrig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
-import dev.ybrig.ck8s.cli.executor.ExecContext;
 import dev.ybrig.ck8s.cli.executor.FlowExecutor;
+import dev.ybrig.ck8s.cli.executor.FlowExecutorFactory;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Objects.nonNull;
 
@@ -28,17 +21,13 @@ public class RunFlowOperation
     public Integer execute(CliOperationContext cliOperationContext)
     {
         CliApp cliApp = cliOperationContext.cliApp();
-        Ck8sPath ck8s = cliOperationContext.ck8sPath();
-        Verbosity verbosity = cliOperationContext.verbosity();
         String flow = cliApp.getFlow();
-        String profile = cliApp.getProfile();
-        String clusterAlias = cliApp.getClusterAlias();
 
         boolean needConfirmation = !cliOperationContext.cliApp().isSkipConfirm() && nonNull(flow)
                 && flowPatternsToConfirm.stream()
                 .anyMatch(flow::matches) ;
         if (needConfirmation) {
-            String msg = String.format("Are you sure you want to execute '%s' on '%s' cluster? (y/N): ", flow, clusterAlias);
+            String msg = String.format("Are you sure you want to execute '%s' on '%s' cluster? (y/N): ", flow, cliApp.getClusterAlias());
             System.out.print(msg);
 
             try (Scanner input = new Scanner(System.in)) {
@@ -49,42 +38,25 @@ public class RunFlowOperation
             }
         }
 
-        List<String> deps = Collections.emptyList();
-        if (cliApp.isWithInputAssert()) {
-            deps = List.of("mvn://com.walmartlabs.concord.plugins.basic:input-params-assert:1.102.1-SNAPSHOT");
-        }
-
         Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
+        Ck8sPath ck8s = cliOperationContext.ck8sPath();
 
         Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier)
                 .includeTests(cliApp.isWithTests())
-                .withDependencies(deps)
-                .debug(verbosity.verbose())
-                .build(clusterAlias);
+                .build();
 
         assertNoErrors(ck8s, verifier.errors());
 
-        // TODO: restore original logic: executor also has testMode
-        if (cliApp.isTestMode()) {
-            LogUtils.info("Running flow: {} on cluster: {} with profile: {}", flow, clusterAlias, profile);
-            return 0;
-        }
+        Map<String, Object> clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, cliOperationContext.cliApp().getClusterAlias());
 
         Ck8sPayload payload = Ck8sPayload.builder()
-                .flows(ck8sFlows)
-                .ck8sPath(ck8s)
-                .args(cliApp.getExtraVars())
+                .debug(cliOperationContext.verbosity().verbose())
+                .arguments(MapUtils.merge(Map.of("clusterRequest", clusterRequest), cliApp.getExtraVars()))
+                .ck8sFlows(ck8sFlows)
                 .build();
 
-        ExecContext execContext = ExecContext.builder()
-                .verbosity(verbosity)
-                .profile(profile)
-                .testMode(cliApp.isTestMode())
-                .secretsProvider(cliApp.getSecretsProvider())
-                .build();
-
-        return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(),
-                execContext, payload, cliApp.getFlow());
+        FlowExecutor flowExecutor = new FlowExecutorFactory().create(cliOperationContext);
+        return flowExecutor.execute(payload, flow, Collections.emptyList());
     }
 
     private void assertNoErrors(Ck8sPath ck8sPath, List<CheckError> errors) {

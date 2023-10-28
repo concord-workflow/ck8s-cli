@@ -1,7 +1,7 @@
 package dev.ybrig.ck8s.cli.concord;
 
-import com.walmartlabs.concord.client.CreateInventoryResponse;
-import com.walmartlabs.concord.client.InventoryEntry;
+import com.walmartlabs.concord.client2.CreateInventoryResponse;
+import com.walmartlabs.concord.client2.InventoryEntry;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -24,8 +24,8 @@ public class InventoryResource
 
         return new CreateInventoryResponse()
                 .ok(true)
-                .setId(new UUID(0, 0))
-                .setResult(CreateInventoryResponse.ResultEnum.CREATED);
+                .id(new UUID(0, 0))
+                .result(CreateInventoryResponse.ResultEnum.CREATED);
     }
 
     @POST

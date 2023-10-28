@@ -79,7 +79,7 @@ public final class MapUtils
         }
     }
 
-    public static Map<String, Object> merge(Map<String, Object> a, Map<String, Object> b)
+    public static Map<String, Object> merge(Map<String, Object> a, Map<String, ? extends Object> b)
     {
         return deepMerge(a, b);
     }
@@ -156,7 +156,7 @@ public final class MapUtils
     }
 
     @SuppressWarnings("unchecked")
-    public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, Object> b) {
+    public static Map<String, Object> deepMerge(Map<String, Object> a, Map<String, ? extends Object> b) {
         Map<String, Object> result = new LinkedHashMap<>(a != null ? a : Collections.emptyMap());
 
         for (String k : b.keySet()) {
