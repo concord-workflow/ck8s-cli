@@ -1,5 +1,6 @@
 package dev.ybrig.ck8s.cli.executor;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.impl.HttpEntity;
@@ -7,6 +8,7 @@ import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
 import com.walmartlabs.concord.client2.impl.ResponseBodyHandler;
 import com.walmartlabs.concord.common.IOUtils;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -17,12 +19,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RemoteFlowExecutor {
@@ -48,6 +49,7 @@ public class RemoteFlowExecutor {
         archive(payload.ck8sFlows().location(), result);
         result.put("arguments", payload.arguments());
         result.put("debug", payload.debug());
+        result.put("org", MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name"));
         return result;
     }
 
@@ -63,6 +65,7 @@ public class RemoteFlowExecutor {
 
     private ConcordProcess startProcess(String clientClusterAlias, Ck8sPayload ck8sPayload, String flowName) throws ApiException {
         Map<String, Object> payload = toMap(ck8sPayload);
+
         payload.put("clientClusterAlias", clientClusterAlias);
         payload.put("flow", flowName);
 
@@ -92,18 +95,7 @@ public class RemoteFlowExecutor {
 
         int code = response.statusCode();
         if (code < 200 || code >= 300) {
-            if (code == 403) {
-                String body;
-                try (InputStream is = response.body()) {
-                    body = new String(is.readAllBytes());
-                } catch (Exception e) {
-                    throw new RuntimeException("Error starting concord process: " + e.getMessage());
-                }
-
-                throw new ApiException("Forbidden: " + body);
-            }
-
-            throw new ApiException("Request error: " + code);
+            throw apiException(response);
         }
 
         try {
@@ -121,19 +113,62 @@ public class RemoteFlowExecutor {
             try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
                 IOUtils.zip(zip, path);
             }
-            input.put("ck8sFlows", out.toByteArray());
+            input.put("ck8sFlowsArchive", out.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void archiveToFile(Path src, Path dest) {
-        try {
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(dest, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))) {
-                IOUtils.zip(zip, src);
+    private ApiException apiException(HttpResponse<InputStream> response) {
+        String body = null;
+        try (InputStream is = response.body()) {
+            if (is != null) {
+                body = new String(is.readAllBytes());
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            return new ApiException(null, e, response.statusCode(), response.headers());
         }
+
+        String message = null;
+        try {
+            message = formatExceptionMessage(response, body);
+        } catch (JsonProcessingException e) {
+            return new ApiException(message, e, response.statusCode(), response.headers());
+        }
+        return new ApiException(response.statusCode(), message, response.headers(), body);
+    }
+
+    @SuppressWarnings("unchecked")
+    private String formatExceptionMessage(HttpResponse<InputStream> response, String body) throws JsonProcessingException {
+        if (body == null || body.isEmpty()) {
+            return "[no body]";
+        }
+
+        String msg = body;
+
+        String type = response.headers().firstValue("Content-Type").orElse(null);
+
+        Map<String, Object> vErrs = null;
+        if ("application/vnd.siesta-validation-errors-v1+json".equals(type)) {
+            List<Object> l = (List<Object>) apiClient.getObjectMapper().readValue(body, List.class);
+            if (!l.isEmpty()) {
+                vErrs = (Map<String,Object>) l.get(0);
+            }
+        } else if ("application/json".equals(type)) {
+            vErrs = (Map<String,Object>) apiClient.getObjectMapper().readValue(body, Map.class);
+        } else {
+            msg = "Server response: " + body;
+        }
+
+        if (vErrs != null) {
+            if (vErrs.containsKey("message")) {
+                msg = (String) vErrs.get("message");
+            }
+            if (vErrs.containsKey("details")) {
+                msg = msg + " Details: " + vErrs.get("details");
+            }
+        }
+
+        return msg;
     }
 }

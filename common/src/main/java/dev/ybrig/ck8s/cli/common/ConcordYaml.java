@@ -45,7 +45,7 @@ public interface ConcordYaml {
 
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("configuration", configuration);
-        Mapper.yamlMapper().write(location.resolve("concord.yaml"), map);
+        Mapper.yamlMapper().write(location.resolve("concord.yml"), map);
     }
 
     static ImmutableConcordYaml.Builder builder() {
