@@ -21,6 +21,14 @@ public interface ProcessorsContext {
 
     String flowName();
 
+    @Nullable
+    String clientClusterAlias();
+
+    @Value.Default
+    default boolean projectPerCluster() {
+        return false;
+    }
+
     @Value.Default
     default List<String> defaultDependencies() {
         return Collections.emptyList();

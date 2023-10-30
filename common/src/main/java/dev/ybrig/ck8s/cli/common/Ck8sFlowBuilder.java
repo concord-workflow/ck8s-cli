@@ -64,7 +64,7 @@ public class Ck8sFlowBuilder
 
     public Ck8sFlows build(String clusterAlias)
     {
-        Path clusterYaml = Ck8sUtils.findClusterYamlByAlias(ck8sPath, clusterAlias);
+        Path clusterYaml = Ck8sUtils.findClusterYamlByAnyAlias(ck8sPath, clusterAlias);
         if (clusterYaml == null) {
             throw new RuntimeException("The cluster alias '" + clusterAlias + "' doesn't map to any ck8s cluster yaml file.");
         }

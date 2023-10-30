@@ -77,6 +77,12 @@ public class CliApp
     @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
     Path targetRootPath = Path.of(System.getProperty("java.io.tmpdir")).resolve("ck8s-cli");
 
+    @CommandLine.Option(names = {"--client-cluster-alias"}, description = "client cluster alias")
+    String clientClusterAlias;
+
+    @CommandLine.Option(names = {"--project-per-cluster"}, description = "project per cluster")
+    boolean projectPerCluster = true;
+
     static class CliOperationArgs
     {
         @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
@@ -118,6 +124,10 @@ public class CliApp
     public String getClusterAlias()
     {
         return clusterAlias;
+    }
+
+    public String getClientClusterAlias() {
+        return clientClusterAlias;
     }
 
     public Map<String, String> getExtraVars()
@@ -166,6 +176,10 @@ public class CliApp
 
     public boolean isSkipConfirm() {
         return skipConfirm;
+    }
+
+    public boolean isProjectPerCluster() {
+        return projectPerCluster;
     }
 
     @Override

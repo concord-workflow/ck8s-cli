@@ -33,4 +33,9 @@ public interface ConcordProfile
 
     @Nullable
     String defaultProject();
+
+    @Value.Default
+    default boolean projectPerCluster() {
+        return true;
+    }
 }

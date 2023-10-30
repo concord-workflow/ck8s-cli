@@ -66,9 +66,15 @@ public class Ck8sUtils
         }
     }
 
-    public static Path findClusterYamlByAlias(Ck8sPath ck8sPath, String alias)
+//    public static Path findClusterYamlByAlias(Ck8sPath ck8sPath, String alias)
+//    {
+//        return findClusterYamlBy(ck8sPath, cluster -> alias.equals(MapUtils.getString(cluster, "alias")));
+//    }
+
+    public static Path findClusterYamlByAnyAlias(Ck8sPath ck8sPath, String alias)
     {
-        return findClusterYamlBy(ck8sPath, cluster -> alias.equals(MapUtils.getString(cluster, "alias")));
+        return findClusterYamlBy(ck8sPath, cluster -> alias.equals(MapUtils.getString(cluster, "alias"))
+                || (alias.equals(MapUtils.getString(cluster, "clusterGroup.alias")) && MapUtils.getBoolean(cluster, "clusterGroup.activeCluster", false)));
     }
 
     public static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<Map<String, Object>> filter)
@@ -80,7 +86,7 @@ public class Ck8sUtils
     }
 
     public static String orgName(Ck8sPath ck8sPath, String clusterAlias) {
-        Path clusterYaml = findClusterYamlByAlias(ck8sPath, clusterAlias);
+        Path clusterYaml = findClusterYamlByAnyAlias(ck8sPath, clusterAlias);
         if (clusterYaml == null) {
             throw new RuntimeException("Can't find cluster.yaml for '" + clusterAlias + "' alias");
         }
@@ -91,7 +97,7 @@ public class Ck8sUtils
     }
 
     public static Map<String, Object> clusterConfiguration(Ck8sPath ck8sPath, String clusterAlias) {
-        Path clusterYaml = findClusterYamlByAlias(ck8sPath, clusterAlias);
+        Path clusterYaml = findClusterYamlByAnyAlias(ck8sPath, clusterAlias);
         if (clusterYaml == null) {
             throw new RuntimeException("Can't find cluster.yaml for '" + clusterAlias + "' alias");
         }

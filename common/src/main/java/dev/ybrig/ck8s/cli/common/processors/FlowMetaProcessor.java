@@ -13,7 +13,7 @@ import java.util.Map;
 public class FlowMetaProcessor extends ConcordYamlProcessor
 {
     @Override
-    protected Map<String, Object> processRootYaml(Ck8sPayload payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
+    protected Map<String, Object> processRootYaml(ProcessorsContext context, Ck8sPayload payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
         Map<String, Object> meta = pd.configuration().meta();
         if (meta.isEmpty()) {
             return rootYaml;

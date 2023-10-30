@@ -25,6 +25,11 @@ public interface ExecContext {
     @Nullable
     SecretsProvider secretsProvider();
 
+    @Nullable
+    String clientClusterAlias();
+
+
+
     static ImmutableExecContext.Builder builder() {
         return ImmutableExecContext.builder();
     }

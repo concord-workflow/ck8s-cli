@@ -24,11 +24,11 @@ public class ProfileProcessor implements PayloadProcessor
         }
 
         Map<String, Object> clusterConfiguration = Ck8sUtils.clusterConfiguration(payload.ck8sPath(), payload.flows().clusterAlias());
-        boolean projectPerCluster = "external".equals(MapUtils.getString(clusterConfiguration, "concord.server.type", "internal"));
+        boolean projectPerCluster = context.projectPerCluster();
 
         Ck8sPayload.Concord concordArgs = Ck8sPayload.Concord.builder().from(payload.concord())
                 .org(orgName(projectPerCluster, payload, context.defaultOrg()))
-                .project(projectName(projectPerCluster, payload.flows().clusterAlias(), flowConcordArgs, context.defaultProject()))
+                .project(projectName(context, projectPerCluster, clusterConfiguration, flowConcordArgs, context.defaultProject()))
                 .activeProfiles(MapUtils.getList(flowConcordArgs, "activeProfiles", Collections.emptyList()))
                 .build();
 
@@ -47,12 +47,15 @@ public class ProfileProcessor implements PayloadProcessor
         return defaultOrg;
     }
 
-    private static String projectName(boolean projectPerCluster, String clusterAlias, Map<String, Object> flowConcordArgs, String defaultProject) {
+    private static String projectName(ProcessorsContext context, boolean projectPerCluster, Map<String, Object> clusterConfiguration, Map<String, Object> flowConcordArgs, String defaultProject) {
         if (projectPerCluster) {
-            String projectName = clusterAlias;
-            String flowProjectName = MapUtils.getString(flowConcordArgs, "project");
-            if (flowProjectName != null) {
-                projectName = projectName + "-" + flowProjectName;
+            if (context.clientClusterAlias() != null) {
+                return context.clientClusterAlias();
+            }
+
+            String projectName = MapUtils.getString(clusterConfiguration, "clusterGroup.alias");
+            if (projectName == null) {
+                projectName = MapUtils.getString(clusterConfiguration, "alias");
             }
             return projectName;
         }

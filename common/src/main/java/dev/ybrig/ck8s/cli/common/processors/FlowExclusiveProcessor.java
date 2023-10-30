@@ -11,7 +11,7 @@ import java.util.Map;
 public class FlowExclusiveProcessor extends ConcordYamlProcessor
 {
     @Override
-    protected Map<String, Object> processRootYaml(Ck8sPayload payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
+    protected Map<String, Object> processRootYaml(ProcessorsContext context, Ck8sPayload payload, ProcessDefinition pd, Map<String, Object> rootYaml) {
         ExclusiveMode exclusive = pd.configuration().exclusive();
         if (exclusive == null) {
             return rootYaml;

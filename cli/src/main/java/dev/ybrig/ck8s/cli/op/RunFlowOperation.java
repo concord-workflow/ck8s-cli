@@ -81,6 +81,7 @@ public class RunFlowOperation
                 .profile(profile)
                 .testMode(cliApp.isTestMode())
                 .secretsProvider(cliApp.getSecretsProvider())
+                .clientClusterAlias(cliApp.getClientClusterAlias())
                 .build();
 
         return new FlowExecutor().execute(cliApp.getFlowExecutorType().getType(),

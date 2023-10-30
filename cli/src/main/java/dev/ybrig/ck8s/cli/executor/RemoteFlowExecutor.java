@@ -104,11 +104,14 @@ public class RemoteFlowExecutor
     public ConcordProcess execute(ExecContext context, Ck8sPayload payload, String flowName)
     {
         try {
-            payload = new DefaultProcessors().process(payload, flowName, concordCfg.defaultOrg(), concordCfg.defaultProject());
+            payload = new DefaultProcessors().process(context.clientClusterAlias(), payload, flowName, concordCfg.defaultOrg(), concordCfg.defaultProject(), concordCfg.projectPerCluster());
 
             payload = Ck8sPayload.builder().from(payload)
                     .putArgs("concordUrl", concordCfg.baseUrl())
                     .putArgs("flow", flowName)
+                    .concord(Ck8sPayload.Concord.builder().from(payload.concord())
+
+                            .build())
                     .build();
 
             if (context.testMode()) {
