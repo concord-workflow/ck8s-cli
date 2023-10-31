@@ -47,7 +47,9 @@ public interface ConcordYaml {
         configuration.put("arguments", arguments());
         configuration.put("requirements", requirements());
         configuration.put("entryPoint", entryPoint());
-        configuration.put("exclusive", exclusive());
+        if (exclusive() != null && !exclusive().isEmpty()) {
+            configuration.put("exclusive", exclusive());
+        }
 
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("configuration", configuration);
