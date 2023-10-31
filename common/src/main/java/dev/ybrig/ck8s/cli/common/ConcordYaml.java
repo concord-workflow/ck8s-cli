@@ -27,6 +27,11 @@ public interface ConcordYaml {
         return Collections.emptyMap();
     }
 
+    @Value.Default
+    default Map<String, Object> exclusive() {
+        return Collections.emptyMap();
+    }
+
     String entryPoint();
 
     @Value.Default
@@ -42,6 +47,7 @@ public interface ConcordYaml {
         configuration.put("arguments", arguments());
         configuration.put("requirements", requirements());
         configuration.put("entryPoint", entryPoint());
+        configuration.put("exclusive", exclusive());
 
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("configuration", configuration);
