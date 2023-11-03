@@ -149,12 +149,13 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         UUID instanceId = UUID.randomUUID();
         Map<String, Object> args = new LinkedHashMap<>();
         args.put("concordUrl", "https://concord.local.localhost");
-        if (secretsProvider != null) {
-            ConfigurationUtils.set(args, secretsProvider, "clusterRequest", "secretsProvider");
-        }
 
         Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.arguments());
         args.putAll(flowAndUserArgs);
+
+        if (secretsProvider != null) {
+            ConfigurationUtils.set(args, secretsProvider, "clusterRequest", "secretsProvider");
+        }
 
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
