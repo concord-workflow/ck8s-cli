@@ -175,7 +175,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         }
 
         long t1 = System.currentTimeMillis();
-        Collection<String> dependencies = new DependencyResolver(dependencyManager, verbosity.verbose())
+        Collection<String> dependencies = new DependencyResolver(dependencyManager, false)
                 .resolveDeps(processDefinition.configuration().dependencies());
 
         if (!verbosity.verbose()) {
