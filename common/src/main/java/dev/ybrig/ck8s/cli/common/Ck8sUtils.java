@@ -79,7 +79,13 @@ public class Ck8sUtils
     private static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<ClusterConfiguration> filter)
     {
         return streamClusterYaml(ck8sPath)
-                .filter(p -> filter.test(new ClusterConfiguration(Mapper.yamlMapper().readMap(p))))
+                .filter(p -> {
+                    try {
+                        return filter.test(new ClusterConfiguration(Mapper.yamlMapper().readMap(p)));
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error parsing cluster definition file " + p);
+                    }
+                })
                 .findFirst()
                 .orElse(null);
     }
