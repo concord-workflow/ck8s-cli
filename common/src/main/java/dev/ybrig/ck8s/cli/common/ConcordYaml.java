@@ -47,6 +47,7 @@ public interface ConcordYaml {
         configuration.put("arguments", arguments());
         configuration.put("requirements", requirements());
         configuration.put("entryPoint", entryPoint());
+        configuration.put("events", Map.of("recordEvents", true, "recordTaskInVars", true));
         if (exclusive() != null && !exclusive().isEmpty()) {
             configuration.put("exclusive", exclusive());
         }

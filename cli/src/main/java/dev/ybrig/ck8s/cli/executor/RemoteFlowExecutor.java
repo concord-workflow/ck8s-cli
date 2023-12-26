@@ -53,9 +53,9 @@ public class RemoteFlowExecutor {
         return result;
     }
 
-    public ConcordProcess execute(String clientClusterAlias, Ck8sPayload payload, String flowName) {
+    public ConcordProcess execute(String clientClusterAlias, Ck8sPayload payload, String flowName, List<String> activeProfiles) {
         try {
-            ConcordProcess process = startProcess(clientClusterAlias, payload, flowName);
+            ConcordProcess process = startProcess(clientClusterAlias, payload, flowName, activeProfiles);
             LogUtils.info("process: {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()));
             return process;
         } catch (Exception e) {
@@ -63,11 +63,14 @@ public class RemoteFlowExecutor {
         }
     }
 
-    private ConcordProcess startProcess(String clientClusterAlias, Ck8sPayload ck8sPayload, String flowName) throws ApiException {
+    private ConcordProcess startProcess(String clientClusterAlias, Ck8sPayload ck8sPayload, String flowName, List<String> activeProfiles) throws ApiException {
         Map<String, Object> payload = toMap(ck8sPayload);
 
         payload.put("clientClusterAlias", clientClusterAlias);
         payload.put("flow", flowName);
+        if (activeProfiles != null && !activeProfiles.isEmpty()) {
+            payload.put("activeProfiles", activeProfiles.toArray(new String[0]));
+        }
 
         HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
@@ -141,7 +144,7 @@ public class RemoteFlowExecutor {
     @SuppressWarnings("unchecked")
     private String formatExceptionMessage(HttpResponse<InputStream> response, String body) throws JsonProcessingException {
         if (body == null || body.isEmpty()) {
-            return "[no body]";
+            return response.statusCode() + " [no body]";
         }
 
         String msg = body;

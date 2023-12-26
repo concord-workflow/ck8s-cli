@@ -15,6 +15,7 @@ import picocli.CommandLine;
 
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -55,8 +56,8 @@ public class CliApp
     @CommandLine.Option(names = {"--secretsProvider"}, description = "secrets provider")
     SecretsProvider secretsProvider;
 
-    @CommandLine.Option(names = {"--withInputAssert"}, description = "assert flow call input parameters aat runtime")
-    boolean withInputAssert = false;
+    @CommandLine.Option(names = {"--active-profiles"}, description = "Concord active profiles")
+    List<String> activeProfiles = null;
 
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {
             "Specify multiple -v options to increase verbosity. For example, `-V -V -V` or `-VVV`",
@@ -134,11 +135,6 @@ public class CliApp
         return secretsProvider;
     }
 
-    public boolean isWithInputAssert()
-    {
-        return withInputAssert;
-    }
-
     public boolean isTestMode()
     {
         return testMode;
@@ -166,6 +162,10 @@ public class CliApp
 
     public boolean isSkipConfirm() {
         return skipConfirm;
+    }
+
+    public List<String> getActiveProfiles() {
+        return activeProfiles;
     }
 
     @Override

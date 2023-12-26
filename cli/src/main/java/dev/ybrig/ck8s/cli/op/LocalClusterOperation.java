@@ -11,6 +11,7 @@ import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutor;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
 
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,12 +47,12 @@ public class LocalClusterOperation
             ConcordProfile profile = CliConfigurationProvider.getConcordProfile(cliApp.getProfile());
             RemoteFlowExecutor flowExecutor = new RemoteFlowExecutor(profile.baseUrl(), profile.apiKey());
 
-            ConcordProcess process = flowExecutor.execute(clusterAlias, payload, "cert-manager-local");
+            ConcordProcess process = flowExecutor.execute(clusterAlias, payload, "cert-manager-local", Collections.emptyList());
             if (process != null) {
                 process.streamLogs(executor);
             }
 
-            process = flowExecutor.execute(clusterAlias, payload, "polaris");
+            process = flowExecutor.execute(clusterAlias, payload, "polaris", Collections.emptyList());
             if (process != null) {
                 process.streamLogs(executor);
             }

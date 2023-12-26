@@ -13,7 +13,7 @@ public class FlowExecutorFactory {
                 ConcordProfile profile = CliConfigurationProvider.getConcordProfile(ctx.cliApp().getProfile());
                 return (payload, flowName, profiles) -> {
                     RemoteFlowExecutor delegate = new RemoteFlowExecutor(profile.baseUrl(), profile.apiKey());
-                    delegate.execute(ctx.cliApp().getClusterAlias(), payload, flowName);
+                    delegate.execute(ctx.cliApp().getClusterAlias(), payload, flowName, ctx.cliApp().getActiveProfiles());
                     return 0;
                 };
             }
