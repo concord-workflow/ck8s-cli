@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.cli.runner.*;
+import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
@@ -22,6 +23,7 @@ import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -194,14 +196,23 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                 .debug(processDefinition.configuration().debug())
                 .build();
 
+        // default task vars path
+        Path defaultTaskVars = Paths.get(System.getProperty("user.home")).resolve(".ck8s").resolve("default-task-vars.json");
+
         Path secretStoreDir = ck8sHome().resolve("secrets");
         Path vaultDir = ck8sHome().resolve("vaults");
         Injector injector = new InjectorFactory(new WorkingDirectory(targetDir),
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, new VaultProvider(vaultDir, DEFAULT_VAULT_ID), dependencyManager, verbosity),
-                new AbstractModule()
+                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, DEFAULT_VAULT_ID), dependencyManager, verbosity),
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(ApiClient.class).toProvider(ApiClientProvider.class);
+                    }
+                },
+        new AbstractModule()
                 {
                     @Override
                     protected void configure()
