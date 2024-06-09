@@ -71,6 +71,15 @@ public class Mapper
         }
     }
 
+    public Map<String, Object> readMap(String content) {
+        try {
+            return objectMapper.readValue(content, MAP_TYPE);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error reading '" + content + "': " + e.getMessage());
+        }
+    }
+
     public Map<String, Object> readMap(URL url)
     {
         try {

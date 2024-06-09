@@ -1,11 +1,13 @@
 package dev.ybrig.ck8s.cli.op;
 
+import com.walmartlabs.concord.cli.Verbosity;
 import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.common.*;
 import dev.ybrig.ck8s.cli.common.verify.CheckError;
 import dev.ybrig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
 import dev.ybrig.ck8s.cli.executor.FlowExecutor;
 import dev.ybrig.ck8s.cli.executor.FlowExecutorFactory;
+import dev.ybrig.ck8s.cli.executor.FlowExecutorParams;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
 import java.util.*;
@@ -60,7 +62,16 @@ public class RunFlowOperation
             return 0;
         }
 
-        FlowExecutor flowExecutor = new FlowExecutorFactory().create(cliOperationContext);
+        FlowExecutorParams executorParams = FlowExecutorParams.builder()
+                .executorType(cliApp.getFlowExecutorType().getType())
+                .concordProfile(cliApp.getProfile())
+                .clusterAlias(cliApp.getClusterAlias())
+                .activeProfiles(cliApp.getActiveProfiles())
+                .secretProvider(cliApp.getSecretsProvider())
+                .verbosity(new Verbosity(cliApp.getVerbosity()))
+                .build();
+
+        FlowExecutor flowExecutor = new FlowExecutorFactory().create(executorParams);
         return flowExecutor.execute(payload, flow, Collections.emptyList());
     }
 

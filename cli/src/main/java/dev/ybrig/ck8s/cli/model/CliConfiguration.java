@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,6 +44,9 @@ public interface CliConfiguration
     @Nullable
     Oidc oidc();
 
+    @Nullable
+    Forms forms();
+
     @Value.Immutable
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonSerialize(as = ImmutableOidc.class)
@@ -55,5 +59,14 @@ public interface CliConfiguration
 
         @Nullable
         String oauthUrl();
+    }
+
+    @Value.Immutable
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonSerialize(as = ImmutableForms.class)
+    @JsonDeserialize(as = ImmutableForms.class)
+    interface Forms {
+
+        Path path();
     }
 }

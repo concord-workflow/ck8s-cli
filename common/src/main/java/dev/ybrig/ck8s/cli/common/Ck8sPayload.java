@@ -2,6 +2,7 @@ package dev.ybrig.ck8s.cli.common;
 
 import org.immutables.value.Value;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
@@ -19,6 +20,14 @@ public interface Ck8sPayload {
     default Map<String, Object> arguments() {
         return Collections.emptyMap();
     }
+
+    @Value.Default
+    default String org() {
+        return MapUtils.assertString(arguments(), "clusterRequest.organization.name");
+    }
+
+    @Nullable
+    String project();
 
     Ck8sFlows ck8sFlows();
 

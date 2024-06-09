@@ -5,6 +5,7 @@ import dev.ybrig.ck8s.cli.cfg.CliDefaultParamValuesProvider;
 import dev.ybrig.ck8s.cli.completion.ClusterAliasCompletion;
 import dev.ybrig.ck8s.cli.completion.FlowCompletion;
 import dev.ybrig.ck8s.cli.completion.ProfilesCompletion;
+import dev.ybrig.ck8s.cli.forms.ServeFormsCommand;
 import dev.ybrig.ck8s.cli.op.*;
 import dev.ybrig.ck8s.cli.selfupdate.SelfUpdateCommand;
 import dev.ybrig.ck8s.cli.sso.GenerateTokenCommand;
@@ -23,7 +24,11 @@ import static java.util.Objects.nonNull;
 
 @CommandLine.Command(name = "ck8s-cli",
         versionProvider = VersionProvider.class,
-        subcommands = {AutoComplete.GenerateCompletion.class, SelfUpdateCommand.class, GenerateTokenCommand.class},
+        subcommands = {
+                AutoComplete.GenerateCompletion.class,
+                SelfUpdateCommand.class,
+                GenerateTokenCommand.class,
+                ServeFormsCommand.class},
         defaultValueProvider = CliDefaultParamValuesProvider.class)
 public class CliApp
         implements Callable<Integer>
@@ -57,7 +62,7 @@ public class CliApp
     SecretsProvider secretsProvider;
 
     @CommandLine.Option(names = {"--active-profiles"}, description = "Concord active profiles")
-    List<String> activeProfiles = null;
+    List<String> activeProfiles = List.of();
 
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {
             "Specify multiple -v options to increase verbosity. For example, `-V -V -V` or `-VVV`",

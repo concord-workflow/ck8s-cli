@@ -20,13 +20,30 @@ package dev.ybrig.ck8s.cli;
  * =====
  */
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
+
+import java.util.Objects;
 
 public class Main
 {
 
     public static void main(String[] args)
     {
+//        args = new String[] {"serve-forms", "-p", "infra-prod", "-V"};
+
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        JoranConfigurator configurator = new JoranConfigurator();
+        configurator.setContext(context);
+        context.reset();
+        try {
+            configurator.doConfigure(Objects.requireNonNull(Main.class.getResource("logback.xml")));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         CommandLine cmd = new CommandLine(new CliApp())
                 .setCaseInsensitiveEnumValuesAllowed(true)
                 .setExitCodeExceptionMapper(Main::mapException);

@@ -1,0 +1,22 @@
+body {
+    background-color: #FFFFFF;
+}
+
+h1 {
+    font-size: 1.5em;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Hide all columns except the first one */
+td:nth-child(n+2),
+th:nth-child(n+2) {
+    display: none;
+}
+
+/* Hide the table header */
+thead {
+    display: none;
+}
