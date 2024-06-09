@@ -21,11 +21,6 @@ public interface Ck8sPayload {
         return Collections.emptyMap();
     }
 
-    @Value.Default
-    default String org() {
-        return MapUtils.assertString(arguments(), "clusterRequest.organization.name");
-    }
-
     @Nullable
     String project();
 
