@@ -13,7 +13,6 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.*;
 import org.eclipse.jetty.http.content.*;
 import org.eclipse.jetty.proxy.ProxyHandler;
-import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;

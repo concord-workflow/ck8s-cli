@@ -67,6 +67,6 @@ public interface CliConfiguration
     @JsonDeserialize(as = ImmutableForms.class)
     interface Forms {
 
-        Path path();
+        String path();
     }
 }
