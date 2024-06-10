@@ -9,6 +9,8 @@ import com.google.inject.multibindings.Multibinder;
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.client2.ApiClient;
+import com.walmartlabs.concord.client2.ApiClientConfiguration;
+import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.common.ConfigurationUtils;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
@@ -23,7 +25,6 @@ import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
-import com.walmartlabs.concord.runtime.v2.runner.remote.ApiClientProvider;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -31,9 +32,14 @@ import com.walmartlabs.concord.svm.ExecutionListener;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.ConcordYaml;
 import dev.ybrig.ck8s.cli.common.IOUtils;
+import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordServer;
+import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
+import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,12 +55,24 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     private final Verbosity verbosity;
     private final String secretsProvider;
     private final boolean offlineMode;
+    private final ConcordProfile profile;
 
-    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider, boolean offlineMode)
+    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider, boolean offlineMode, ConcordProfile profile)
     {
         this.verbosity = verbosity;
         this.secretsProvider = secretsProvider;
         this.offlineMode = offlineMode;
+
+        // TODO: "default" is a default value for profile, but if profile is undefined we want to use local Concord server...
+        if ("default".equals(profile.alias())) {
+            this.profile = ConcordProfile.builder()
+                    .alias("default")
+                    .baseUrl("http://localhost:8001")
+                    .apiKey("any")
+                    .build();
+        } else {
+            this.profile = profile;
+        }
     }
 
     private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo)
@@ -73,15 +91,14 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     private static ProcessInfo processInfo(List<String> activeProfiles)
     {
         return ProcessInfo.builder()
-                .sessionToken("test")
                 .activeProfiles(activeProfiles)
                 .build();
     }
 
-    private static ProjectInfo projectInfo()
+    private ProjectInfo projectInfo(String orgName)
     {
         return ProjectInfo.builder()
-                .orgName("Default")
+                .orgName(orgName)
                 .build();
     }
 
@@ -170,7 +187,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
             LogUtils.info("Active profiles: {}", activeProfiles);
         }
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo())
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo(MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name")))
                 .instanceId(instanceId)
                 .entryPoint("normalFlow")
                 .build();
@@ -194,6 +211,9 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
+                .api(ApiConfiguration.builder()
+                        .baseUrl(profile.baseUrl())
+                        .build())
                 .dependencies(dependencies)
                 .debug(processDefinition.configuration().debug())
                 .build();
@@ -207,11 +227,17 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, DEFAULT_VAULT_ID), dependencyManager, verbosity),
-                new AbstractModule() {
+                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, DEFAULT_VAULT_ID), dependencyManager, verbosity) {
                     @Override
                     protected void configure() {
                         bind(ApiClient.class).toProvider(ApiClientProvider.class);
+                        super.configure();
+                    }
+                },
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(ConcordProfile.class).toInstance(profile);
                     }
                 },
         new AbstractModule()
@@ -238,7 +264,9 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
         loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
 
-        ConcordServer.start();
+        if ("default".equals(profile.alias())) {
+            ConcordServer.start();
+        }
 
         try {
             runner.start(cfg, processDefinition, args);
@@ -268,5 +296,23 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     private Path ck8sHome()
     {
         return Paths.get(System.getProperty("user.home")).resolve(".ck8s");
+    }
+
+    public static class ApiClientProvider implements Provider<ApiClient> {
+        private final ApiClientFactory clientFactory;
+        private final ConcordProfile profile;
+
+        @Inject
+        public ApiClientProvider(ApiClientFactory clientFactory, ConcordProfile profile) {
+            this.clientFactory = clientFactory;
+            this.profile = profile;
+        }
+
+        public ApiClient get() {
+            return this.clientFactory.create(ApiClientConfiguration.builder()
+                    .baseUrl(profile.baseUrl())
+                    .apiKey(profile.apiKey())
+                    .build());
+        }
     }
 }

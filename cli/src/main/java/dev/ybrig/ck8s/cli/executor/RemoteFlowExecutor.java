@@ -50,7 +50,7 @@ public class RemoteFlowExecutor {
         archive(payload.ck8sFlows().location(), result);
         result.put("arguments", payload.arguments());
         result.put("debug", payload.debug());
-        result.put("org",  MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name"));
+        result.put("org", MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name"));
         if (payload.project() != null) {
             result.put("project", payload.project());
         }

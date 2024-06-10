@@ -32,7 +32,7 @@ public class Main
 
     public static void main(String[] args)
     {
-//        args = new String[] {"serve-forms", "-p", "infra-prod", "-V"};
+//        args = new String[] {"--flow-executor", "concord-cli", "-p", "ci1", "-c", "ci1", "-f", "brig2", "--secretsProvider=local"};
 
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         JoranConfigurator configurator = new JoranConfigurator();

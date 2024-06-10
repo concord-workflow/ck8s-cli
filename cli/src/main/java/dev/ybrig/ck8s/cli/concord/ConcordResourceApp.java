@@ -16,6 +16,7 @@ public class ConcordResourceApp
     {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(InventoryResource.class);
+        resources.add(JsonStoreDataResource.class);
         resources.add(JacksonFeature.class);
 
         this.classes = Collections.unmodifiableSet(resources);
