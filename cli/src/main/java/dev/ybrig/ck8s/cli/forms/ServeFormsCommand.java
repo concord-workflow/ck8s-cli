@@ -86,9 +86,15 @@ public class ServeFormsCommand implements Callable<Integer> {
             }
         }
 
+        if (Files.notExists(formsDir)) {
+            LogUtils.error("Forms directory does not exist: " + formsDir);
+            return -1;
+        }
+
         if (verbose) {
             LogUtils.info("redirecting api requests to: {}", instanceProfile.baseUrl());
             LogUtils.info("default data.js values: {}", defaultDataJs);
+            LogUtils.info("forms dir: {}", formsDir);
         }
 
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
