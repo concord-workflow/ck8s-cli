@@ -30,4 +30,9 @@ public interface FlowExecutorParams {
     }
 
     Verbosity verbosity();
+
+    @Value.Default
+    default boolean useLocalDependencies() {
+        return false;
+    }
 }

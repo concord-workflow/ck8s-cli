@@ -26,6 +26,7 @@ import picocli.CommandLine;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -93,7 +94,7 @@ public class ServeFormsCommand implements Callable<Integer> {
 
         Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
 
-        Server server = new Server(port);
+        Server server = new Server(new InetSocketAddress("localhost", port));
 
         ContextHandlerCollection contextCollection = new ContextHandlerCollection();
 

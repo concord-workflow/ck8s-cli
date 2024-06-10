@@ -48,11 +48,13 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
     private final Verbosity verbosity;
     private final String secretsProvider;
+    private final boolean offlineMode;
 
-    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider)
+    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider, boolean offlineMode)
     {
         this.verbosity = verbosity;
         this.secretsProvider = secretsProvider;
+        this.offlineMode = offlineMode;
     }
 
     private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo)
@@ -258,7 +260,9 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     {
         Path cfgFile = new MvnJsonProvider().get();
         Path depsCacheDir = ck8sHome().resolve("depsCache");
-        return DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile));
+        return DependencyManagerConfiguration.builder().from(DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile)))
+                .offlineMode(offlineMode)
+                .build();
     }
 
     private Path ck8sHome()

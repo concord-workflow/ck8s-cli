@@ -69,6 +69,7 @@ public class RunFlowOperation
                 .activeProfiles(cliApp.getActiveProfiles())
                 .secretProvider(cliApp.getSecretsProvider())
                 .verbosity(new Verbosity(cliApp.getVerbosity()))
+                .useLocalDependencies(cliApp.isWithLocalDependencies())
                 .build();
 
         FlowExecutor flowExecutor = new FlowExecutorFactory().create(executorParams);

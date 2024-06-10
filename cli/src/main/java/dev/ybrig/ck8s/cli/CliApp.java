@@ -83,6 +83,9 @@ public class CliApp
     @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
     Path targetRootPath = Path.of(System.getProperty("java.io.tmpdir")).resolve("ck8s-cli");
 
+    @CommandLine.Option(names = {"--with-local-deps"}, description = "Do not resole dependencies from remote, use local cached")
+    boolean withLocalDependencies = false;
+
     static class CliOperationArgs
     {
         @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
@@ -171,6 +174,10 @@ public class CliApp
 
     public List<String> getActiveProfiles() {
         return activeProfiles;
+    }
+
+    public boolean isWithLocalDependencies() {
+        return withLocalDependencies;
     }
 
     @Override
