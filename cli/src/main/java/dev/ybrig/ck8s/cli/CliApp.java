@@ -86,6 +86,12 @@ public class CliApp
     @CommandLine.Option(names = {"--with-local-deps"}, description = "Do not resole dependencies from remote, use local cached")
     boolean withLocalDependencies = false;
 
+    @CommandLine.Option(names = {"--connect-timeout"}, description = "Connection timeout")
+    long connectTimeout = 30;
+
+    @CommandLine.Option(names = {"--read-timeout"}, description = "Read timeout")
+    long readTimeout = 30;
+
     static class CliOperationArgs
     {
         @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
@@ -178,6 +184,14 @@ public class CliApp
 
     public boolean isWithLocalDependencies() {
         return withLocalDependencies;
+    }
+
+    public long getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public long getReadTimeout() {
+        return readTimeout;
     }
 
     @Override

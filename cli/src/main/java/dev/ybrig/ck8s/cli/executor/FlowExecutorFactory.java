@@ -12,7 +12,7 @@ public class FlowExecutorFactory {
         switch (type) {
             case REMOTE: {
                 return (payload, flowName, profiles) -> {
-                    RemoteFlowExecutor delegate = new RemoteFlowExecutor(profile.baseUrl(), profile.apiKey());
+                    RemoteFlowExecutor delegate = new RemoteFlowExecutor(profile.baseUrl(), profile.apiKey(), params.connectTimeout(), params.responseTimeout());
                     delegate.execute(params.clusterAlias(), payload, flowName, params.activeProfiles());
                     return 0;
                 };

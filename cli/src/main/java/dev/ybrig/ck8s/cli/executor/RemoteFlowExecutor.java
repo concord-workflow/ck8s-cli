@@ -12,14 +12,16 @@ import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.immutables.value.Value;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -30,17 +32,23 @@ import java.util.Map;
 public class RemoteFlowExecutor {
 
     private final ApiClient apiClient;
+    private final long responseTimeout;
 
     public RemoteFlowExecutor(String baseUrl, String apiKey) {
-        this.apiClient = createClient(baseUrl, apiKey);
+        this(baseUrl, apiKey, 30, 30);
     }
 
-    private static ApiClient createClient(String baseUrl, String apiKey) {
+    public RemoteFlowExecutor(String baseUrl, String apiKey, long connectTimeout, long responseTimeout) {
+        this.apiClient = createClient(baseUrl, apiKey, connectTimeout);
+        this.responseTimeout = responseTimeout;
+    }
+
+    private static ApiClient createClient(String baseUrl, String apiKey, long connectTimeout) {
         if (apiKey == null) {
             throw new RuntimeException("Can't create concord client for: api key is empty");
         }
 
-        return new DefaultApiClientFactory(baseUrl, Duration.of(30, ChronoUnit.SECONDS), false)
+        return new DefaultApiClientFactory(baseUrl, Duration.of(connectTimeout, ChronoUnit.SECONDS), false)
                 .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
     }
 
@@ -80,7 +88,7 @@ public class RemoteFlowExecutor {
         HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
         HttpRequest request = apiClient.requestBuilder()
-                .timeout(Duration.of(30, ChronoUnit.SECONDS))
+                .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
                 .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process"))
                 .header("Content-Type", entity.contentType().toString())
                 .method("POST", HttpRequest.BodyPublishers.ofInputStream(() -> {
@@ -97,6 +105,12 @@ public class RemoteFlowExecutor {
             response = apiClient.getHttpClient().send(
                     request,
                     HttpResponse.BodyHandlers.ofInputStream());
+        } catch (HttpConnectTimeoutException e) {
+            throw new RuntimeException("Connect timeout: " + apiClient.getBaseUri());
+        } catch (HttpTimeoutException e) {
+            throw new RuntimeException("Timeout: " + apiClient.getBaseUri());
+        } catch (ConnectException e) {
+            throw new RuntimeException("Can't connect to " + apiClient.getBaseUri());
         } catch (Exception e) {
             throw new RuntimeException("Error sending request: " + e.getMessage());
         }

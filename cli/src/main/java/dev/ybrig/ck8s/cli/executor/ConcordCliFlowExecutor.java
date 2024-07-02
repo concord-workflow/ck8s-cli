@@ -170,6 +170,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         UUID instanceId = UUID.randomUUID();
         Map<String, Object> args = new LinkedHashMap<>();
         args.put("concordUrl", "https://concord.local.localhost");
+        args.put("localConcordCli", true);
 
         Map<String, Object> flowAndUserArgs = ConfigurationUtils.deepMerge(processDefinition.configuration().arguments(), payload.arguments());
         args.putAll(flowAndUserArgs);

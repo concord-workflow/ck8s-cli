@@ -70,6 +70,8 @@ public class RunFlowOperation
                 .secretProvider(cliApp.getSecretsProvider())
                 .verbosity(new Verbosity(cliApp.getVerbosity()))
                 .useLocalDependencies(cliApp.isWithLocalDependencies())
+                .connectTimeout(cliApp.getConnectTimeout())
+                .responseTimeout(cliApp.getReadTimeout())
                 .build();
 
         FlowExecutor flowExecutor = new FlowExecutorFactory().create(executorParams);

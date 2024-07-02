@@ -35,4 +35,14 @@ public interface FlowExecutorParams {
     default boolean useLocalDependencies() {
         return false;
     }
+
+    @Value.Default
+    default long connectTimeout() {
+        return 30;
+    }
+
+    @Value.Default
+    default long responseTimeout() {
+        return 30;
+    }
 }
