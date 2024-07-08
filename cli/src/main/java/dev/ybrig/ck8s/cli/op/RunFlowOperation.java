@@ -9,6 +9,7 @@ import dev.ybrig.ck8s.cli.executor.FlowExecutor;
 import dev.ybrig.ck8s.cli.executor.FlowExecutorFactory;
 import dev.ybrig.ck8s.cli.executor.FlowExecutorParams;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
+import picocli.CommandLine;
 
 import java.util.*;
 
@@ -24,6 +25,9 @@ public class RunFlowOperation
     {
         CliApp cliApp = cliOperationContext.cliApp();
         String flow = cliApp.getFlow();
+        if (cliApp.getClusterAlias() == null) {
+            throw new CommandLine.ParameterException(new CommandLine(cliApp), "Missing required option: '--cluster=<clusterAlias>'");
+        }
 
         boolean needConfirmation = !cliOperationContext.cliApp().isSkipConfirm() && nonNull(flow)
                 && flowPatternsToConfirm.stream()
