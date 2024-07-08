@@ -81,9 +81,10 @@ public class Ck8sUtils
         return streamClusterYaml(ck8sPath)
                 .filter(p -> {
                     try {
-                        return filter.test(new ClusterConfiguration(Mapper.yamlMapper().readMap(p)));
+                        Map<String, Object> m = Mapper.yamlMapper().readMap(p);
+                        return filter.test(new ClusterConfiguration(m));
                     } catch (Exception e) {
-                        throw new RuntimeException("Error parsing cluster definition file " + p);
+                        throw new RuntimeException("Error parsing cluster definition file " + p + ": " + e.getMessage());
                     }
                 })
                 .findFirst()
