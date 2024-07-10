@@ -199,7 +199,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
         long t1 = System.currentTimeMillis();
         Collection<String> dependencies = new DependencyResolver(dependencyManager, false)
-                .resolveDeps(processDefinition.configuration().dependencies());
+                .resolveDeps(JobDependencies.get(payload, processDefinition.configuration().dependencies()));
 
         if (!verbosity.verbose()) {
             System.out.println("Dependency resolution took " + (System.currentTimeMillis() - t1) + "ms");
