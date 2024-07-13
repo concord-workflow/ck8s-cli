@@ -29,6 +29,7 @@ import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
 import com.walmartlabs.concord.svm.ExecutionListener;
+import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.ConcordYaml;
 import dev.ybrig.ck8s.cli.common.IOUtils;
@@ -57,21 +58,21 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     private final boolean offlineMode;
     private final ConcordProfile profile;
 
-    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider, boolean offlineMode, ConcordProfile profile)
+    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider, boolean offlineMode, String concordProfile)
     {
         this.verbosity = verbosity;
         this.secretsProvider = secretsProvider;
         this.offlineMode = offlineMode;
 
         // TODO: "default" is a default value for profile, but if profile is undefined we want to use local Concord server...
-        if ("default".equals(profile.alias())) {
+        if ("default".equals(concordProfile)) {
             this.profile = ConcordProfile.builder()
                     .alias("default")
                     .baseUrl("http://localhost:8001")
                     .apiKey("any")
                     .build();
         } else {
-            this.profile = profile;
+            this.profile = CliConfigurationProvider.getConcordProfile(concordProfile);
         }
     }
 
