@@ -1,9 +1,8 @@
 package dev.ybrig.ck8s.cli.executor;
 
 import com.walmartlabs.concord.runtime.v2.model.FlowCall;
-import com.walmartlabs.concord.runtime.v2.model.Step;
 import com.walmartlabs.concord.runtime.v2.runner.context.ContextFactory;
-import com.walmartlabs.concord.runtime.v2.runner.vm.StepCommand;
+import com.walmartlabs.concord.runtime.v2.runner.vm.FlowCallCommand;
 import com.walmartlabs.concord.runtime.v2.sdk.Context;
 import com.walmartlabs.concord.svm.Runtime;
 import com.walmartlabs.concord.svm.*;
@@ -18,17 +17,11 @@ public class FlowCallParamsLogger
     @Override
     public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd)
     {
-        if (!(cmd instanceof StepCommand<?>)) {
+        if (!(cmd instanceof FlowCallCommand)) {
             return Result.CONTINUE;
         }
-        StepCommand<?> stepCommand = (StepCommand<?>) cmd;
 
-        Step step = stepCommand.getStep();
-        if (!(step instanceof FlowCall)) {
-            return Result.CONTINUE;
-        }
-        FlowCall flowCall = (FlowCall) step;
-
+        FlowCall flowCall = ((FlowCallCommand) cmd).getStep();
         if (flowCall.getOptions() == null) {
             return Result.CONTINUE;
         }
