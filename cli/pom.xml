@@ -284,7 +284,7 @@
                 <artifactId>really-executable-jar-maven-plugin</artifactId>
                 <version>1.4.2</version>
                 <configuration>
-                    <flags>-Xmx128m -client</flags>
+                    <flags>-Xmx128m -client -Djava.net.preferIPv4Stack=true </flags>
                     <classifier>uber</classifier>
                     <outputClassifier>executable</outputClassifier>
                     <allowOtherTypes>true</allowOtherTypes>

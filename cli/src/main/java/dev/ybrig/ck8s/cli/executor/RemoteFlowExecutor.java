@@ -110,7 +110,7 @@ public class RemoteFlowExecutor {
         } catch (HttpTimeoutException e) {
             throw new RuntimeException("Timeout: " + apiClient.getBaseUri());
         } catch (ConnectException e) {
-            throw new RuntimeException("Can't connect to " + apiClient.getBaseUri() + ". Error: " + e.getMessage());
+            throw new RuntimeException("Can't connect to " + apiClient.getBaseUri() + (e.getMessage() != null ? ". Error: " + e.getMessage() : ""));
         } catch (Exception e) {
             throw new RuntimeException("Error sending request: " + e.getMessage());
         }
