@@ -24,6 +24,10 @@ public class Mapper
     private static final Mapper xmlMapper = new Mapper(createXmlObjectMapper());
     private final ObjectMapper objectMapper;
 
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
     public Mapper(ObjectMapper objectMapper)
     {
         this.objectMapper = objectMapper;

@@ -10,9 +10,15 @@ public class Ck8sPath
     private static final Path CK8S_ORGS_DIR = CK8S_CORE.resolve("ck8s-orgs");
     private static final Path CK8S_COMPONENTS = CK8S_CORE.resolve("ck8s-components");
     private static final Path CK8S_COMPONENTS_TESTS = CK8S_CORE.resolve("ck8s-components-tests");
+
     private static final Path CK8S_EXT_ORGS_DIR = Path.of("ck8s-orgs");
     private static final Path CK8S_EXT_COMPONENTS = Path.of("ck8s-components");
     private static final Path CK8S_EXT_COMPONENTS_TESTS = Path.of("ck8s-components-tests");
+
+    private static final Path UNIFIED_CK8S_ORGS_DIR = Path.of("ck8s-orgs");
+    private static final Path UNIFIED_CK8S_COMPONENTS = Path.of("ck8s-components");
+    private static final Path UNIFIED_CK8S_COMPONENTS_TESTS = Path.of("ck8s-components-tests");
+
     private final Path ck8s;
     @Nullable
     private final Path ck8sExt;
@@ -82,17 +88,27 @@ public class Ck8sPath
 
     public Path ck8sOrgDir()
     {
-        return ck8s.resolve(CK8S_ORGS_DIR);
+        if (Files.exists(ck8s.resolve(CK8S_ORGS_DIR))) {
+            return ck8s.resolve(CK8S_ORGS_DIR);
+        }
+
+        return ck8s.resolve(UNIFIED_CK8S_ORGS_DIR);
     }
 
     public Path ck8sComponents()
     {
-        return ck8s.resolve(CK8S_COMPONENTS);
+        if (Files.exists(ck8s.resolve(CK8S_COMPONENTS))) {
+            return ck8s.resolve(CK8S_COMPONENTS);
+        }
+        return ck8s.resolve(UNIFIED_CK8S_COMPONENTS);
     }
 
     public Path ck8sComponentsTests()
     {
-        return ck8s.resolve(CK8S_COMPONENTS_TESTS);
+        if (Files.exists(ck8s.resolve(CK8S_COMPONENTS_TESTS))) {
+            return ck8s.resolve(CK8S_COMPONENTS_TESTS);
+        }
+        return ck8s.resolve(UNIFIED_CK8S_COMPONENTS_TESTS);
     }
 
     @Nullable
@@ -117,7 +133,11 @@ public class Ck8sPath
 
     public Path defaultCfg()
     {
-        return ck8s.resolve("flows").resolve("ck8s-configs").resolve("ck8s.yaml");
+        Path oldCfg = ck8s.resolve("flows").resolve("ck8s-configs").resolve("ck8s.yaml");
+        if (Files.exists(oldCfg)) {
+            return oldCfg;
+        }
+        return ck8s.resolve("ck8s-configs").resolve("ck8s.yaml");
     }
 
     public Path orgCfgForCluster(Path clusterYaml)
