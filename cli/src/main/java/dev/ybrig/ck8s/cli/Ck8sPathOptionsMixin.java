@@ -11,7 +11,7 @@ public class Ck8sPathOptionsMixin
 {
     private Path ck8sPath = Path.of(System.getProperty("user.dir"));
 
-    private Path ck8sExtPath = Path.of(System.getProperty("user.dir")).getParent().resolve("ck8s-ext");
+    private Path ck8sExtPath = null;
 
     public Path getCk8sPath()
     {
