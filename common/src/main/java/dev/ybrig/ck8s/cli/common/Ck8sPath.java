@@ -19,6 +19,8 @@ public class Ck8sPath
     private static final Path UNIFIED_CK8S_COMPONENTS = Path.of("ck8s-components");
     private static final Path UNIFIED_CK8S_COMPONENTS_TESTS = Path.of("ck8s-components-tests");
 
+    private static final Path CONFIGS_DIR = Path.of("configs");
+
     private final Path ck8s;
     @Nullable
     private final Path ck8sExt;
@@ -148,6 +150,13 @@ public class Ck8sPath
     public Path accountCfgForCluster(Path clusterYaml)
     {
         return clusterYaml.getParent().getParent().resolve("account.yaml");
+    }
+
+    public Path configs() {
+        if (ck8sExt != null && Files.exists(ck8sExt.resolve(CONFIGS_DIR))) {
+            return ck8sExt.resolve(CONFIGS_DIR);
+        }
+        return ck8s.resolve(CONFIGS_DIR);
     }
 
     public Path relativize(Path p)

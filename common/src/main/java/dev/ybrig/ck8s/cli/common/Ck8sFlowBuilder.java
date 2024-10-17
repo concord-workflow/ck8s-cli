@@ -59,9 +59,9 @@ public class Ck8sFlowBuilder {
         }
 
         // copy configs
-        if (ck8sPath.ck8sExtDir() != null) {
+        if (Files.exists(ck8sPath.configs())) {
             try {
-                IOUtils.copy(ck8sPath.ck8sExtDir().resolve("configs"), flows.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+                IOUtils.copy(ck8sPath.configs(), flows.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
                 throw new RuntimeException("Can't copy configs: " + e.getMessage());
             }
