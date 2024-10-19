@@ -33,6 +33,13 @@ public class CliConfigurationProvider
                 .findFirst()
                 .orElse(null);
 
+        if (cfg != null && cfg.ck8sExtDir() != null) {
+            replace(CliConfiguration.builder().from(cfg)
+                    .ck8sDir(cfg.ck8sExtDir())
+                    .ck8sExtDir(null)
+                    .build());
+        }
+
         return cfg;
     }
 
