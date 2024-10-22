@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Map;
@@ -57,7 +59,9 @@ public class Mapper
 
     private static ObjectMapper createJsonObjectMapper()
     {
-        return new ObjectMapper();
+        var om = new ObjectMapper();
+        om.registerModule(new JavaTimeModule());
+        return om;
     }
 
     private static ObjectMapper createXmlObjectMapper()
@@ -146,6 +150,17 @@ public class Mapper
         }
         catch (Exception e) {
             throw new RuntimeException("Error writing value to '" + path + "': " + e.getMessage());
+        }
+    }
+
+    public void write(OutputStream out, Object value)
+    {
+        try {
+            objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValue(out, value);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Error writing value to file: " + e.getMessage());
         }
     }
 

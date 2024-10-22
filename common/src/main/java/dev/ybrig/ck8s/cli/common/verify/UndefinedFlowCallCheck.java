@@ -27,12 +27,12 @@ public class UndefinedFlowCallCheck extends AbstractChecker {
         }
 
         ProcessDefinition processDefinition = result.getProjectDefinition();
-        Map<String, List<Step>> flows = processDefinition.flows();
+        Map<String, Flow> flows = processDefinition.flows();
         allFlows.addAll(flows.keySet());
 
         List<FlowCall> flowCalls = new ArrayList<>();
-        for (Map.Entry<String, List<Step>> e : flows.entrySet()) {
-            collectFlowCallSteps(e.getValue(), flowCalls);
+        for (Map.Entry<String, Flow> e : flows.entrySet()) {
+            collectFlowCallSteps(e.getValue().steps(), flowCalls);
         }
 
         List<FlowCall> plainFlowCalls = flowCalls.stream().filter(f -> !isExpression(f.getFlowName())).collect(Collectors.toList());

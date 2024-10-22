@@ -34,4 +34,12 @@ public class Ck8sPathOptionsMixin
     {
         rootMixin().ck8sExtPath = ck8sExtPath;
     }
+
+    @Override
+    public String toString() {
+        return "Ck8sPathOptionsMixin{" +
+                "ck8sPath=" + ck8sPath +
+                ", ck8sExtPath=" + ck8sExtPath +
+                '}';
+    }
 }

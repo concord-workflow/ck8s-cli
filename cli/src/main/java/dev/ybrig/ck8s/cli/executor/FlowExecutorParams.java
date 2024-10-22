@@ -5,6 +5,7 @@ import dev.ybrig.ck8s.cli.CliApp;
 import org.immutables.value.Value;
 
 import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.util.List;
 
 @Value.Immutable
@@ -45,4 +46,7 @@ public interface FlowExecutorParams {
     default long responseTimeout() {
         return 30;
     }
+
+    @Nullable
+    Path eventsPath();
 }

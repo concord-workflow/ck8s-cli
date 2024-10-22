@@ -21,7 +21,8 @@ public class FlowExecutorFactory {
                 if (params.secretProvider() != null) {
                     secretsProvider = params.secretProvider().name();
                 }
-                return new ConcordCliFlowExecutor(params.verbosity(), secretsProvider, params.useLocalDependencies(), params.concordProfile());
+                return new ConcordCliFlowExecutor(params.verbosity(), secretsProvider,
+                        params.useLocalDependencies(), params.concordProfile(), params.eventsPath());
             }
             default: {
                 throw new IllegalArgumentException("Unknown type: " + type);

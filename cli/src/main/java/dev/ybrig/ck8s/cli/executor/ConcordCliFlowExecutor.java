@@ -21,10 +21,12 @@ import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
+import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -57,9 +59,11 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     private final String secretsProvider;
     private final boolean offlineMode;
     private final ConcordProfile profile;
+    private final Path eventsDir;
 
-    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider, boolean offlineMode, String concordProfile)
-    {
+    public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider,
+                                  boolean offlineMode, String concordProfile,
+                                  Path eventsDir) {
         this.verbosity = verbosity;
         this.secretsProvider = secretsProvider;
         this.offlineMode = offlineMode;
@@ -74,10 +78,11 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         } else {
             this.profile = CliConfigurationProvider.getConcordProfile(concordProfile);
         }
+
+        this.eventsDir = eventsDir;
     }
 
-    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo)
-    {
+    private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo) {
         return ProcessConfiguration.builder()
                 .debug(cfg.debug())
                 .entryPoint(cfg.entryPoint())
@@ -89,42 +94,35 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                 .out(cfg.out());
     }
 
-    private static ProcessInfo processInfo(List<String> activeProfiles)
-    {
+    private static ProcessInfo processInfo(List<String> activeProfiles) {
         return ProcessInfo.builder()
                 .activeProfiles(activeProfiles)
                 .build();
     }
 
-    private ProjectInfo projectInfo(String orgName)
-    {
+    private ProjectInfo projectInfo(String orgName) {
         return ProjectInfo.builder()
                 .orgName(orgName)
                 .build();
     }
 
-    private static void dumpArguments(Map<String, Object> args)
-    {
+    private static void dumpArguments(Map<String, Object> args) {
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
         try {
             LogUtils.info("Process arguments:\n{}", om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public int execute(Ck8sPayload payload, String flowName, List<String> activeProfiles)
-    {
+    public int execute(Ck8sPayload payload, String flowName, List<String> activeProfiles) {
         try {
             return _execute(payload, flowName, activeProfiles);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             if (verbosity.verbose()) {
                 LogUtils.error("", e);
-            }
-            else {
+            } else {
                 LogUtils.error("{}", e.getMessage());
             }
             return 1;
@@ -132,8 +130,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     }
 
     private int _execute(Ck8sPayload payload, String flowName, List<String> activeProfiles)
-            throws Exception
-    {
+            throws Exception {
         Path targetDir = payload.ck8sFlows().location();
 
         ConcordYaml concordYaml = ConcordYaml.builder()
@@ -155,13 +152,11 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         try {
             loadResult = new ProjectLoaderV2(importManager)
                     .load(targetDir, new CliImportsNormalizer(DEFAULT_IMPORTS_SOURCE, verbosity.verbose(), DEFAULT_VERSION), verbosity.verbose() ? new CliImportsListener() : null);
-        }
-        catch (ImportProcessingException e) {
+        } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             LogUtils.error("while processing import {}: {}", om.writeValueAsString(e.getImport()), e.getMessage());
             return -1;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LogUtils.error("while loading {}", targetDir, e);
             return -1;
         }
@@ -242,14 +237,17 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                         bind(ConcordProfile.class).toInstance(profile);
                     }
                 },
-        new AbstractModule()
-                {
+                new AbstractModule() {
                     @Override
-                    protected void configure()
-                    {
+                    protected void configure() {
+                        Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
                         if (verbosity.logTaskParams()) {
-                            Multibinder<ExecutionListener> executionListeners = Multibinder.newSetBinder(binder(), ExecutionListener.class);
                             executionListeners.addBinding().toInstance(new FlowCallParamsLogger());
+                        }
+
+                        if (eventsDir != null) {
+                            bind(EventReportingService.class).toInstance(new CliEventReportingService(eventsDir, instanceId));
+                            executionListeners.addBinding().to(EventRecordingExecutionListener.class);
                         }
                     }
                 })
@@ -272,12 +270,10 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
         try {
             runner.start(cfg, processDefinition, args);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             if (verbosity.verbose()) {
                 LogUtils.error("", e);
-            }
-            else {
+            } else {
                 LogUtils.error("{}", e.getMessage());
             }
             return 1;
@@ -286,8 +282,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         return 0;
     }
 
-    private DependencyManagerConfiguration getDependencyManagerConfiguration()
-    {
+    private DependencyManagerConfiguration getDependencyManagerConfiguration() {
         Path cfgFile = new MvnJsonProvider().get();
         Path depsCacheDir = ck8sHome().resolve("depsCache");
         return DependencyManagerConfiguration.builder().from(DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile)))
@@ -295,8 +290,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                 .build();
     }
 
-    private Path ck8sHome()
-    {
+    private Path ck8sHome() {
         return Paths.get(System.getProperty("user.home")).resolve(".ck8s");
     }
 

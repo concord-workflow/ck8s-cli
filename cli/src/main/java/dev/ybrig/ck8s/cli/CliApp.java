@@ -2,9 +2,11 @@ package dev.ybrig.ck8s.cli;
 
 import dev.ybrig.ck8s.cli.actions.ActionType;
 import dev.ybrig.ck8s.cli.cfg.CliDefaultParamValuesProvider;
+import dev.ybrig.ck8s.cli.codecoverage.CodeCoverageCommand;
 import dev.ybrig.ck8s.cli.completion.ClusterAliasCompletion;
 import dev.ybrig.ck8s.cli.completion.FlowCompletion;
 import dev.ybrig.ck8s.cli.completion.ProfilesCompletion;
+import dev.ybrig.ck8s.cli.concord.process.ProcessEventsCommand;
 import dev.ybrig.ck8s.cli.forms.ServeFormsCommand;
 import dev.ybrig.ck8s.cli.op.*;
 import dev.ybrig.ck8s.cli.selfupdate.SelfUpdateCommand;
@@ -28,7 +30,9 @@ import static java.util.Objects.nonNull;
                 AutoComplete.GenerateCompletion.class,
                 SelfUpdateCommand.class,
                 GenerateTokenCommand.class,
-                ServeFormsCommand.class},
+                ServeFormsCommand.class,
+                ProcessEventsCommand.class,
+                CodeCoverageCommand.class},
         defaultValueProvider = CliDefaultParamValuesProvider.class)
 public class CliApp
         implements Callable<Integer>
@@ -91,6 +95,9 @@ public class CliApp
 
     @CommandLine.Option(names = {"--read-timeout"}, description = "Read timeout")
     long readTimeout = 30;
+
+    @CommandLine.Option(names = {"--events-dir"}, description = "Where t store events")
+    Path eventsDir = null;
 
     static class CliOperationArgs
     {
@@ -192,6 +199,10 @@ public class CliApp
 
     public long getReadTimeout() {
         return readTimeout;
+    }
+
+    public Path getEventsDir() {
+        return eventsDir;
     }
 
     @Override

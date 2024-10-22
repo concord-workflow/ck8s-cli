@@ -76,6 +76,7 @@ public class RunFlowOperation
                 .useLocalDependencies(cliApp.isWithLocalDependencies())
                 .connectTimeout(cliApp.getConnectTimeout())
                 .responseTimeout(cliApp.getReadTimeout())
+                .eventsPath(cliApp.getEventsDir())
                 .build();
 
         FlowExecutor flowExecutor = new FlowExecutorFactory().create(executorParams);
