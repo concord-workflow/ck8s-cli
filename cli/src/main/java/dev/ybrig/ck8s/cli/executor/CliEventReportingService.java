@@ -29,7 +29,7 @@ public class CliEventReportingService implements EventReportingService {
         try (var out = Files.newOutputStream(outputFile, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
             Mapper.jsonMapper().write(out, processEventRequest);
         } catch (IOException e) {
-            LogUtils.error("Error writing to events file '{}': ", outputFile, e.getMessage());
+            LogUtils.error("Error writing to events file '{}': {}", outputFile, e.getMessage());
         }
     }
 }
