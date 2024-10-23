@@ -78,11 +78,11 @@ public class ServeFormsCommand implements Callable<Integer> {
         defaultDataJs.put("project", concordProject);
 
         if (formsDir == null) {
-            formsDir = ck8sPathOptions.getCk8sExtPath();
+            formsDir = ck8sPathOptions.getCk8sPath();
 
             CliConfiguration.Forms forms = cfg.forms();
             if (forms != null) {
-                formsDir = ck8sPathOptions.getCk8sExtPath().resolve(forms.path());
+                formsDir = ck8sPathOptions.getCk8sPath().resolve(forms.path());
             }
         }
 
