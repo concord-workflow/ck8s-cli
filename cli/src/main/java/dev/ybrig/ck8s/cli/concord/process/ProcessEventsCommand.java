@@ -60,7 +60,7 @@ public class ProcessEventsCommand implements Callable<Integer> {
         int eventsLimit = 1000;
         Long fromId = null;
         while (true) {
-            var events = api.listProcessEvents(processId, "ELEMENT", null, fromId, null, null, null, eventsLimit);
+            var events = api.listProcessEvents(processId, "ELEMENT", null, fromId, null, null, true, eventsLimit);
             allEvents.addAll(events);
             if (!events.isEmpty()) {
                 fromId = events.get(events.size() - 1).getSeqId();

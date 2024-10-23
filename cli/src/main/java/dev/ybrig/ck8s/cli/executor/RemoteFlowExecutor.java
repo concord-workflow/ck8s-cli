@@ -10,6 +10,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
+import dev.ybrig.ck8s.cli.concord.RemoteConcordProcess;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
@@ -123,7 +124,7 @@ public class RemoteFlowExecutor {
         try {
             StartProcessResponse startProcessResponse = ResponseBodyHandler.handle(apiClient.getObjectMapper(), response, new TypeReference<StartProcessResponse>() {
             });
-            return new ConcordProcess(apiClient, startProcessResponse.getInstanceId());
+            return new RemoteConcordProcess(apiClient, startProcessResponse.getInstanceId());
         } catch (Exception e) {
             throw new RuntimeException("Error parsing response: " + e.getMessage());
         }

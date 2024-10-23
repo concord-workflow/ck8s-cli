@@ -99,6 +99,12 @@ public class CliApp
     @CommandLine.Option(names = {"--events-dir"}, description = "Where t store events")
     Path eventsDir = null;
 
+    @CommandLine.Option(names = {"--wait"}, description = "Wait N seconds till process finished")
+    Integer waitSeconds = null;
+
+    @CommandLine.Option(names = {"--stream-logs"}, description = "Stream process logs")
+    boolean streamLogs = false;
+
     static class CliOperationArgs
     {
         @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
@@ -203,6 +209,14 @@ public class CliApp
 
     public Path getEventsDir() {
         return eventsDir;
+    }
+
+    public Integer getWaitSeconds() {
+        return waitSeconds;
+    }
+
+    public boolean getStreamLogs() {
+        return streamLogs;
     }
 
     @Override

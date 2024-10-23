@@ -27,6 +27,8 @@ import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
+import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingListener;
+import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.*;
 import com.walmartlabs.concord.sdk.Constants;
@@ -36,6 +38,8 @@ import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.ConcordYaml;
 import dev.ybrig.ck8s.cli.common.IOUtils;
 import dev.ybrig.ck8s.cli.common.MapUtils;
+import dev.ybrig.ck8s.cli.concord.CliConcordProcess;
+import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.concord.ConcordServer;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
@@ -116,7 +120,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     }
 
     @Override
-    public int execute(Ck8sPayload payload, String flowName, List<String> activeProfiles) {
+    public ConcordProcess execute(Ck8sPayload payload, String flowName, List<String> activeProfiles) {
         try {
             return _execute(payload, flowName, activeProfiles);
         } catch (Exception e) {
@@ -125,11 +129,11 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
             } else {
                 LogUtils.error("{}", e.getMessage());
             }
-            return 1;
+            return null;
         }
     }
 
-    private int _execute(Ck8sPayload payload, String flowName, List<String> activeProfiles)
+    private ConcordProcess _execute(Ck8sPayload payload, String flowName, List<String> activeProfiles)
             throws Exception {
         Path targetDir = payload.ck8sFlows().location();
 
@@ -155,10 +159,10 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         } catch (ImportProcessingException e) {
             ObjectMapper om = new ObjectMapper();
             LogUtils.error("while processing import {}: {}", om.writeValueAsString(e.getImport()), e.getMessage());
-            return -1;
+            return null;
         } catch (Exception e) {
             LogUtils.error("while loading {}", targetDir, e);
-            return -1;
+            return null;
         }
 
         ProcessDefinition processDefinition = loadResult.getProjectDefinition();
@@ -246,8 +250,14 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                         }
 
                         if (eventsDir != null) {
-                            bind(EventReportingService.class).toInstance(new CliEventReportingService(eventsDir, instanceId));
+                            CliEventReportingService reportingService = new CliEventReportingService(eventsDir, instanceId);
+
+                            bind(EventReportingService.class).toInstance(reportingService);
                             executionListeners.addBinding().to(EventRecordingExecutionListener.class);
+                            executionListeners.addBinding().toInstance(reportingService);
+
+                            Multibinder<TaskCallListener> taskCallListeners = Multibinder.newSetBinder(binder(), TaskCallListener.class);
+                            taskCallListeners.addBinding().to(TaskCallEventRecordingListener.class);
                         }
                     }
                 })
@@ -276,10 +286,10 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
             } else {
                 LogUtils.error("{}", e.getMessage());
             }
-            return 1;
+            return null;
         }
 
-        return 0;
+        return new CliConcordProcess(instanceId);
     }
 
     private DependencyManagerConfiguration getDependencyManagerConfiguration() {

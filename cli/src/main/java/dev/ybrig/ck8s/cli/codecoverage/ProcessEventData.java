@@ -21,15 +21,6 @@ public class ProcessEventData {
         return lineNum.intValue();
     }
 
-    public static boolean isFlowCall(ProcessEventEntry event) {
-        String description = MapUtils.getString(event.getData(), "description");
-        if (description == null) {
-            return false;
-        }
-
-        return description.startsWith("Flow call: ");
-    }
-
     public static String flowCallName(ProcessEventEntry event) {
         String description = MapUtils.getString(event.getData(), "description");
         if (description == null) {

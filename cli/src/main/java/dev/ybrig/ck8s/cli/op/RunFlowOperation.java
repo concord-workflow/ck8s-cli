@@ -5,6 +5,7 @@ import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.common.*;
 import dev.ybrig.ck8s.cli.common.verify.CheckError;
 import dev.ybrig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
+import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.FlowExecutor;
 import dev.ybrig.ck8s.cli.executor.FlowExecutorFactory;
 import dev.ybrig.ck8s.cli.executor.FlowExecutorParams;
@@ -12,6 +13,8 @@ import dev.ybrig.ck8s.cli.utils.LogUtils;
 import picocli.CommandLine;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static java.util.Objects.nonNull;
 
@@ -80,7 +83,25 @@ public class RunFlowOperation
                 .build();
 
         FlowExecutor flowExecutor = new FlowExecutorFactory().create(executorParams);
-        return flowExecutor.execute(payload, flow, Collections.emptyList());
+        ConcordProcess process = flowExecutor.execute(payload, flow, Collections.emptyList());
+        if (process == null) {
+            return -1;
+        }
+
+        if (cliApp.getStreamLogs()) {
+            ExecutorService executor = Executors.newCachedThreadPool();
+            try {
+                process.streamLogs(executor);
+            } finally {
+                executor.shutdownNow();
+            }
+        }
+
+        if (cliApp.getWaitSeconds() != null && cliApp.getWaitSeconds() > 0) {
+            process.waitEnded(cliApp.getWaitSeconds() * 1000);
+        }
+
+        return 0;
     }
 
     private void assertNoErrors(Ck8sPath ck8sPath, List<CheckError> errors) {
