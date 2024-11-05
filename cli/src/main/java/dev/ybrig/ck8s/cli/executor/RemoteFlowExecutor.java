@@ -7,6 +7,7 @@ import com.walmartlabs.concord.client2.impl.HttpEntity;
 import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
 import com.walmartlabs.concord.client2.impl.ResponseBodyHandler;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
@@ -58,8 +59,10 @@ public class RemoteFlowExecutor {
     private Map<String, Object> toMap(Ck8sPayload payload) {
         Map<String, Object> result = new LinkedHashMap<>();
 
+        System.out.println("dryRunMode: " + dryRunMode);
+
         archive(payload.ck8sFlows().location(), result);
-        result.put("dryRunMode", dryRunMode);
+        result.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
         result.put("arguments", payload.arguments());
         result.put("debug", payload.debug());
         result.put("org", MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name"));
