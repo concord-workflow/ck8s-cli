@@ -116,6 +116,10 @@
             <groupId>com.walmartlabs.concord.runtime.v2</groupId>
             <artifactId>concord-runtime-vm-v2</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.runtime</groupId>
+            <artifactId>concord-process-loader</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>info.picocli</groupId>

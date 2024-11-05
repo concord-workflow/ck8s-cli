@@ -64,31 +64,26 @@ public class RunFlowOperation
                 .ck8sFlows(ck8sFlows)
                 .build();
 
-        if (cliApp.isTestMode()) {
-            LogUtils.info("Running flow: {} on cluster: {} with profile: {}", flow, cliOperationContext.cliApp().getClusterAlias(), cliOperationContext.cliApp().getProfile());
-            return 0;
-        }
-
         FlowExecutorParams executorParams = FlowExecutorParams.builder()
                 .executorType(cliApp.getFlowExecutorType().getType())
                 .concordProfile(cliApp.getProfile())
                 .clusterAlias(cliApp.getClusterAlias())
-                .activeProfiles(cliApp.getActiveProfiles())
                 .secretProvider(cliApp.getSecretsProvider())
                 .verbosity(new Verbosity(cliApp.getVerbosity()))
                 .useLocalDependencies(cliApp.isWithLocalDependencies())
                 .connectTimeout(cliApp.getConnectTimeout())
                 .responseTimeout(cliApp.getReadTimeout())
                 .eventsPath(cliApp.getEventsDir())
+                .isDryRunMode(cliApp.isDryRunMode())
                 .build();
 
         FlowExecutor flowExecutor = new FlowExecutorFactory().create(executorParams);
-        ConcordProcess process = flowExecutor.execute(payload, flow, Collections.emptyList());
+        ConcordProcess process = flowExecutor.execute(payload, flow, cliApp.getActiveProfiles());
         if (process == null) {
             return -1;
         }
 
-        if (cliApp.getStreamLogs()) {
+        if (cliApp.isStreamLogs()) {
             ExecutorService executor = Executors.newCachedThreadPool();
             try {
                 process.streamLogs(executor);

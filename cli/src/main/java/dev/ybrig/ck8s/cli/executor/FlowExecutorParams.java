@@ -25,11 +25,6 @@ public interface FlowExecutorParams {
     @Nullable
     CliApp.SecretsProvider secretProvider();
 
-    @Value.Default
-    default List<String> activeProfiles() {
-        return List.of();
-    }
-
     Verbosity verbosity();
 
     @Value.Default
@@ -49,4 +44,9 @@ public interface FlowExecutorParams {
 
     @Nullable
     Path eventsPath();
+
+    @Value.Default
+    default boolean isDryRunMode() {
+        return false;
+    }
 }

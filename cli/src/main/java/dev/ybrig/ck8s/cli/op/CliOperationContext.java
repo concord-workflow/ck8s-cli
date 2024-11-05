@@ -60,7 +60,6 @@ public final class CliOperationContext {
             }
 
             LogUtils.info("Using target path: {}", cliApp.getTargetRootPath());
-            LogUtils.info("Test mode: {}", cliApp.isTestMode());
         }
         return ck8s;
     }

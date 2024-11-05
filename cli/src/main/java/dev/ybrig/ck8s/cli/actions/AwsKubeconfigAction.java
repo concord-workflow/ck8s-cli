@@ -37,10 +37,6 @@ public class AwsKubeconfigAction
         }
 
         String awsKubeconfigScriptFunction = "awsKubeconfig";
-        if (cliOperationContext.cliApp().isTestMode()) {
-            System.out.println(String.format("Executing action: %s", awsKubeconfigScriptFunction));
-            return 0;
-        }
 
         Map<Path, ClusterInfo> clusters = getClusterList(ck8sPath);
         for (Map.Entry<Path, ClusterInfo> e : clusters.entrySet()) {

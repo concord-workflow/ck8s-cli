@@ -34,14 +34,16 @@ public class RemoteFlowExecutor {
 
     private final ApiClient apiClient;
     private final long responseTimeout;
+    private final boolean dryRunMode;
 
     public RemoteFlowExecutor(String baseUrl, String apiKey) {
-        this(baseUrl, apiKey, 30, 30);
+        this(baseUrl, apiKey, 30, 30, false);
     }
 
-    public RemoteFlowExecutor(String baseUrl, String apiKey, long connectTimeout, long responseTimeout) {
+    public RemoteFlowExecutor(String baseUrl, String apiKey, long connectTimeout, long responseTimeout, boolean dryRunMode) {
         this.apiClient = createClient(baseUrl, apiKey, connectTimeout);
         this.responseTimeout = responseTimeout;
+        this.dryRunMode = dryRunMode;
     }
 
     private static ApiClient createClient(String baseUrl, String apiKey, long connectTimeout) {
@@ -53,10 +55,11 @@ public class RemoteFlowExecutor {
                 .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
     }
 
-    private static Map<String, Object> toMap(Ck8sPayload payload) {
+    private Map<String, Object> toMap(Ck8sPayload payload) {
         Map<String, Object> result = new LinkedHashMap<>();
 
         archive(payload.ck8sFlows().location(), result);
+        result.put("dryRunMode", dryRunMode);
         result.put("arguments", payload.arguments());
         result.put("debug", payload.debug());
         result.put("org", MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name"));

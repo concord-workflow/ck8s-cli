@@ -69,10 +69,6 @@ public class ExecuteScriptAction
 
     public int perform(CliOperationContext cliOperationContext, String functionName, Map<String, String> extraEnv)
     {
-        if (cliOperationContext.cliApp().isTestMode()) {
-            System.out.println("Executing action: " + functionName);
-            return 0;
-        }
         try (TempPath script = TempPath.createFile("main");
                 TempPath call = TempPath.createFile("call")) {
 

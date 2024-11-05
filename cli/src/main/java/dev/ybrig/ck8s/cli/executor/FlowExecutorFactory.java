@@ -12,8 +12,8 @@ public class FlowExecutorFactory {
             case REMOTE: {
                 ConcordProfile profile = CliConfigurationProvider.getConcordProfile(params.concordProfile());
                 return (payload, flowName, profiles) -> {
-                    RemoteFlowExecutor delegate = new RemoteFlowExecutor(profile.baseUrl(), profile.apiKey(), params.connectTimeout(), params.responseTimeout());
-                    return delegate.execute(params.clusterAlias(), payload, flowName, params.activeProfiles());
+                    RemoteFlowExecutor delegate = new RemoteFlowExecutor(profile.baseUrl(), profile.apiKey(), params.connectTimeout(), params.responseTimeout(), params.isDryRunMode());
+                    return delegate.execute(params.clusterAlias(), payload, flowName, profiles);
                 };
             }
             case CONCORD_CLI: {
@@ -22,7 +22,8 @@ public class FlowExecutorFactory {
                     secretsProvider = params.secretProvider().name();
                 }
                 return new ConcordCliFlowExecutor(params.verbosity(), secretsProvider,
-                        params.useLocalDependencies(), params.concordProfile(), params.eventsPath());
+                        params.useLocalDependencies(), params.concordProfile(), params.eventsPath(),
+                        params.isDryRunMode());
             }
             default: {
                 throw new IllegalArgumentException("Unknown type: " + type);

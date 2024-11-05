@@ -319,11 +319,6 @@ public class GenerateTokenCommand
     public Integer call()
             throws Exception
     {
-        if (cliApp.isTestMode()) {
-            System.out.println(String.format("Generating OIDC token for profile: %s", profile));
-            return 0;
-        }
-
         CliConfiguration.Oidc oidc = CliConfigurationProvider.get().oidc();
         if (oidc == null) {
             LogUtils.error("Please specify oidc configuration in ck8s-cli configuration file");

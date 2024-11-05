@@ -16,14 +16,14 @@ import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
 import com.walmartlabs.concord.imports.*;
+import com.walmartlabs.concord.process.loader.model.ProcessDefinitionUtils;
+import com.walmartlabs.concord.process.loader.v2.ProcessDefinitionV2;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
-import com.walmartlabs.concord.runtime.v2.runner.ProjectLoadListeners;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
@@ -64,10 +64,11 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     private final boolean offlineMode;
     private final ConcordProfile profile;
     private final Path eventsDir;
+    private final boolean dryRunMode;
 
     public ConcordCliFlowExecutor(Verbosity verbosity, String secretsProvider,
                                   boolean offlineMode, String concordProfile,
-                                  Path eventsDir) {
+                                  Path eventsDir, boolean dryRunMode) {
         this.verbosity = verbosity;
         this.secretsProvider = secretsProvider;
         this.offlineMode = offlineMode;
@@ -84,6 +85,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         }
 
         this.eventsDir = eventsDir;
+        this.dryRunMode = dryRunMode;
     }
 
     private static ImmutableProcessConfiguration.Builder from(ProcessDefinitionConfiguration cfg, ProcessInfo processInfo, ProjectInfo projectInfo) {
@@ -167,8 +169,14 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
         ProcessDefinition processDefinition = loadResult.getProjectDefinition();
 
+        Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), activeProfiles);
+        List<String> overlayDeps = new ArrayList<>(MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, List.of()));
+        overlayDeps.addAll(processDefinition.configuration().dependencies());
+
+        Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Map.of());
+
         UUID instanceId = UUID.randomUUID();
-        Map<String, Object> args = new LinkedHashMap<>();
+        Map<String, Object> args = new LinkedHashMap<>(overlayArgs);
         args.put("concordUrl", "https://concord.local.localhost");
         args.put("localConcordCli", true);
 
@@ -181,6 +189,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
         args.put(Constants.Context.TX_ID_KEY, instanceId.toString());
         args.put(Constants.Context.WORK_DIR_KEY, targetDir.toAbsolutePath().toString());
+        args.put("initiator", Map.of("displayName", "cli"));
 
         if (verbosity.verbose()) {
             dumpArguments(payload.arguments());
@@ -191,6 +200,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo(MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name")))
                 .instanceId(instanceId)
                 .entryPoint("normalFlow")
+                .dryRun(dryRunMode)
                 .build();
 
         if (!verbosity.verbose()) {
@@ -199,7 +209,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
         long t1 = System.currentTimeMillis();
         Collection<String> dependencies = new DependencyResolver(dependencyManager, false)
-                .resolveDeps(JobDependencies.get(payload, processDefinition.configuration().dependencies()));
+                .resolveDeps(JobDependencies.get(payload, overlayDeps));
 
         if (!verbosity.verbose()) {
             System.out.println("Dependency resolution took " + (System.currentTimeMillis() - t1) + "ms");
@@ -268,11 +278,6 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         if (cfg.debug()) {
             LogUtils.info("Available tasks: " + injector.getInstance(TaskProviders.class).names());
         }
-
-        // Just to notify listeners
-        ProjectLoadListeners loadListeners = injector.getInstance(ProjectLoadListeners.class);
-        ProjectLoaderV2 loader = new ProjectLoaderV2(new NoopImportManager());
-        loader.load(targetDir, new NoopImportsNormalizer(), ImportsListener.NOP_LISTENER, loadListeners);
 
         if ("default".equals(profile.alias())) {
             ConcordServer.start();

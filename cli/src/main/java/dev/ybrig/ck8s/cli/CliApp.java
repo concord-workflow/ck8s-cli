@@ -75,9 +75,6 @@ public class CliApp
             "-VVV debug logs"})
     boolean[] verbosity = new boolean[0];
 
-    @CommandLine.Option(names = {"-t", "--dry-run"}, description = "Test mode: Only display the command that will be executed")
-    boolean testMode = false;
-
     @CommandLine.Option(names = {"--skip-confirm"}, description = "Skip confirmation prompts and perform the action without user confirmation. Use this option to automate the process without manual approvals")
     boolean skipConfirm = false;
 
@@ -104,6 +101,9 @@ public class CliApp
 
     @CommandLine.Option(names = {"--stream-logs"}, description = "Stream process logs")
     boolean streamLogs = false;
+
+    @CommandLine.Option(names = {"--dry-run"}, description = "Execute flows in dry run mode")
+    boolean dryRunMode = false;
 
     static class CliOperationArgs
     {
@@ -162,11 +162,6 @@ public class CliApp
         return secretsProvider;
     }
 
-    public boolean isTestMode()
-    {
-        return testMode;
-    }
-
     public Path getTargetRootPath()
     {
         return targetRootPath;
@@ -215,8 +210,12 @@ public class CliApp
         return waitSeconds;
     }
 
-    public boolean getStreamLogs() {
+    public boolean isStreamLogs() {
         return streamLogs;
+    }
+
+    public boolean isDryRunMode() {
+        return dryRunMode;
     }
 
     @Override
