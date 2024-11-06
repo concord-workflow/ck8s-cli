@@ -59,7 +59,9 @@ public class RemoteFlowExecutor {
     private Map<String, Object> toMap(Ck8sPayload payload) {
         Map<String, Object> result = new LinkedHashMap<>();
 
-        System.out.println("dryRunMode: " + dryRunMode);
+        if (dryRunMode) {
+            LogUtils.info("dryRunMode: enabled");
+        }
 
         archive(payload.ck8sFlows().location(), result);
         result.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
