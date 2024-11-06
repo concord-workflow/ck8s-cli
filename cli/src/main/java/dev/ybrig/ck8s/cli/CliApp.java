@@ -65,7 +65,7 @@ public class CliApp
     @CommandLine.Option(names = {"--secretsProvider"}, description = "secrets provider")
     SecretsProvider secretsProvider;
 
-    @CommandLine.Option(names = {"--active-profiles"}, description = "Concord active profiles")
+    @CommandLine.Option(names = {"--active-profiles", "--flow-profiles"}, description = "Concord active profiles")
     List<String> activeProfiles = List.of();
 
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {

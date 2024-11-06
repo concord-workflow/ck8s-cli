@@ -52,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class ConcordCliFlowExecutor implements FlowExecutor {
 
@@ -139,6 +140,10 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
             throws Exception {
         Path targetDir = payload.ck8sFlows().location();
 
+        if (!activeProfiles.isEmpty()) {
+            LogUtils.info("active profiles: {}", activeProfiles);
+        }
+
         ConcordYaml concordYaml = ConcordYaml.builder()
                 .entryPoint("normalFlow")
                 .debug(payload.debug())
@@ -170,8 +175,15 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         ProcessDefinition processDefinition = loadResult.getProjectDefinition();
 
         Map<String, Object> overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), activeProfiles);
-        List<String> overlayDeps = new ArrayList<>(MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, List.of()));
-        overlayDeps.addAll(processDefinition.configuration().dependencies());
+        List<String> deps = new ArrayList<>(MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, List.of()));
+        deps.addAll(processDefinition.configuration().dependencies());
+
+        // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
+        List<String> extraDeps = activeProfiles.stream()
+                .flatMap(profileName -> Stream.ofNullable(processDefinition.profiles().get(profileName)))
+                .flatMap(profile -> profile.configuration().extraDependencies().stream())
+                .toList();
+        deps.addAll(extraDeps);
 
         Map<String, Object> overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Map.of());
 
@@ -209,7 +221,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
         long t1 = System.currentTimeMillis();
         Collection<String> dependencies = new DependencyResolver(dependencyManager, false)
-                .resolveDeps(JobDependencies.get(payload, overlayDeps));
+                .resolveDeps(JobDependencies.get(payload, deps));
 
         if (!verbosity.verbose()) {
             System.out.println("Dependency resolution took " + (System.currentTimeMillis() - t1) + "ms");
