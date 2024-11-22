@@ -120,6 +120,11 @@
             <groupId>com.walmartlabs.concord.runtime</groupId>
             <artifactId>concord-process-loader</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.walmartlabs.concord.plugins.basic</groupId>
+            <artifactId>concord-tasks</artifactId>
+            <version>${concord.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>info.picocli</groupId>

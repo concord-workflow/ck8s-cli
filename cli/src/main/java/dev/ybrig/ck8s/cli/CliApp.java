@@ -17,6 +17,7 @@ import picocli.AutoComplete;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +66,7 @@ public class CliApp
     @CommandLine.Option(names = {"--secretsProvider"}, description = "secrets provider")
     SecretsProvider secretsProvider;
 
-    @CommandLine.Option(names = {"--active-profiles", "--flow-profiles"}, description = "Concord active profiles")
+    @CommandLine.Option(names = {"--active-profiles", "--flow-profiles"}, description = "Concord active profiles", converter = ActiveProfilesConverter.class)
     List<String> activeProfiles = List.of();
 
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {
@@ -263,6 +264,14 @@ public class CliApp
         public ActionTypeConverter()
         {
             super(ActionType.class);
+        }
+    }
+
+    static class ActiveProfilesConverter implements CommandLine.ITypeConverter<List<String>> {
+
+        @Override
+        public List<String> convert(String value) throws Exception {
+            return Arrays.asList(value.split(","));
         }
     }
 

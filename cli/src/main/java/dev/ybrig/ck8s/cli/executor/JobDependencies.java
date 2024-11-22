@@ -173,7 +173,7 @@ public final class JobDependencies {
             }
         }
 
-        DefaultExpressionEvaluator expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders(), List.of());
+        DefaultExpressionEvaluator expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders(), List.of(), List.of());
         EvalContext ctx = EvalContext.builder().variables(new MapBackedVariables(payload.arguments())).build();
         Map<String, String> interpolated = new HashMap<>();
         for (Map.Entry<String, String> e : result.entrySet()) {

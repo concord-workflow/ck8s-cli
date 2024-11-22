@@ -38,6 +38,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @CommandLine.Command(name = "serve-forms",
         description = {"Serve forms"}
@@ -348,7 +350,6 @@ public class ServeFormsCommand implements Callable<Integer> {
             Map<String, Object> arguments = getArguments(parts);
             String flow = assertString(parts, "flow");
             String clusterAlias = assertString(parts, "clusterAlias");
-
             Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
             Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, targetRootPath, verifier)
                     .includeTests(true)
@@ -365,7 +366,7 @@ public class ServeFormsCommand implements Callable<Integer> {
 
             // TODO: allow local concord cli...
             RemoteFlowExecutor executor = new RemoteFlowExecutor(concordProfile.baseUrl(), concordProfile.apiKey());
-            ConcordProcess process = executor.execute(clusterAlias, payload, flow, List.of());
+            ConcordProcess process = executor.execute(clusterAlias, payload, flow, activeProfiles(parts));
             return process.instanceId();
         }
 
@@ -387,6 +388,28 @@ public class ServeFormsCommand implements Callable<Integer> {
                 throw new IllegalStateException("Missing value for part " + key + " in request");
             }
             return part.getContentAsString(StandardCharsets.UTF_8);
+        }
+
+        private static List<String> activeProfiles(MultiPartFormData.Parts parts) {
+            return getStringList(parts, "activeProfiles");
+        }
+
+        private static String getString(MultiPartFormData.Parts parts, String key) {
+            MultiPart.Part part = parts.getFirst(key);
+            if (part == null) {
+                return null;
+            }
+            return part.getContentAsString(StandardCharsets.UTF_8);
+        }
+
+        private static List<String> getStringList(MultiPartFormData.Parts parts, String key) {
+            String strValue = getString(parts, key);
+            if (strValue == null) {
+                return List.of();
+            } else {
+                String[] values = strValue.split(",");
+                return Stream.of(values).map(String::trim).collect(Collectors.toList());
+            }
         }
 
         private static void assertMandatoryParts(MultiPartFormData.Parts parts) {

@@ -26,6 +26,7 @@ import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
+import com.walmartlabs.concord.runtime.v2.runner.logging.*;
 import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
 import com.walmartlabs.concord.runtime.v2.runner.remote.TaskCallEventRecordingListener;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskCallListener;
@@ -52,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 public class ConcordCliFlowExecutor implements FlowExecutor {
@@ -141,7 +143,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
         Path targetDir = payload.ck8sFlows().location();
 
         if (!activeProfiles.isEmpty()) {
-            LogUtils.info("active profiles: {}", activeProfiles);
+            LogUtils.info("Active profiles: {}", String.join(", ", activeProfiles));
         }
 
         ConcordYaml concordYaml = ConcordYaml.builder()
@@ -205,8 +207,6 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
 
         if (verbosity.verbose()) {
             dumpArguments(payload.arguments());
-
-            LogUtils.info("Active profiles: {}", activeProfiles);
         }
 
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo(MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name")))
@@ -254,6 +254,7 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                     @Override
                     protected void configure() {
                         bind(ApiClient.class).toProvider(ApiClientProvider.class);
+                        bind(RunnerLogger.class).to(Logger.class);
                         super.configure();
                     }
                 },
@@ -336,6 +337,48 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
                     .baseUrl(profile.baseUrl())
                     .apiKey(profile.apiKey())
                     .build());
+        }
+    }
+
+    private static class Logger extends SimpleLogger {
+
+        @Override
+        public Long createSegment(String segmentName, UUID correlationId) {
+            return 0L;
+        }
+
+        @Override
+        public void withContext(LogContext context, Runnable runnable) {
+            ThreadGroup threadGroup = new LogContextThreadGroup(context);
+            executeInThreadGroup(threadGroup, "thread-" + context.segmentName(), runnable);
+        }
+
+        private static void executeInThreadGroup(ThreadGroup group, String threadName, Runnable runnable) {
+            ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadGroupAwareThreadFactory(group, threadName));
+            Future<?> result = executor.submit(runnable);
+            try {
+                result.get();
+            } catch (InterruptedException e) { // NOSONAR
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                Throwable cause = e.getCause();
+                if (cause != null) {
+                    if (cause instanceof RuntimeException) {
+                        throw (RuntimeException) cause;
+                    } else {
+                        throw new RuntimeException(cause);
+                    }
+                }
+
+                throw new RuntimeException(e);
+            }
+        }
+
+        private record ThreadGroupAwareThreadFactory(ThreadGroup group, String threadName) implements ThreadFactory {
+
+            public Thread newThread(Runnable r) {
+                return new Thread(this.group, r, this.threadName);
+            }
         }
     }
 }
