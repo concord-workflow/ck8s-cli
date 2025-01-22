@@ -3,6 +3,7 @@ package dev.ybrig.ck8s.cli.actions;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.model.ClusterInfo;
 import dev.ybrig.ck8s.cli.op.CliOperationContext;
+import dev.ybrig.ck8s.cli.utils.LogUtils;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -56,6 +57,8 @@ public class AwsKubeconfigAction
             params.put("REGION", ci.region());
             params.put("ACCOUNT", account);
             params.put("ALIAS", ci.alias());
+
+            LogUtils.info("Creating AWS Kubeconfig for cluster: {}, region: {}, account: {}, alias: {}", ci.name(), ci.region(), account, ci.alias());
 
             scriptAction.perform(cliOperationContext, awsKubeconfigScriptFunction, params);
         }

@@ -523,5 +523,13 @@ function awsKubeconfig () {
     if aws eks describe-cluster --name ${NAME} --region ${REGION} --profile ${ACCOUNT} > /dev/null 2>&1; then
       aws eks update-kubeconfig --name ${NAME} --alias ${ALIAS} --region ${REGION} --profile ${ACCOUNT} \
         --kubeconfig ${HOME}/.kube/ck8s-config-${ACCOUNT}
+
+      echo "DONE"
+      echo ""
+    else
+      >&2 echo "Cluster not active or not accessible -> ignoring"
+      echo "Check command output: aws eks describe-cluster --name ${NAME} --region ${REGION} --profile ${ACCOUNT}"
+      echo "ERROR!!!"
+      echo ""
     fi
 }
