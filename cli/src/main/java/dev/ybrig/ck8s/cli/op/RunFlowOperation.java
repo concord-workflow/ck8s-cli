@@ -62,6 +62,7 @@ public class RunFlowOperation
                 .debug(cliOperationContext.verbosity().verbose())
                 .arguments(MapUtils.merge(Map.of("clusterRequest", clusterRequest), cliApp.getExtraVars()))
                 .ck8sFlows(ck8sFlows)
+                .project(cliOperationContext.cliApp().getProject())
                 .build();
 
         FlowExecutorParams executorParams = FlowExecutorParams.builder()

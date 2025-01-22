@@ -106,6 +106,9 @@ public class CliApp
     @CommandLine.Option(names = {"--dry-run"}, description = "Execute flows in dry run mode")
     boolean dryRunMode = false;
 
+    @CommandLine.Option(names = {"--project"}, description = "Concord project")
+    String project;
+
     static class CliOperationArgs
     {
         @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
@@ -224,6 +227,10 @@ public class CliApp
     {
         return resolveOperation()
                 .execute(new CliOperationContext(this));
+    }
+
+    public String getProject() {
+        return project;
     }
 
     private CliOperation resolveOperation()
