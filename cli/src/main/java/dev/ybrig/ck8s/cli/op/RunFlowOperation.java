@@ -40,8 +40,12 @@ public class RunFlowOperation
             System.out.print(msg);
 
             try (Scanner input = new Scanner(System.in)) {
-                String confirm = input.nextLine();
-                if (!confirmInput.contains(confirm)) {
+                if (input.hasNextLine()) {
+                    String confirm = input.nextLine();
+                    if (!confirmInput.contains(confirm)) {
+                        return -1;
+                    }
+                } else {
                     return -1;
                 }
             }

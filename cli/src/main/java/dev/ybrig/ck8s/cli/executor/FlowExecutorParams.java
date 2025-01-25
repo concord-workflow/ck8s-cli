@@ -34,12 +34,12 @@ public interface FlowExecutorParams {
 
     @Value.Default
     default long connectTimeout() {
-        return 30;
+        return 60;
     }
 
     @Value.Default
     default long responseTimeout() {
-        return 30;
+        return 60;
     }
 
     @Nullable
