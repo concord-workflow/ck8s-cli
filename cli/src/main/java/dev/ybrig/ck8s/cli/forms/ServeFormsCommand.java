@@ -1,5 +1,6 @@
 package dev.ybrig.ck8s.cli.forms;
 
+import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.Ck8sPathOptionsMixin;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
 import dev.ybrig.ck8s.cli.common.*;
@@ -350,6 +351,8 @@ public class ServeFormsCommand implements Callable<Integer> {
             Map<String, Object> arguments = getArguments(parts);
             String flow = assertString(parts, "flow");
             String clusterAlias = assertString(parts, "clusterAlias");
+            boolean dryRunMode = dryRunMode(parts);
+
             Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
             Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, targetRootPath, verifier)
                     .includeTests(true)
@@ -365,7 +368,7 @@ public class ServeFormsCommand implements Callable<Integer> {
                     .build();
 
             // TODO: allow local concord cli...
-            RemoteFlowExecutor executor = new RemoteFlowExecutor(concordProfile.baseUrl(), concordProfile.apiKey());
+            RemoteFlowExecutor executor = new RemoteFlowExecutor(concordProfile.baseUrl(), concordProfile.apiKey(), 30, 30, dryRunMode);
             ConcordProcess process = executor.execute(clusterAlias, payload, flow, activeProfiles(parts));
             return process.instanceId();
         }
@@ -392,6 +395,18 @@ public class ServeFormsCommand implements Callable<Integer> {
 
         private static List<String> activeProfiles(MultiPartFormData.Parts parts) {
             return getStringList(parts, "activeProfiles");
+        }
+
+        private static boolean dryRunMode(MultiPartFormData.Parts parts) {
+            return getBoolean(parts, Constants.Request.DRY_RUN_MODE_KEY, false);
+        }
+
+        public static boolean getBoolean(MultiPartFormData.Parts input, String key, boolean defaultValue) {
+            String s = getString(input, key);
+            if (s == null) {
+                return defaultValue;
+            }
+            return Boolean.parseBoolean(s);
         }
 
         private static String getString(MultiPartFormData.Parts parts, String key) {

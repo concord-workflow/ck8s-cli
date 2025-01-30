@@ -64,7 +64,11 @@ public class RemoteFlowExecutor {
         }
 
         archive(payload.ck8sFlows().location(), result);
-        result.put(Constants.Request.DRY_RUN_MODE_KEY, dryRunMode);
+
+        if (dryRunMode) {
+            result.put(Constants.Request.DRY_RUN_MODE_KEY, true);
+        }
+
         result.put("arguments", payload.arguments());
         result.put("debug", payload.debug());
         result.put("org", MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name"));
