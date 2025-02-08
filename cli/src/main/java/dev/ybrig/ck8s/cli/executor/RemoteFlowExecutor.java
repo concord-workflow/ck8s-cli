@@ -10,6 +10,7 @@ import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.MapUtils;
+import dev.ybrig.ck8s.cli.common.VersionProvider;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.concord.RemoteConcordProcess;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
@@ -104,6 +105,7 @@ public class RemoteFlowExecutor {
                 .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
                 .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process"))
                 .header("Content-Type", entity.contentType().toString())
+                .headers("User-Agent", "ck8s-cli (" + VersionProvider.get() + ") " + flowName + MapUtils.getMap(payload, "arguments", Map.of()).getOrDefault("uniqueId", ""))
                 .method("POST", HttpRequest.BodyPublishers.ofInputStream(() -> {
                     try {
                         return entity.getContent();
