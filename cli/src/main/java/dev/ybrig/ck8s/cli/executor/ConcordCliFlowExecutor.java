@@ -56,6 +56,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
 
+import static dev.ybrig.ck8s.cli.common.DefaultArgs.GROUP_CLUSTER_REQUESTS;
+
 public class ConcordCliFlowExecutor implements FlowExecutor {
 
     private static final String DEFAULT_IMPORTS_SOURCE = "https://github.com";
@@ -116,9 +118,12 @@ public class ConcordCliFlowExecutor implements FlowExecutor {
     }
 
     private static void dumpArguments(Map<String, Object> args) {
+        var m = new LinkedHashMap<>(args);
+        m.remove(GROUP_CLUSTER_REQUESTS);
+
         ObjectMapper om = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER));
         try {
-            LogUtils.info("Process arguments:\n{}", om.writerWithDefaultPrettyPrinter().writeValueAsString(args));
+            LogUtils.info("Process arguments:\n{}", om.writerWithDefaultPrettyPrinter().writeValueAsString(m));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

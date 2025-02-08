@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static dev.ybrig.ck8s.cli.common.DefaultArgs.GROUP_CLUSTER_REQUESTS;
 import static java.util.Objects.nonNull;
 
 public class RunFlowOperation
@@ -61,10 +62,15 @@ public class RunFlowOperation
         assertNoErrors(ck8s, verifier.errors());
 
         Map<String, Object> clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, cliOperationContext.cliApp().getClusterAlias());
+        var clusterGroup = MapUtils.getString(clusterRequest, "clusterGroup.alias");
+        var groupClusterRequests = Ck8sUtils.findClustersYaml(ck8s, clusterGroup).stream()
+                .map(c -> Ck8sUtils.buildClusterRequest(ck8s, c))
+                .toList();
 
         Ck8sPayload payload = Ck8sPayload.builder()
                 .debug(cliOperationContext.verbosity().verbose())
                 .arguments(MapUtils.merge(Map.of("clusterRequest", clusterRequest), cliApp.getExtraVars()))
+                .putArguments(GROUP_CLUSTER_REQUESTS, groupClusterRequests)
                 .ck8sFlows(ck8sFlows)
                 .project(cliOperationContext.cliApp().getProject())
                 .build();

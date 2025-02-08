@@ -3,6 +3,7 @@ package dev.ybrig.ck8s.cli.common;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -74,6 +75,22 @@ public class Ck8sUtils
                     .map(g -> g.isActive() && alias.equals(g.alias()))
                     .orElse(false);
         });
+    }
+
+    public static List<Path> findClustersYaml(Ck8sPath ck8sPath, String groupAlias) {
+        return streamClusterYaml(ck8sPath)
+                .filter(p -> {
+                    try {
+                        var m = Mapper.yamlMapper().readMap(p);
+                        var cluster = new ClusterConfiguration(m);
+                        return cluster.clusterGroup()
+                                .map(g -> groupAlias.equals(g.alias()))
+                                .orElse(false);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error parsing cluster definition file " + p + ": " + e.getMessage());
+                    }
+                })
+                .toList();
     }
 
     private static Path findClusterYamlBy(Ck8sPath ck8sPath, Predicate<ClusterConfiguration> filter)
