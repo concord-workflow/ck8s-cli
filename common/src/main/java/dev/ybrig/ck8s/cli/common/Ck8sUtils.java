@@ -77,14 +77,19 @@ public class Ck8sUtils
         });
     }
 
-    public static List<Path> findClustersYaml(Ck8sPath ck8sPath, String groupAlias) {
+    public static List<Path> findClustersYaml(Ck8sPath ck8sPath, String groupOrAlias) {
+        var clusterRequest = Ck8sUtils.buildClusterRequest(ck8sPath, groupOrAlias);
+        var clusterGroup = MapUtils.getString(clusterRequest, "clusterGroup.alias");
+        if (clusterGroup == null) {
+            throw new RuntimeException("cluster group alias undefined for : " + groupOrAlias);
+        }
+
         return streamClusterYaml(ck8sPath)
                 .filter(p -> {
                     try {
-                        var m = Mapper.yamlMapper().readMap(p);
-                        var cluster = new ClusterConfiguration(m);
+                        var cluster = new ClusterConfiguration(Mapper.yamlMapper().readMap(p));
                         return cluster.clusterGroup()
-                                .map(g -> groupAlias.equals(g.alias()))
+                                .map(g -> clusterGroup.equals(g.alias()))
                                 .orElse(false);
                     } catch (Exception e) {
                         throw new RuntimeException("Error parsing cluster definition file " + p + ": " + e.getMessage());

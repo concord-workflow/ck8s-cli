@@ -31,7 +31,7 @@ public class LocalClusterOperation
         String clusterAlias = "local";
 
         CliApp cliApp = cliOperationContext.cliApp();
-        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), null)
+        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), null, clusterAlias)
                 .build();
 
         Ck8sPayload payload = Ck8sPayload.builder()

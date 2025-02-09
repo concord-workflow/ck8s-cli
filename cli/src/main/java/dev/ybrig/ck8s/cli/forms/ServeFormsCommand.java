@@ -354,7 +354,7 @@ public class ServeFormsCommand implements Callable<Integer> {
             boolean dryRunMode = dryRunMode(parts);
 
             Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
-            Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, targetRootPath, verifier)
+            Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, targetRootPath, verifier, clusterAlias)
                     .includeTests(true)
                     .build();
 

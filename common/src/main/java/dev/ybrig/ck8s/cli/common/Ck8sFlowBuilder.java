@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class Ck8sFlowBuilder {
@@ -17,17 +18,19 @@ public class Ck8sFlowBuilder {
     private final Ck8sPath ck8sPath;
     private final Path target;
     private boolean includeTests;
+    private final String clusterGroupOrAlias;
     private final Ck8sFlowBuilderListener listener;
 
-    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target) {
-        this(ck8sPath, target, (src, dest) -> {});
+    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target, String clusterGroupOrAlias) {
+        this(ck8sPath, target, (src, dest) -> {}, clusterGroupOrAlias);
     }
 
-    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target, Ck8sFlowBuilderListener listener)
+    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target, Ck8sFlowBuilderListener listener, String clusterGroupOrAlias)
     {
         this.ck8sPath = ck8sPath;
         this.target = target;
         this.listener = listener;
+        this.clusterGroupOrAlias = clusterGroupOrAlias;
     }
 
     public Ck8sFlowBuilder includeTests(boolean include)
@@ -64,6 +67,21 @@ public class Ck8sFlowBuilder {
                 IOUtils.copy(ck8sPath.configs(), flows.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
                 throw new RuntimeException("Can't copy configs: " + e.getMessage());
+            }
+        }
+
+        // copy cluster configuration for cluster group
+        if (clusterGroupOrAlias != null) {
+            try {
+                var clusterLocation = flows.resolve("clusters");
+                Files.createDirectories(clusterLocation);
+
+                Ck8sUtils.findClustersYaml(ck8sPath, clusterGroupOrAlias).forEach(clusterYaml -> {
+                    Map<String, Object> clusterRequest = Ck8sUtils.buildClusterRequest(ck8sPath, clusterYaml);
+                    Mapper.yamlMapper().write(clusterLocation.resolve(MapUtils.assertString(clusterRequest, "alias") + ".yaml"), clusterRequest);
+                });
+            } catch (Exception e) {
+                throw new RuntimeException("Can't copy cluster configs: " + e.getMessage());
             }
         }
 

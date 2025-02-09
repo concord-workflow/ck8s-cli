@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static dev.ybrig.ck8s.cli.common.DefaultArgs.GROUP_CLUSTER_REQUESTS;
+import static dev.ybrig.ck8s.cli.common.DefaultArgs.CLUSTER_REQUEST;
 import static java.util.Objects.nonNull;
 
 public class RunFlowOperation
@@ -55,22 +55,16 @@ public class RunFlowOperation
         Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
         Ck8sPath ck8s = cliOperationContext.ck8sPath();
 
-        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier)
+        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier, cliOperationContext.cliApp().getClusterAlias())
                 .includeTests(cliApp.isWithTests())
                 .build();
 
         assertNoErrors(ck8s, verifier.errors());
 
         Map<String, Object> clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, cliOperationContext.cliApp().getClusterAlias());
-        var clusterGroup = MapUtils.getString(clusterRequest, "clusterGroup.alias");
-        var groupClusterRequests = Ck8sUtils.findClustersYaml(ck8s, clusterGroup).stream()
-                .map(c -> Ck8sUtils.buildClusterRequest(ck8s, c))
-                .toList();
-
         Ck8sPayload payload = Ck8sPayload.builder()
                 .debug(cliOperationContext.verbosity().verbose())
-                .arguments(MapUtils.merge(Map.of("clusterRequest", clusterRequest), cliApp.getExtraVars()))
-                .putArguments(GROUP_CLUSTER_REQUESTS, groupClusterRequests)
+                .arguments(MapUtils.merge(Map.of(CLUSTER_REQUEST, clusterRequest), cliApp.getExtraVars()))
                 .ck8sFlows(ck8sFlows)
                 .project(cliOperationContext.cliApp().getProject())
                 .build();
