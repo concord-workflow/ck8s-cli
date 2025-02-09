@@ -1,11 +1,9 @@
 package dev.ybrig.ck8s.cli.executor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.impl.HttpEntity;
 import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
-import com.walmartlabs.concord.client2.impl.ResponseBodyHandler;
 import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
@@ -18,7 +16,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpConnectTimeoutException;
@@ -115,11 +112,11 @@ public class RemoteFlowExecutor {
                 }))
                 .build();
 
-        HttpResponse<InputStream> response;
+        HttpResponse<String> response;
         try {
             response = apiClient.getHttpClient().send(
                     request,
-                    HttpResponse.BodyHandlers.ofInputStream());
+                    HttpResponse.BodyHandlers.ofString());
         } catch (HttpConnectTimeoutException e) {
             throw new RuntimeException("Connect timeout: " + apiClient.getBaseUri());
         } catch (HttpTimeoutException e) {
@@ -136,9 +133,14 @@ public class RemoteFlowExecutor {
         }
 
         try {
-            StartProcessResponse startProcessResponse = ResponseBodyHandler.handle(apiClient.getObjectMapper(), response, new TypeReference<StartProcessResponse>() {
-            });
-            return new RemoteConcordProcess(apiClient, startProcessResponse.getInstanceId());
+            var body = response.body();
+            var contentType = response.headers().firstValue("Content-Type").orElse("application/json");
+            if (isJsonMime(contentType)) {
+                StartProcessResponse startProcessResponse = apiClient.getObjectMapper().readValue(body, StartProcessResponse.class);
+                return new RemoteConcordProcess(apiClient, startProcessResponse.getInstanceId());
+            } else {
+                throw new ApiException("Content type \"" + contentType + "\" is not supported", response.statusCode(), response.headers(), body);
+            }
         } catch (Exception e) {
             throw new RuntimeException("Error parsing response: " + e.getMessage());
         }
@@ -156,15 +158,8 @@ public class RemoteFlowExecutor {
         }
     }
 
-    private ApiException apiException(HttpResponse<InputStream> response) {
-        String body = null;
-        try (InputStream is = response.body()) {
-            if (is != null) {
-                body = new String(is.readAllBytes());
-            }
-        } catch (Exception e) {
-            return new ApiException(null, e, response.statusCode(), response.headers());
-        }
+    private ApiException apiException(HttpResponse<String> response) {
+        String body = response.body();
 
         String message = null;
         try {
@@ -176,7 +171,7 @@ public class RemoteFlowExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private String formatExceptionMessage(HttpResponse<InputStream> response, String body) throws JsonProcessingException {
+    private String formatExceptionMessage(HttpResponse<?> response, String body) throws JsonProcessingException {
         if (body == null || body.isEmpty()) {
             return response.statusCode() + " [no body]";
         }
@@ -207,5 +202,10 @@ public class RemoteFlowExecutor {
         }
 
         return msg;
+    }
+
+    private static boolean isJsonMime(String mime) {
+        String jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
+        return mime != null && (mime.matches(jsonMime) || mime.equals("*/*"));
     }
 }
