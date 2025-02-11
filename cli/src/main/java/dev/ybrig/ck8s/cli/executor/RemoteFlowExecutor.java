@@ -98,39 +98,40 @@ public class RemoteFlowExecutor {
 
         HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
-        HttpRequest request = apiClient.requestBuilder()
-                .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
-                .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process"))
-                .header("Content-Type", entity.contentType().toString())
-                .headers("User-Agent", "ck8s-cli (" + VersionProvider.get() + ") " + flowName + MapUtils.getMap(payload, "arguments", Map.of()).getOrDefault("uniqueId", ""))
-                .method("POST", HttpRequest.BodyPublishers.ofInputStream(() -> {
-                    try {
-                        return entity.getContent();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }))
-                .build();
+        var response = ClientUtils.withRetry(3, 15, () -> {
+            HttpRequest request = apiClient.requestBuilder()
+                    .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
+                    .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process"))
+                    .header("Content-Type", entity.contentType().toString())
+                    .headers("User-Agent", "ck8s-cli (" + VersionProvider.get() + ") " + flowName + "_" + MapUtils.getMap(payload, "arguments", Map.of()).getOrDefault("uniqueId", ""))
+                    .method("POST", HttpRequest.BodyPublishers.ofInputStream(() -> {
+                        try {
+                            return entity.getContent();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }))
+                    .build();
 
-        HttpResponse<String> response;
-        try {
-            response = apiClient.getHttpClient().send(
-                    request,
-                    HttpResponse.BodyHandlers.ofString());
-        } catch (HttpConnectTimeoutException e) {
-            throw new RuntimeException("Connect timeout: " + apiClient.getBaseUri());
-        } catch (HttpTimeoutException e) {
-            throw new RuntimeException("Timeout: " + apiClient.getBaseUri());
-        } catch (ConnectException e) {
-            throw new RuntimeException("Can't connect to " + apiClient.getBaseUri() + (e.getMessage() != null ? ". Error: " + e.getMessage() : ""));
-        } catch (Exception e) {
-            throw new RuntimeException("Error sending request: " + e.getMessage());
-        }
+            HttpResponse<String> httpResponse;
+            try {
+                httpResponse = apiClient.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            } catch (HttpConnectTimeoutException e) {
+                throw new RuntimeException("Connect timeout: " + apiClient.getBaseUri());
+            } catch (HttpTimeoutException e) {
+                throw new RuntimeException("Timeout: " + apiClient.getBaseUri());
+            } catch (ConnectException e) {
+                throw new RuntimeException("Can't connect to " + apiClient.getBaseUri() + (e.getMessage() != null ? ". Error: " + e.getMessage() : ""));
+            } catch (Exception e) {
+                throw new RuntimeException("Error sending request: " + e.getMessage());
+            }
 
-        int code = response.statusCode();
-        if (code < 200 || code >= 300) {
-            throw apiException(response);
-        }
+            int code = httpResponse.statusCode();
+            if (code < 200 || code >= 300) {
+                throw apiException(httpResponse);
+            }
+            return httpResponse;
+        });
 
         try {
             var body = response.body();
