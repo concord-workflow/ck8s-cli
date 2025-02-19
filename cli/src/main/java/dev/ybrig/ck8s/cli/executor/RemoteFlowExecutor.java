@@ -28,6 +28,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class RemoteFlowExecutor {
 
@@ -98,12 +99,14 @@ public class RemoteFlowExecutor {
 
         HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
+        var requestId = UUID.randomUUID();
+
         var response = ClientUtils.withRetry(3, 15, () -> {
             HttpRequest request = apiClient.requestBuilder()
                     .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
-                    .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process"))
+                    .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process/debug/" + requestId))
                     .header("Content-Type", entity.contentType().toString())
-                    .headers("User-Agent", "ck8s-cli (" + VersionProvider.get() + ") " + flowName + "_" + MapUtils.getMap(payload, "arguments", Map.of()).getOrDefault("uniqueId", ""))
+                    .headers("User-Agent", "ck8s-cli (" + VersionProvider.get() + ") " + requestId)
                     .method("POST", HttpRequest.BodyPublishers.ofInputStream(() -> {
                         try {
                             return entity.getContent();
@@ -117,13 +120,13 @@ public class RemoteFlowExecutor {
             try {
                 httpResponse = apiClient.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
             } catch (HttpConnectTimeoutException e) {
-                throw new RuntimeException("Connect timeout: " + apiClient.getBaseUri());
+                throw new RuntimeException(requestIdPrefix(requestId) + "Connect timeout: " + apiClient.getBaseUri());
             } catch (HttpTimeoutException e) {
-                throw new RuntimeException("Timeout: " + apiClient.getBaseUri());
+                throw new RuntimeException(requestIdPrefix(requestId) + "Timeout: " + apiClient.getBaseUri());
             } catch (ConnectException e) {
-                throw new RuntimeException("Can't connect to " + apiClient.getBaseUri() + (e.getMessage() != null ? ". Error: " + e.getMessage() : ""));
+                throw new RuntimeException(requestIdPrefix(requestId) + "Can't connect to " + apiClient.getBaseUri() + (e.getMessage() != null ? ". Error: " + e.getMessage() : ""));
             } catch (Exception e) {
-                throw new RuntimeException("Error sending request: " + e.getMessage());
+                throw new RuntimeException(requestIdPrefix(requestId) + "Error sending request: " + e.getMessage());
             }
 
             int code = httpResponse.statusCode();
@@ -140,11 +143,15 @@ public class RemoteFlowExecutor {
                 StartProcessResponse startProcessResponse = apiClient.getObjectMapper().readValue(body, StartProcessResponse.class);
                 return new RemoteConcordProcess(apiClient, startProcessResponse.getInstanceId());
             } else {
-                throw new ApiException("Content type \"" + contentType + "\" is not supported", response.statusCode(), response.headers(), body);
+                throw new ApiException(requestIdPrefix(requestId) + "Content type \"" + contentType + "\" is not supported", response.statusCode(), response.headers(), body);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error parsing response: " + e.getMessage());
+            throw new RuntimeException(requestIdPrefix(requestId) + "Error parsing response: " + e.getMessage());
         }
+    }
+
+    private static String requestIdPrefix(UUID requestId) {
+        return "[RequestID: " + requestId + "]: ";
     }
 
     private static void archive(Path path, Map<String, Object> input) {
