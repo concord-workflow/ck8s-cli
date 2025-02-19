@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RemoteFlowExecutor {
 
@@ -99,9 +100,12 @@ public class RemoteFlowExecutor {
 
         HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
-        var requestId = UUID.randomUUID();
+        var requestIdGlobal = UUID.randomUUID().toString();
+        var retryNum = new AtomicInteger(0);
 
         var response = ClientUtils.withRetry(3, 15, () -> {
+            var requestId = requestIdGlobal + "_" + retryNum.incrementAndGet();
+
             HttpRequest request = apiClient.requestBuilder()
                     .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
                     .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process/debug/" + requestId))
@@ -143,14 +147,14 @@ public class RemoteFlowExecutor {
                 StartProcessResponse startProcessResponse = apiClient.getObjectMapper().readValue(body, StartProcessResponse.class);
                 return new RemoteConcordProcess(apiClient, startProcessResponse.getInstanceId());
             } else {
-                throw new ApiException(requestIdPrefix(requestId) + "Content type \"" + contentType + "\" is not supported", response.statusCode(), response.headers(), body);
+                throw new ApiException(requestIdPrefix(requestIdGlobal) + "Content type \"" + contentType + "\" is not supported", response.statusCode(), response.headers(), body);
             }
         } catch (Exception e) {
-            throw new RuntimeException(requestIdPrefix(requestId) + "Error parsing response: " + e.getMessage());
+            throw new RuntimeException(requestIdPrefix(requestIdGlobal) + "Error parsing response: " + e.getMessage());
         }
     }
 
-    private static String requestIdPrefix(UUID requestId) {
+    private static String requestIdPrefix(String requestId) {
         return "[RequestID: " + requestId + "]: ";
     }
 
