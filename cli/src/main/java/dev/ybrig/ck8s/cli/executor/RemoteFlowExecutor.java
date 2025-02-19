@@ -5,6 +5,7 @@ import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.impl.HttpEntity;
 import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
 import com.walmartlabs.concord.common.IOUtils;
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.common.Ck8sPayload;
 import dev.ybrig.ck8s.cli.common.MapUtils;
@@ -14,7 +15,6 @@ import dev.ybrig.ck8s.cli.concord.RemoteConcordProcess;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
@@ -22,7 +22,7 @@ import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
-import java.nio.file.Path;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
@@ -63,8 +63,6 @@ public class RemoteFlowExecutor {
             LogUtils.info("dryRunMode: enabled");
         }
 
-        archive(payload.ck8sFlows().location(), result);
-
         if (dryRunMode) {
             result.put(Constants.Request.DRY_RUN_MODE_KEY, true);
         }
@@ -81,8 +79,12 @@ public class RemoteFlowExecutor {
 
     public ConcordProcess execute(String clientClusterAlias, Ck8sPayload payload, String flowName, List<String> activeProfiles) {
         try {
+            var startAt = System.currentTimeMillis();
             ConcordProcess process = startProcess(clientClusterAlias, payload, flowName, activeProfiles);
-            LogUtils.info("process: {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()));
+            var duration = System.currentTimeMillis() - startAt;
+
+            LogUtils.info("process: {}, duration {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()), duration);
+
             return process;
         } catch (Exception e) {
             throw new RuntimeException("Error starting concord process: " + e.getMessage());
@@ -90,7 +92,7 @@ public class RemoteFlowExecutor {
     }
 
     private ConcordProcess startProcess(String clientClusterAlias, Ck8sPayload ck8sPayload, String flowName, List<String> activeProfiles) throws ApiException {
-        Map<String, Object> payload = toMap(ck8sPayload);
+        var payload = toMap(ck8sPayload);
 
         payload.put("clientClusterAlias", clientClusterAlias);
         payload.put("flow", flowName);
@@ -98,11 +100,24 @@ public class RemoteFlowExecutor {
             payload.put("activeProfiles", activeProfiles.toArray(new String[0]));
         }
 
+        try (TemporaryPath tmp = IOUtils.tempFile("payload", ".zip")) {
+            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp.path()))) {
+                IOUtils.zip(zip, ck8sPayload.ck8sFlows().location());
+            }
+            payload.put("ck8sFlowsArchive", tmp.path());
+
+            return sendRequest(payload);
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ConcordProcess sendRequest(Map<String, Object> payload) throws ApiException {
         HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
         var requestIdGlobal = UUID.randomUUID().toString();
         var retryNum = new AtomicInteger(0);
-
         var response = ClientUtils.withRetry(3, 15, () -> {
             var requestId = requestIdGlobal + "_" + retryNum.incrementAndGet();
 
@@ -156,18 +171,6 @@ public class RemoteFlowExecutor {
 
     private static String requestIdPrefix(String requestId) {
         return "[RequestID: " + requestId + "]: ";
-    }
-
-    private static void archive(Path path, Map<String, Object> input) {
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(out)) {
-                IOUtils.zip(zip, path);
-            }
-            input.put("ck8sFlowsArchive", out.toByteArray());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private ApiException apiException(HttpResponse<String> response) {
