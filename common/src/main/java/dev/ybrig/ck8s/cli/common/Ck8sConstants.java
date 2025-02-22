@@ -4,11 +4,11 @@ public final class Ck8sConstants {
 
     public static final String PROCESS_TYPE = "ck8s";
 
+    public static final String DEFAULT_REPO_NAME = "ck8s";
+
     public static class Request {
 
         public static final String PROCESS_TYPE_KEY = "processType";
-
-        public static final String CK8S_REF = "ck8sRef";
     }
 
     public static class Arguments {
