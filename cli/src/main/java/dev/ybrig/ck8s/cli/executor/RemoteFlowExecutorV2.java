@@ -2,18 +2,12 @@ package dev.ybrig.ck8s.cli.executor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.client2.impl.HttpEntity;
 import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
-import dev.ybrig.ck8s.cli.common.Ck8sPayload;
-import dev.ybrig.ck8s.cli.common.MapUtils;
-import dev.ybrig.ck8s.cli.common.VersionProvider;
+import dev.ybrig.ck8s.cli.common.*;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.concord.RemoteConcordProcess;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -22,66 +16,30 @@ import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Deprecated
-public class RemoteFlowExecutor {
+public class RemoteFlowExecutorV2 {
 
     private final ApiClient apiClient;
     private final long responseTimeout;
     private final boolean dryRunMode;
 
-    public RemoteFlowExecutor(String baseUrl, String apiKey) {
-        this(baseUrl, apiKey, 30, 30, false);
-    }
-
-    public RemoteFlowExecutor(String baseUrl, String apiKey, long connectTimeout, long responseTimeout, boolean dryRunMode) {
+    public RemoteFlowExecutorV2(String baseUrl, String apiKey, long connectTimeout, long responseTimeout, boolean dryRunMode) {
         this.apiClient = createClient(baseUrl, apiKey, connectTimeout);
         this.responseTimeout = responseTimeout;
         this.dryRunMode = dryRunMode;
     }
 
-    private static ApiClient createClient(String baseUrl, String apiKey, long connectTimeout) {
-        if (apiKey == null) {
-            throw new RuntimeException("Can't create concord client for: api key is empty");
-        }
-
-        return new DefaultApiClientFactory(baseUrl, Duration.of(connectTimeout, ChronoUnit.SECONDS), false)
-                .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
-    }
-
-    private Map<String, Object> toMap(Ck8sPayload payload) {
-        Map<String, Object> result = new LinkedHashMap<>();
-
-        if (dryRunMode) {
-            LogUtils.info("dryRunMode: enabled");
-        }
-
-        if (dryRunMode) {
-            result.put(Constants.Request.DRY_RUN_MODE_KEY, true);
-        }
-
-        result.put("arguments", payload.arguments());
-        result.put("debug", payload.debug());
-        result.put("org", MapUtils.assertString(payload.arguments(), "clusterRequest.organization.name"));
-        if (payload.project() != null) {
-            result.put("project", payload.project());
-        }
-
-        return result;
-    }
-
-    public ConcordProcess execute(String clientClusterAlias, Ck8sPayload payload, String flowName, List<String> activeProfiles) {
+    public ConcordProcess execute(Map<String, Object> request,
+                                  String orgName, String projectName,
+                                  Map<String, Object> args, boolean debug,
+                                  List<String> activeProfiles) {
         try {
             var startAt = System.currentTimeMillis();
-            ConcordProcess process = startProcess(clientClusterAlias, payload, flowName, activeProfiles);
+            var process = startProcess(request, orgName, projectName, args, debug, activeProfiles);
             var duration = System.currentTimeMillis() - startAt;
 
             LogUtils.info("process: {}, duration {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()), duration);
@@ -92,39 +50,41 @@ public class RemoteFlowExecutor {
         }
     }
 
-    private ConcordProcess startProcess(String clientClusterAlias, Ck8sPayload ck8sPayload, String flowName, List<String> activeProfiles) throws ApiException {
-        var payload = toMap(ck8sPayload);
+    private ConcordProcess startProcess(Map<String, Object> request,
+                                        String orgName, String projectName,
+                                        Map<String, Object> args, boolean debug,
+                                        List<String> activeProfiles) throws ApiException {
+        var payload = new HashMap<>(request);
 
-        payload.put("clientClusterAlias", clientClusterAlias);
-        payload.put("flow", flowName);
+        if (dryRunMode) {
+            LogUtils.info("dryRunMode: enabled");
+            payload.put(Constants.Request.DRY_RUN_MODE_KEY, true);
+        }
+
+        payload.put(Constants.Request.ARGUMENTS_KEY, args);
+        payload.put(Constants.Request.DEBUG_KEY, debug);
+
+        payload.put(Constants.Multipart.ORG_NAME, orgName);
+        payload.put(Constants.Multipart.PROJECT_NAME, projectName);
+
         if (activeProfiles != null && !activeProfiles.isEmpty()) {
-            payload.put("activeProfiles", activeProfiles.toArray(new String[0]));
+            payload.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles.toArray(new String[0]));
         }
 
-        try (TemporaryPath tmp = IOUtils.tempFile("payload", ".zip")) {
-            try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp.path()))) {
-                IOUtils.zip(zip, ck8sPayload.ck8sFlows().location());
-            }
-            payload.put("ck8sFlowsArchive", tmp.path());
-
-            return sendRequest(payload);
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return sendRequest(payload);
     }
 
     private ConcordProcess sendRequest(Map<String, Object> payload) throws ApiException {
-        HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
+        var entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
         var requestIdGlobal = UUID.randomUUID().toString();
         var retryNum = new AtomicInteger(0);
-        var response = ClientUtils.withRetry(3, 15, () -> {
+        var response = ClientUtils.withRetry(3, 15000, () -> {
             var requestId = requestIdGlobal + "_" + retryNum.incrementAndGet();
 
-            HttpRequest request = apiClient.requestBuilder()
+            var request = apiClient.requestBuilder()
                     .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
-                    .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v2/process"))
+                    .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v3/process/" + requestId))
                     .header("Content-Type", entity.contentType().toString())
                     .headers("User-Agent", "ck8s-cli (" + VersionProvider.get() + ") " + requestId)
                     .method("POST", HttpRequest.BodyPublishers.ofInputStream(() -> {
@@ -149,7 +109,7 @@ public class RemoteFlowExecutor {
                 throw new RuntimeException(requestIdPrefix(requestId) + "Error sending request: " + e.getMessage());
             }
 
-            int code = httpResponse.statusCode();
+            var code = httpResponse.statusCode();
             if (code < 200 || code >= 300) {
                 throw apiException(httpResponse);
             }
@@ -160,7 +120,7 @@ public class RemoteFlowExecutor {
             var body = response.body();
             var contentType = response.headers().firstValue("Content-Type").orElse("application/json");
             if (isJsonMime(contentType)) {
-                StartProcessResponse startProcessResponse = apiClient.getObjectMapper().readValue(body, StartProcessResponse.class);
+                var startProcessResponse = apiClient.getObjectMapper().readValue(body, StartProcessResponse.class);
                 return new RemoteConcordProcess(apiClient, startProcessResponse.getInstanceId());
             } else {
                 throw new ApiException(requestIdPrefix(requestIdGlobal) + "Content type \"" + contentType + "\" is not supported", response.statusCode(), response.headers(), body);
@@ -175,7 +135,7 @@ public class RemoteFlowExecutor {
     }
 
     private ApiException apiException(HttpResponse<String> response) {
-        String body = response.body();
+        var body = response.body();
 
         String message = null;
         try {
@@ -192,13 +152,13 @@ public class RemoteFlowExecutor {
             return response.statusCode() + " [no body]";
         }
 
-        String msg = body;
+        var msg = body;
 
-        String type = response.headers().firstValue("Content-Type").orElse(null);
+        var type = response.headers().firstValue("Content-Type").orElse(null);
 
         Map<String, Object> vErrs = null;
         if ("application/vnd.siesta-validation-errors-v1+json".equals(type)) {
-            List<Object> l = (List<Object>) apiClient.getObjectMapper().readValue(body, List.class);
+            var l = (List<Object>) apiClient.getObjectMapper().readValue(body, List.class);
             if (!l.isEmpty()) {
                 vErrs = (Map<String,Object>) l.get(0);
             }
@@ -220,8 +180,17 @@ public class RemoteFlowExecutor {
         return msg;
     }
 
+    private static ApiClient createClient(String baseUrl, String apiKey, long connectTimeout) {
+        if (apiKey == null) {
+            throw new RuntimeException("Can't create concord client for: api key is empty");
+        }
+
+        return new DefaultApiClientFactory(baseUrl, Duration.of(connectTimeout, ChronoUnit.SECONDS), false)
+                .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
+    }
+
     private static boolean isJsonMime(String mime) {
-        String jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
+        var jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
         return mime != null && (mime.matches(jsonMime) || mime.equals("*/*"));
     }
 }

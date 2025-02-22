@@ -15,6 +15,7 @@ public class Ck8sPath
     private static final Path CK8S_EXT_COMPONENTS = Path.of("ck8s-components");
     private static final Path CK8S_EXT_COMPONENTS_TESTS = Path.of("ck8s-components-tests");
 
+    private static final Path UNIFIED_CK8S_CONFIGS_DIR = Path.of("ck8s-configs");
     private static final Path UNIFIED_CK8S_ORGS_DIR = Path.of("ck8s-orgs");
     private static final Path UNIFIED_CK8S_COMPONENTS = Path.of("ck8s-components");
     private static final Path UNIFIED_CK8S_COMPONENTS_TESTS = Path.of("ck8s-components-tests");
@@ -133,13 +134,17 @@ public class Ck8sPath
         return ck8sExt.resolve(CK8S_EXT_COMPONENTS_TESTS);
     }
 
+    public Path ck8sConfigs() {
+        return ck8s.resolve(UNIFIED_CK8S_CONFIGS_DIR);
+    }
+
     public Path defaultCfg()
     {
         Path oldCfg = ck8s.resolve("flows").resolve("ck8s-configs").resolve("ck8s.yaml");
         if (Files.exists(oldCfg)) {
             return oldCfg;
         }
-        return ck8s.resolve("ck8s-configs").resolve("ck8s.yaml");
+        return ck8s.resolve(UNIFIED_CK8S_CONFIGS_DIR).resolve("ck8s.yaml");
     }
 
     public Path orgCfgForCluster(Path clusterYaml)
