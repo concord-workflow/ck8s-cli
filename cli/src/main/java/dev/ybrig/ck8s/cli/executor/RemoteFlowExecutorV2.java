@@ -2,7 +2,6 @@ package dev.ybrig.ck8s.cli.executor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.walmartlabs.concord.client2.*;
-import com.walmartlabs.concord.client2.impl.HttpEntity;
 import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.common.*;
@@ -40,7 +39,7 @@ public class RemoteFlowExecutorV2 {
                                   List<String> activeProfiles) {
         try {
             var startAt = System.currentTimeMillis();
-            ConcordProcess process = startProcess(request, orgName, projectName, args, debug, activeProfiles);
+            var process = startProcess(request, orgName, projectName, args, debug, activeProfiles);
             var duration = System.currentTimeMillis() - startAt;
 
             LogUtils.info("process: {}, duration {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()), duration);
@@ -76,14 +75,14 @@ public class RemoteFlowExecutorV2 {
     }
 
     private ConcordProcess sendRequest(Map<String, Object> payload) throws ApiException {
-        HttpEntity entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
+        var entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
         var requestIdGlobal = UUID.randomUUID().toString();
         var retryNum = new AtomicInteger(0);
         var response = ClientUtils.withRetry(3, 15000, () -> {
             var requestId = requestIdGlobal + "_" + retryNum.incrementAndGet();
 
-            HttpRequest request = apiClient.requestBuilder()
+            var request = apiClient.requestBuilder()
                     .timeout(Duration.of(responseTimeout, ChronoUnit.SECONDS))
                     .uri(URI.create(apiClient.getBaseUri() + "/api/ck8s/v3/process/" + requestId))
                     .header("Content-Type", entity.contentType().toString())
@@ -110,7 +109,7 @@ public class RemoteFlowExecutorV2 {
                 throw new RuntimeException(requestIdPrefix(requestId) + "Error sending request: " + e.getMessage());
             }
 
-            int code = httpResponse.statusCode();
+            var code = httpResponse.statusCode();
             if (code < 200 || code >= 300) {
                 throw apiException(httpResponse);
             }
@@ -121,7 +120,7 @@ public class RemoteFlowExecutorV2 {
             var body = response.body();
             var contentType = response.headers().firstValue("Content-Type").orElse("application/json");
             if (isJsonMime(contentType)) {
-                StartProcessResponse startProcessResponse = apiClient.getObjectMapper().readValue(body, StartProcessResponse.class);
+                var startProcessResponse = apiClient.getObjectMapper().readValue(body, StartProcessResponse.class);
                 return new RemoteConcordProcess(apiClient, startProcessResponse.getInstanceId());
             } else {
                 throw new ApiException(requestIdPrefix(requestIdGlobal) + "Content type \"" + contentType + "\" is not supported", response.statusCode(), response.headers(), body);
@@ -136,7 +135,7 @@ public class RemoteFlowExecutorV2 {
     }
 
     private ApiException apiException(HttpResponse<String> response) {
-        String body = response.body();
+        var body = response.body();
 
         String message = null;
         try {
@@ -153,13 +152,13 @@ public class RemoteFlowExecutorV2 {
             return response.statusCode() + " [no body]";
         }
 
-        String msg = body;
+        var msg = body;
 
-        String type = response.headers().firstValue("Content-Type").orElse(null);
+        var type = response.headers().firstValue("Content-Type").orElse(null);
 
         Map<String, Object> vErrs = null;
         if ("application/vnd.siesta-validation-errors-v1+json".equals(type)) {
-            List<Object> l = (List<Object>) apiClient.getObjectMapper().readValue(body, List.class);
+            var l = (List<Object>) apiClient.getObjectMapper().readValue(body, List.class);
             if (!l.isEmpty()) {
                 vErrs = (Map<String,Object>) l.get(0);
             }
@@ -191,7 +190,7 @@ public class RemoteFlowExecutorV2 {
     }
 
     private static boolean isJsonMime(String mime) {
-        String jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
+        var jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
         return mime != null && (mime.matches(jsonMime) || mime.equals("*/*"));
     }
 }
