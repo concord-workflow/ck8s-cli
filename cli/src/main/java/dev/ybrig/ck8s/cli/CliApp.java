@@ -7,6 +7,7 @@ import dev.ybrig.ck8s.cli.completion.ClusterAliasCompletion;
 import dev.ybrig.ck8s.cli.completion.FlowCompletion;
 import dev.ybrig.ck8s.cli.completion.ProfilesCompletion;
 import dev.ybrig.ck8s.cli.concord.process.ProcessEventsCommand;
+import dev.ybrig.ck8s.cli.executor.ExecutorType;
 import dev.ybrig.ck8s.cli.forms.ServeFormsCommand;
 import dev.ybrig.ck8s.cli.op.*;
 import dev.ybrig.ck8s.cli.selfupdate.SelfUpdateCommand;
@@ -108,6 +109,9 @@ public class CliApp
 
     @CommandLine.Option(names = {"--project"}, description = "Concord project")
     String project;
+
+    @CommandLine.Option(names = {"--ck8sRef"}, description = "ck8s GH ref")
+    String ck8sRef;
 
     static class CliOperationArgs
     {
@@ -233,6 +237,10 @@ public class CliApp
         return project;
     }
 
+    public String getCk8sRef() {
+        return ck8sRef;
+    }
+
     private CliOperation resolveOperation()
     {
         if (cliOperationArgs != null) {
@@ -243,10 +251,19 @@ public class CliApp
                 return new ClusterListOperation();
             }
             if (nonNull(cliOperationArgs.flow)) {
+                if (clusterAlias == null) {
+                    throw new CommandLine.ParameterException(new CommandLine(this), "Missing required option: '--cluster=<clusterAlias>'");
+                }
+
                 if ("cluster".equals(cliOperationArgs.flow)
                         && "local".equals(clusterAlias)) {
                     return new LocalClusterOperation();
                 }
+
+                if (flowExecutorType != null && flowExecutorType.getType() == ExecutorType.REMOTEV2) {
+                    return new RunFlowOperationV2();
+                }
+
                 return new RunFlowOperation();
             }
         }
