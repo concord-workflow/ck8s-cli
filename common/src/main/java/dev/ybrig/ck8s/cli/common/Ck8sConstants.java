@@ -2,12 +2,11 @@ package dev.ybrig.ck8s.cli.common;
 
 public final class Ck8sConstants {
 
-    public static final String PROCESS_TYPE = "ck8s";
-
     public static final String DEFAULT_REPO_NAME = "ck8s";
 
-    public static class Request {
+    public static final String PROCESS_TYPE = "ck8s";
 
+    public static class Meta {
         public static final String PROCESS_TYPE_KEY = "processType";
     }
 

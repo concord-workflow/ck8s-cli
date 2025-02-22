@@ -95,7 +95,6 @@ public class RunFlowOperationV2
     private static Map<String, Object> prepareRequest(CliApp cliApp) {
         var request = new HashMap<String, Object>();
         request.put(Constants.Multipart.REPO_NAME, Ck8sConstants.DEFAULT_REPO_NAME);
-        request.put(Ck8sConstants.Request.PROCESS_TYPE_KEY, Ck8sConstants.PROCESS_TYPE);
 
         var ck8sRef = cliApp.getCk8sRef();
         if (ck8sRef != null) {
