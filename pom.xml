@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.ybrig.ck8s.cli</groupId>
     <artifactId>parent</artifactId>
-    <version>1.6.12-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>ck8s-cli</name>
