@@ -109,7 +109,7 @@ public class RunFlowOperationV2
         }
 
         var archive = archive(ck8s, cliApp.isWithTests());
-        request.put("archive", archive);
+        request.put("archive", archive.path());
         return archive;
     }
 
