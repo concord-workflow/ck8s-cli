@@ -136,6 +136,10 @@ public class RunFlowOperationV2
         // dry-run mode
         requestParams.put(Constants.Request.DRY_RUN_MODE_KEY, cliApp.isDryRunMode());
 
+        if (cliApp.getMeta() != null) {
+            requestParams.put(Constants.Request.META, cliApp.getMeta());
+        }
+
         request.put("request", requestParams);
 
         return request;

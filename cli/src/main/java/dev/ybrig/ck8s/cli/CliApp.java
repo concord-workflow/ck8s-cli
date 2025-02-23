@@ -113,6 +113,9 @@ public class CliApp
     @CommandLine.Option(names = {"--ck8sRef"}, description = "ck8s GH ref")
     String ck8sRef;
 
+    @CommandLine.Option(names = {"-m", "--meta"}, description = "additional process meta")
+    Map<String, String> meta = new LinkedHashMap<>();
+
     static class CliOperationArgs
     {
         @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
@@ -239,6 +242,10 @@ public class CliApp
 
     public String getCk8sRef() {
         return ck8sRef;
+    }
+
+    public Map<String, String> getMeta() {
+        return meta;
     }
 
     private CliOperation resolveOperation()
