@@ -32,32 +32,35 @@ public class RunFlowOperationV2
             return -1;
         }
 
+        validateFlows();
+
         var ck8s = cliOperationContext.ck8sPath();
-        var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, clientCluster);
-        var orgName = MapUtils.assertString(clusterRequest, "organization.name");
-        var projectName = projectName(cliApp, clusterRequest);
-        var args = prepareArgs(cliApp);
-
-        var debug = new Verbosity(cliApp.getVerbosity()).verbose();
-        var activeProfiles = cliApp.getActiveProfiles();
-
-        var request = prepareRequest(cliApp);
+        var request = prepareRequest(cliApp, ck8s);
 
         var profile = CliConfigurationProvider.getConcordProfile(cliApp.getProfile());
-        var executor = new RemoteFlowExecutorV2(profile.baseUrl(), profile.apiKey(), cliApp.getConnectTimeout(), cliApp.getReadTimeout(), cliApp.isDryRunMode());
-
-        validateFlows();
+        var executor = new RemoteFlowExecutorV2(profile.baseUrl(), profile.apiKey(), cliApp.getConnectTimeout(), cliApp.getReadTimeout());
 
         ConcordProcess process;
         try (TemporaryPath archive = prepareArchiveIfRequired(cliApp, ck8s, request)) {
-            process = executor.execute(request, orgName, projectName, args, debug, activeProfiles);
+            process = executor.execute(request);
         }
 
         if (process == null) {
             return -1;
         }
 
-        handleProcessLogsAndWait(cliApp, process);
+        if (cliApp.isStreamLogs()) {
+            ExecutorService executorService = Executors.newCachedThreadPool();
+            try {
+                process.streamLogs(executorService);
+            } finally {
+                executorService.shutdownNow();
+            }
+        }
+
+        if (cliApp.getWaitSeconds() != null && cliApp.getWaitSeconds() > 0) {
+            process.waitEnded(cliApp.getWaitSeconds() * 1000);
+        }
 
         return 0;
     }
@@ -92,14 +95,49 @@ public class RunFlowOperationV2
         return args;
     }
 
-    private static Map<String, Object> prepareRequest(CliApp cliApp) {
+    private static Map<String, Object> prepareRequest(CliApp cliApp, Ck8sPath ck8s) {
         var request = new HashMap<String, Object>();
+
+        var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, cliApp.getClusterAlias());
+
+        // org
+        var orgName = MapUtils.assertString(clusterRequest, "organization.name");
+        request.put(Constants.Multipart.ORG_NAME, orgName);
+
+        //project
+        var projectName = projectName(cliApp, clusterRequest);
+        request.put(Constants.Multipart.PROJECT_NAME, projectName);
+
+        // repo
         request.put(Constants.Multipart.REPO_NAME, Ck8sConstants.DEFAULT_REPO_NAME);
 
+        // branch
         var ck8sRef = cliApp.getCk8sRef();
         if (ck8sRef != null) {
             request.put(Constants.Request.REPO_BRANCH_OR_TAG, cliApp.getCk8sRef());
         }
+
+        // debug
+        var debug = new Verbosity(cliApp.getVerbosity()).verbose();
+        request.put(Constants.Request.DEBUG_KEY, debug);
+
+        var requestParams = new HashMap<String, Object>();
+
+        // active profiles
+        var activeProfiles = cliApp.getActiveProfiles();
+        if (activeProfiles != null && !activeProfiles.isEmpty()) {
+            requestParams.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles);
+        }
+
+        // args
+        var args = prepareArgs(cliApp);
+        requestParams.put(Constants.Request.ARGUMENTS_KEY, args);
+
+        // dry-run mode
+        requestParams.put(Constants.Request.DRY_RUN_MODE_KEY, cliApp.isDryRunMode());
+
+        request.put("request", requestParams);
+
         return request;
     }
 
@@ -156,20 +194,5 @@ public class RunFlowOperationV2
 //        if (hasErrors) {
 //            throw new RuntimeException("Payload has errors");
 //        }
-    }
-
-    private static void handleProcessLogsAndWait(CliApp cliApp, ConcordProcess process) {
-        if (cliApp.isStreamLogs()) {
-            ExecutorService executorService = Executors.newCachedThreadPool();
-            try {
-                process.streamLogs(executorService);
-            } finally {
-                executorService.shutdownNow();
-            }
-        }
-
-        if (cliApp.getWaitSeconds() != null && cliApp.getWaitSeconds() > 0) {
-            process.waitEnded(cliApp.getWaitSeconds() * 1000);
-        }
     }
 }

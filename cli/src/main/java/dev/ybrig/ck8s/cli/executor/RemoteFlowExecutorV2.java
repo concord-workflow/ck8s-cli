@@ -3,7 +3,6 @@ package dev.ybrig.ck8s.cli.executor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
-import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.common.*;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.concord.RemoteConcordProcess;
@@ -25,21 +24,16 @@ public class RemoteFlowExecutorV2 {
 
     private final ApiClient apiClient;
     private final long responseTimeout;
-    private final boolean dryRunMode;
 
-    public RemoteFlowExecutorV2(String baseUrl, String apiKey, long connectTimeout, long responseTimeout, boolean dryRunMode) {
+    public RemoteFlowExecutorV2(String baseUrl, String apiKey, long connectTimeout, long responseTimeout) {
         this.apiClient = createClient(baseUrl, apiKey, connectTimeout);
         this.responseTimeout = responseTimeout;
-        this.dryRunMode = dryRunMode;
     }
 
-    public ConcordProcess execute(Map<String, Object> request,
-                                  String orgName, String projectName,
-                                  Map<String, Object> args, boolean debug,
-                                  List<String> activeProfiles) {
+    public ConcordProcess execute(Map<String, Object> request) {
         try {
             var startAt = System.currentTimeMillis();
-            var process = startProcess(request, orgName, projectName, args, debug, activeProfiles);
+            var process = sendRequest(request);
             var duration = System.currentTimeMillis() - startAt;
 
             LogUtils.info("process: {}, duration {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()), duration);
@@ -48,30 +42,6 @@ public class RemoteFlowExecutorV2 {
         } catch (Exception e) {
             throw new RuntimeException("Error starting concord process: " + e.getMessage());
         }
-    }
-
-    private ConcordProcess startProcess(Map<String, Object> request,
-                                        String orgName, String projectName,
-                                        Map<String, Object> args, boolean debug,
-                                        List<String> activeProfiles) throws ApiException {
-        var payload = new HashMap<>(request);
-
-        if (dryRunMode) {
-            LogUtils.info("dryRunMode: enabled");
-            payload.put(Constants.Request.DRY_RUN_MODE_KEY, true);
-        }
-
-        payload.put(Constants.Request.ARGUMENTS_KEY, args);
-        payload.put(Constants.Request.DEBUG_KEY, debug);
-
-        payload.put(Constants.Multipart.ORG_NAME, orgName);
-        payload.put(Constants.Multipart.PROJECT_NAME, projectName);
-
-        if (activeProfiles != null && !activeProfiles.isEmpty()) {
-            payload.put(Constants.Request.ACTIVE_PROFILES_KEY, activeProfiles.toArray(new String[0]));
-        }
-
-        return sendRequest(payload);
     }
 
     private ConcordProcess sendRequest(Map<String, Object> payload) throws ApiException {
