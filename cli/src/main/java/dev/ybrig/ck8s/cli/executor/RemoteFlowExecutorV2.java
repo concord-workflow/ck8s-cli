@@ -38,7 +38,8 @@ public class RemoteFlowExecutorV2 {
             var process = sendRequest(request);
             var duration = System.currentTimeMillis() - startAt;
 
-            LogUtils.info("process: {}, duration {}", String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId()), duration);
+            var processUrl = String.format("%s/#/process/%s/log", apiClient.getBaseUrl(), process.instanceId());
+            LogUtils.info("process: {}", processUrl);
 
             return process;
         } catch (Exception e) {
