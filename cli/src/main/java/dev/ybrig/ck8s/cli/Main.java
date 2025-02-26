@@ -27,15 +27,13 @@ import picocli.CommandLine;
 
 import java.util.Objects;
 
-public class Main
-{
+public class Main {
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
 //        args = new String[] {"--flow-executor", "concord-cli", "-p", "ci1", "-c", "ci1", "-f", "brig2", "--secretsProvider=local", "-VVVVV"};
 
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        JoranConfigurator configurator = new JoranConfigurator();
+        var context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        var configurator = new JoranConfigurator();
         configurator.setContext(context);
         context.reset();
         try {
@@ -44,12 +42,12 @@ public class Main
             throw new RuntimeException(e);
         }
 
-        CommandLine cmd = new CommandLine(new CliApp())
+        var cmd = new CommandLine(new CliApp())
                 .setCaseInsensitiveEnumValuesAllowed(true)
                 .setExitCodeExceptionMapper(Main::mapException);
 
         // hide generate-completion subcommand from usage help
-        CommandLine gen = cmd.getSubcommands().get("generate-completion");
+        var gen = cmd.getSubcommands().get("generate-completion");
         gen.getCommandSpec().usageMessage().hidden(true);
 
         if (cmd.isVersionHelpRequested()) {
@@ -57,12 +55,11 @@ public class Main
             return;
         }
 
-        int code = cmd.execute(args);
+        var code = cmd.execute(args);
         System.exit(code);
     }
 
-    private static int mapException(Throwable th)
-    {
+    private static int mapException(Throwable th) {
         if (th instanceof CommandLine.ParameterException) {
             return 2;
         }

@@ -24,7 +24,7 @@ import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
-import dev.ybrig.ck8s.cli.common.Ck8sPayload;
+import dev.ybrig.ck8s.cli.common.Ck8sPath;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.common.Mapper;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
@@ -44,13 +44,13 @@ public final class JobDependencies {
 
     private static final Logger log = LoggerFactory.getLogger(JobDependencies.class);
 
-    public static List<String> get(Ck8sPayload payload, List<String> originalDependencies) {
-        Collection<URI> uris = getDependencyUris(originalDependencies);
+    public static List<String> get(Ck8sPath ck8s, List<String> originalDependencies, Map<String, Object> args) {
+        var uris = getDependencyUris(originalDependencies);
         if (uris.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Map<String, String> versions = getDependencyVersions(payload);
+        var versions = getDependencyVersions(ck8s, args);
         if (versions.isEmpty()) {
             return originalDependencies;
         }
@@ -60,14 +60,17 @@ public final class JobDependencies {
                 .collect(Collectors.toList());
     }
 
+    private JobDependencies() {
+    }
+
     private static Collection<URI> updateVersions(Collection<URI> uris, Map<String, String> versions) {
         List<URI> result = new ArrayList<>();
-        for (URI item : uris) {
-            String scheme = item.getScheme();
+        for (var item : uris) {
+            var scheme = item.getScheme();
             if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
-                IdAndVersion idv = IdAndVersion.parse(item.getAuthority());
+                var idv = IdAndVersion.parse(item.getAuthority());
                 if (isLatestVersion(idv.version)) {
-                    String version = versions.get(idv.id);
+                    var version = versions.get(idv.id);
                     if (version != null) {
                         item = URI.create(MAVEN_SCHEME + "://" + idv.id + ":" + assertVersion(idv.id, versions));
                     } else {
@@ -97,9 +100,9 @@ public final class JobDependencies {
 
         Collection<URI> result = new HashSet<>();
 
-        for (String s : urls) {
-            URI u = new URI(s);
-            String scheme = u.getScheme();
+        for (var s : urls) {
+            var u = new URI(s);
+            var scheme = u.getScheme();
 
             if (MAVEN_SCHEME.equalsIgnoreCase(scheme)) {
                 result.add(u);
@@ -115,21 +118,21 @@ public final class JobDependencies {
                 continue;
             }
 
-            URL url = u.toURL();
+            var url = u.toURL();
             while (true) {
                 if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
-                    URLConnection conn = url.openConnection();
+                    var conn = url.openConnection();
                     if (conn instanceof HttpURLConnection) {
-                        HttpURLConnection httpConn = (HttpURLConnection) conn;
+                        var httpConn = (HttpURLConnection) conn;
                         httpConn.setInstanceFollowRedirects(false);
 
-                        int code = httpConn.getResponseCode();
+                        var code = httpConn.getResponseCode();
                         if (code == HttpURLConnection.HTTP_MOVED_TEMP ||
                                 code == HttpURLConnection.HTTP_MOVED_PERM ||
                                 code == HttpURLConnection.HTTP_SEE_OTHER ||
                                 code == 307) {
 
-                            String location = httpConn.getHeaderField("Location");
+                            var location = httpConn.getHeaderField("Location");
                             url = new URL(location);
                             log.info("normalizeUrls -> using: {}", location);
 
@@ -151,11 +154,11 @@ public final class JobDependencies {
         return result;
     }
 
-    private static Map<String, String> getDependencyVersions(Ck8sPayload payload) {
-        Path componentsLocation = payload.ck8sFlows().location().resolve("ck8s-components");
+    private static Map<String, String> getDependencyVersions(Ck8sPath ck8s, Map<String, Object> args) {
+        var componentsLocation = ck8s.ck8sComponents();
 
         Map<String, String> result = new HashMap<>();
-        Path ck8sVersions = componentsLocation.resolve("concord/dependency-versions-policy.yaml");
+        var ck8sVersions = componentsLocation.resolve("concord/dependency-versions-policy.yaml");
         if (Files.exists(ck8sVersions)) {
             try {
                 result.putAll(parseDependenciesVersions(Mapper.yamlMapper().readMap(ck8sVersions)));
@@ -164,7 +167,7 @@ public final class JobDependencies {
             }
         }
 
-        Path ck8sExtVersions = componentsLocation.resolve("concord/policy/dependency-versions-policy.yaml");
+        var ck8sExtVersions = componentsLocation.resolve("concord/policy/dependency-versions-policy.yaml");
         if (Files.exists(ck8sExtVersions)) {
             try {
                 result.putAll(parseDependenciesVersions(Mapper.yamlMapper().readMap(ck8sExtVersions)));
@@ -173,10 +176,10 @@ public final class JobDependencies {
             }
         }
 
-        DefaultExpressionEvaluator expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders(), List.of(), List.of());
-        EvalContext ctx = EvalContext.builder().variables(new MapBackedVariables(payload.arguments())).build();
+        var expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders(), List.of(), List.of());
+        var ctx = EvalContext.builder().variables(new MapBackedVariables(args)).build();
         Map<String, String> interpolated = new HashMap<>();
-        for (Map.Entry<String, String> e : result.entrySet()) {
+        for (var e : result.entrySet()) {
             interpolated.put(e.getKey(), expressionEvaluator.eval(ctx, e.getValue(), String.class));
         }
 
@@ -190,7 +193,7 @@ public final class JobDependencies {
         }
 
         Map<String, String> result = new HashMap<>();
-        for (Map<String, Object> e : ck8sVersionsList) {
+        for (var e : ck8sVersionsList) {
             result.put(MapUtils.assertString(e, "artifact"), MapUtils.assertString(e, "version"));
         }
         return result;
@@ -201,7 +204,7 @@ public final class JobDependencies {
     }
 
     private static String assertVersion(String dep, Map<String, String> versions) {
-        String version = versions.get(dep);
+        var version = versions.get(dep);
         if (version != null) {
             return version;
         }
@@ -210,26 +213,23 @@ public final class JobDependencies {
 
     private static class IdAndVersion {
 
+        private final String id;
+        private final String version;
+
         public static IdAndVersion parse(String s) {
-            int i = s.lastIndexOf(':');
+            var i = s.lastIndexOf(':');
             if (i >= 0 && i + 1 < s.length()) {
-                String id = s.substring(0, i);
-                String v = s.substring(i + 1);
+                var id = s.substring(0, i);
+                var v = s.substring(i + 1);
                 return new IdAndVersion(id, v);
             }
 
             throw new IllegalArgumentException("Invalid artifact ID format: " + s);
         }
 
-        private final String id;
-        private final String version;
-
         private IdAndVersion(String id, String version) {
             this.id = id;
             this.version = version;
         }
-    }
-
-    private JobDependencies() {
     }
 }

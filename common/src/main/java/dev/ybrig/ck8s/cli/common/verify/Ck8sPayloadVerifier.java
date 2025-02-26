@@ -18,14 +18,14 @@ public class Ck8sPayloadVerifier implements Ck8sFlowBuilderListener {
 
     @Override
     public void beforeConcordYamlAdd(Path src, Path dest) {
-        for (Ck8sPayloadChecker checker : checkers) {
+        for (var checker : checkers) {
             checker.process(src);
         }
     }
 
     public List<CheckError> errors() {
         List<CheckError> results = new ArrayList<>();
-        for (Ck8sPayloadChecker checker : checkers) {
+        for (var checker : checkers) {
             results.addAll(checker.errors());
         }
         return results;

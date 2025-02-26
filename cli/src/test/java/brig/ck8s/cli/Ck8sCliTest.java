@@ -2,13 +2,11 @@ package brig.ck8s.cli;
 
 import org.junit.jupiter.api.Test;
 
-import static brig.ck8s.cli.Ck8sCliAssertions.*;
+import static brig.ck8s.cli.Ck8sCliAssertions.assertFailed;
 
-public class Ck8sCliTest
-{
+public class Ck8sCliTest {
     @Test
-    public void testFailOnListAndActionAtSameTime()
-    {
+    public void testFailOnListAndActionAtSameTime() {
         assertFailed("-l -a dnsmasq-setup")
                 .assertExitCode(2)
                 .assertErrContainsMatchingLine(
@@ -16,8 +14,7 @@ public class Ck8sCliTest
     }
 
     @Test
-    public void testFailOnListAndRunFlowAtSameTime()
-    {
+    public void testFailOnListAndRunFlowAtSameTime() {
         assertFailed("-l -f cluster")
                 .assertExitCode(2)
                 .assertErrContainsMatchingLine(
@@ -25,8 +22,7 @@ public class Ck8sCliTest
     }
 
     @Test
-    public void testFailOnActionAndRunFlowAtSameTime()
-    {
+    public void testFailOnActionAndRunFlowAtSameTime() {
         assertFailed("-a dnsmasq-setup -f cluster")
                 .assertExitCode(2)
                 .assertErrContainsMatchingLine(

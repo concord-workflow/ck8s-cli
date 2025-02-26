@@ -17,42 +17,38 @@ public class Ck8sFlowBuilder {
 
     private final Ck8sPath ck8sPath;
     private final Path target;
-    private boolean includeTests;
     private final String clusterGroupOrAlias;
     private final Ck8sFlowBuilderListener listener;
+    private boolean includeTests;
 
     public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target, String clusterGroupOrAlias) {
-        this(ck8sPath, target, (src, dest) -> {}, clusterGroupOrAlias);
+        this(ck8sPath, target, (src, dest) -> {
+        }, clusterGroupOrAlias);
     }
 
-    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target, Ck8sFlowBuilderListener listener, String clusterGroupOrAlias)
-    {
+    public Ck8sFlowBuilder(Ck8sPath ck8sPath, Path target, Ck8sFlowBuilderListener listener, String clusterGroupOrAlias) {
         this.ck8sPath = ck8sPath;
         this.target = target;
         this.listener = listener;
         this.clusterGroupOrAlias = clusterGroupOrAlias;
     }
 
-    public Ck8sFlowBuilder includeTests(boolean include)
-    {
+    public Ck8sFlowBuilder includeTests(boolean include) {
         this.includeTests = include;
         return this;
     }
 
-    public Ck8sFlows build()
-    {
+    public Ck8sFlows build() {
         try {
             IOUtils.deleteRecursively(target);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Can't delete target '" + target + "': " + e.getMessage());
         }
 
-        Path flows = target.resolve("flows");
+        var flows = target.resolve("flows");
         try {
             Files.createDirectories(flows);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Can't create target '" + target + "': " + e.getMessage());
         }
 
@@ -77,7 +73,7 @@ public class Ck8sFlowBuilder {
                 Files.createDirectories(clusterLocation);
 
                 Ck8sUtils.findClustersYaml(ck8sPath, clusterGroupOrAlias).forEach(clusterYaml -> {
-                    Map<String, Object> clusterRequest = Ck8sUtils.buildClusterRequest(ck8sPath, clusterYaml);
+                    var clusterRequest = Ck8sUtils.buildClusterRequest(ck8sPath, clusterYaml);
                     Mapper.yamlMapper().write(clusterLocation.resolve(MapUtils.assertString(clusterRequest, "alias") + ".yaml"), clusterRequest);
                 });
             } catch (Exception e) {
@@ -90,33 +86,28 @@ public class Ck8sFlowBuilder {
                 .build();
     }
 
-    private void copyComponents(Ck8sPath ck8sPath, Path target)
-    {
+    private void copyComponents(Ck8sPath ck8sPath, Path target) {
         copyComponents(ck8sPath.ck8sComponents(), ck8sPath.ck8sExtComponents(), target, "ck8s-components");
     }
 
-    private void copyTestComponents(Ck8sPath ck8sPath, Path target)
-    {
+    private void copyTestComponents(Ck8sPath ck8sPath, Path target) {
         copyComponents(ck8sPath.ck8sComponentsTests(), ck8sPath.ck8sExtComponentsTests(), target, "ck8s-components-tests");
     }
 
-    private void copyComponents(Path sourceCk8sComponents, Path sourceCk8sExtComponents, Path target, String componentsDirName)
-    {
-        Path concordDir = target.resolve("concord");
+    private void copyComponents(Path sourceCk8sComponents, Path sourceCk8sExtComponents, Path target, String componentsDirName) {
+        var concordDir = target.resolve("concord");
         try {
             if (Files.notExists(concordDir)) {
                 Files.createDirectory(concordDir);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error creating concord target dir: " + e.getMessage());
         }
 
-        Path componentsDir = target.resolve(componentsDirName);
+        var componentsDir = target.resolve(componentsDirName);
         try {
             Files.createDirectory(componentsDir);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error creating '" + componentsDirName + "' target dir: " + e.getMessage());
         }
 
@@ -127,8 +118,7 @@ public class Ck8sFlowBuilder {
         try {
             copyComponentsYaml(sourceCk8sComponents, concordDir);
             IOUtils.copy(sourceCk8sComponents, componentsDir, FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error copying ck8s components '" + sourceCk8sComponents + "' to '" + componentsDir + "': " + e.getMessage(), e);
         }
 
@@ -136,17 +126,15 @@ public class Ck8sFlowBuilder {
             try {
                 copyComponentsYaml(sourceCk8sExtComponents, concordDir);
                 IOUtils.copy(sourceCk8sExtComponents, componentsDir, FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new RuntimeException("Error copying ck8sExt components '" + sourceCk8sExtComponents + "' to '" + componentsDir + "': " + e.getMessage());
             }
         }
     }
 
     private void copyComponentsYaml(Path src, Path dest)
-            throws IOException
-    {
-        try (Stream<Path> walk = Files.walk(src)) {
+            throws IOException {
+        try (var walk = Files.walk(src)) {
             walk
                     .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().matches(CONCORD_YAML_PATTERN))
@@ -159,12 +147,10 @@ public class Ck8sFlowBuilder {
         }
     }
 
-    private static void copy(Path source, Path target, CopyOption... options)
-    {
+    private static void copy(Path source, Path target, CopyOption... options) {
         try {
             Files.copy(source, target, options);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error copy '" + source + "' to '" + target + "':" + e.getMessage());
         }
     }

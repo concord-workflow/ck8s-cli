@@ -7,36 +7,30 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class TempPath
-        implements AutoCloseable
-{
+        implements AutoCloseable {
 
     private final Path path;
 
-    TempPath(Path path)
-    {
-        this.path = path;
-    }
-
     public static TempPath createDir(String prefix)
-            throws IOException
-    {
+            throws IOException {
         return new TempPath(Files.createTempDirectory(prefix));
     }
 
     public static TempPath createFile(String prefix)
-            throws IOException
-    {
+            throws IOException {
         return new TempPath(Files.createTempFile(prefix, null));
     }
 
-    public Path path()
-    {
+    TempPath(Path path) {
+        this.path = path;
+    }
+
+    public Path path() {
         return path;
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         if (path == null) {
             return;
         }
@@ -44,12 +38,10 @@ public class TempPath
         try {
             if (Files.isDirectory(path)) {
                 IOUtils.deleteRecursively(path);
-            }
-            else {
+            } else {
                 Files.deleteIfExists(path);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LogUtils.warn("cleanup ['{}'] -> error: {}", path, e.getMessage());
         }
     }

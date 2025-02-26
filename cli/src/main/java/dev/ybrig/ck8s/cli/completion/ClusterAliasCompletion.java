@@ -10,14 +10,12 @@ import java.util.Collections;
 import java.util.Iterator;
 
 public class ClusterAliasCompletion
-        implements Iterable<String>
-{
+        implements Iterable<String> {
 
     @Override
-    public Iterator<String> iterator()
-    {
-        String ck8sDir = CliConfigurationProvider.get().ck8sDir();
-        String ck8sExtDir = CliConfigurationProvider.get().ck8sExtDir();
+    public Iterator<String> iterator() {
+        var ck8sDir = CliConfigurationProvider.get().ck8sDir();
+        var ck8sExtDir = CliConfigurationProvider.get().ck8sExtDir();
         if (ck8sDir == null) {
             LogUtils.warn("Can't generate cluster aliases autocomplete. No ck8s/ck8sExt dir definition in ck8s-cli configuration.");
             return Collections.emptyIterator();

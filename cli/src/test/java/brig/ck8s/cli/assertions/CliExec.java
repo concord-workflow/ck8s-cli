@@ -18,28 +18,25 @@ import static org.mockito.Mockito.spy;
  * --add-opens java.base/java.lang=ALL-UNNAMED
  */
 class CliExec
-        implements AutoCloseable
-{
+        implements AutoCloseable {
     private final static Unsafe unsafe;
     private final static Object runtimeFieldBase;
     private final static long runtimeFieldOffset;
 
     static {
         try {
-            Field theUnsafeFiled = Unsafe.class.getDeclaredField("theUnsafe");
+            var theUnsafeFiled = Unsafe.class.getDeclaredField("theUnsafe");
             theUnsafeFiled.setAccessible(true);
             unsafe = (Unsafe) theUnsafeFiled.get(null);
-        }
-        catch (ReflectiveOperationException ex) {
+        } catch (ReflectiveOperationException ex) {
             throw new RuntimeException("Failed to grab Unsafe from system classes", ex);
         }
         try {
-            Field accessibleRuntimeFiled = Runtime.class.getDeclaredField("currentRuntime");
+            var accessibleRuntimeFiled = Runtime.class.getDeclaredField("currentRuntime");
             accessibleRuntimeFiled.setAccessible(true);
             runtimeFieldBase = unsafe.staticFieldBase(accessibleRuntimeFiled);
             runtimeFieldOffset = unsafe.staticFieldOffset(accessibleRuntimeFiled);
-        }
-        catch (ReflectiveOperationException ex) {
+        } catch (ReflectiveOperationException ex) {
             throw new RuntimeException("Failed to grab runtime field from system classes", ex);
         }
     }
@@ -54,8 +51,7 @@ class CliExec
     private AtomicReference<Optional<Integer>> exitCode
             = new AtomicReference<>(Optional.empty());
 
-    public CliExec()
-    {
+    public CliExec() {
         this.originalOut = System.out;
         this.out = new ByteArrayOutputStream();
 
@@ -67,7 +63,7 @@ class CliExec
                 new PrintStream(this.err, true, UTF_8));
 
         this.oryginalRuntime = Runtime.getRuntime();
-        Runtime interceptedRuntime = spy(oryginalRuntime);
+        var interceptedRuntime = spy(oryginalRuntime);
         Mockito.doAnswer(
                         invocationOnMock -> {
                             this.exitCode.set(
@@ -79,36 +75,30 @@ class CliExec
         overrideRuntime(interceptedRuntime);
     }
 
-    Integer getExitCode()
-    {
-        return exitCode.get().orElse(-1);
-    }
-
-    Optional<String> getOut()
-    {
-        return streamToString(out);
-    }
-
-    Optional<String> getErr()
-    {
-        return streamToString(err);
-    }
-
-    public CliExecAssertion runCommand(Runnable commandRun)
-    {
+    public CliExecAssertion runCommand(Runnable commandRun) {
         commandRun.run();
         return new CliExecAssertion(this);
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         redirectStdStreams(this.originalOut, this.originalErr);
         overrideRuntime(this.oryginalRuntime);
     }
 
-    private Optional<String> streamToString(ByteArrayOutputStream outputStream)
-    {
+    Integer getExitCode() {
+        return exitCode.get().orElse(-1);
+    }
+
+    Optional<String> getOut() {
+        return streamToString(out);
+    }
+
+    Optional<String> getErr() {
+        return streamToString(err);
+    }
+
+    private Optional<String> streamToString(ByteArrayOutputStream outputStream) {
         return Optional.of(outputStream)
                 .filter(s -> s.toByteArray().length > 0)
                 .map(s -> new String(s.toByteArray(), UTF_8))
@@ -119,14 +109,12 @@ class CliExec
                         .orElse(s));
     }
 
-    private void redirectStdStreams(PrintStream out, PrintStream err)
-    {
+    private void redirectStdStreams(PrintStream out, PrintStream err) {
         System.setOut(out);
         System.setErr(err);
     }
 
-    private void overrideRuntime(Runtime runtime)
-    {
+    private void overrideRuntime(Runtime runtime) {
         unsafe.putObject(runtimeFieldBase, runtimeFieldOffset, runtime);
     }
 }

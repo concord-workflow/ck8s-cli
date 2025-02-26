@@ -12,15 +12,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ScriptActionOperation
-        implements CliOperation
-{
-    public Integer execute(CliOperationContext cliOperationContext)
-    {
-        CliApp cliApp = cliOperationContext.cliApp();
-        Ck8sPath ck8s = cliOperationContext.ck8sPath();
-        ActionType actionType = cliApp.getActionType();
+        implements CliOperation {
+    public Integer execute(CliOperationContext cliOperationContext) {
+        var cliApp = cliOperationContext.cliApp();
+        var ck8s = cliOperationContext.ck8sPath();
+        var actionType = cliApp.getActionType();
 
-        ExecuteScriptAction scriptAction = new ExecuteScriptAction(ck8s);
+        var scriptAction = new ExecuteScriptAction(ck8s);
         switch (actionType) {
             case UP: {
                 return scriptAction.perform(cliOperationContext, "ck8sUp");
@@ -44,7 +42,7 @@ public class ScriptActionOperation
                 return scriptAction.perform(cliOperationContext, "reinstallConcordAgentPool");
             }
             case CONSOLE: {
-                ConcordProfile concordCfg = CliConfigurationProvider.getConcordProfile(cliApp.getProfile());
+                var concordCfg = CliConfigurationProvider.getConcordProfile(cliApp.getProfile());
                 Map<String, String> params = new HashMap<>();
                 params.put("CONCORD_URL", concordCfg.baseUrl());
                 params.put("CONCORD_ADMIN_TOKEN", concordCfg.apiKey());

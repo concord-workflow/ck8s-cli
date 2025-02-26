@@ -20,7 +20,7 @@ public class ClusterConfiguration {
     }
 
     public Optional<ClusterGroup> clusterGroup() {
-        Map<String, Object> groupCfg = MapUtils.getMap(cfg, "clusterGroup", null);
+        var groupCfg = MapUtils.getMap(cfg, "clusterGroup", null);
         if (groupCfg == null) {
             return Optional.empty();
         }
@@ -28,7 +28,7 @@ public class ClusterConfiguration {
     }
 
     public Optional<ConcordConfiguration> concord() {
-        Map<String, Object> concordCfg = MapUtils.getMap(cfg, "concord", null);
+        var concordCfg = MapUtils.getMap(cfg, "concord", null);
         if (concordCfg == null) {
             return Optional.empty();
         }
@@ -69,7 +69,7 @@ public class ClusterConfiguration {
         }
 
         public Optional<Server> server() {
-            Map<String, Object> serverCfg = MapUtils.getMap(cfg, "server", null);
+            var serverCfg = MapUtils.getMap(cfg, "server", null);
             if (serverCfg == null) {
                 return Optional.empty();
             }
@@ -78,10 +78,6 @@ public class ClusterConfiguration {
 
         public static class Server {
 
-            public enum Type {
-                INTERNAL, EXTERNAL
-            }
-
             private final Map<String, Object> cfg;
 
             public Server(Map<String, Object> cfg) {
@@ -89,8 +85,12 @@ public class ClusterConfiguration {
             }
 
             public Type type() {
-                String type = MapUtils.getString(cfg, "type", Type.INTERNAL.name());
+                var type = MapUtils.getString(cfg, "type", Type.INTERNAL.name());
                 return Type.valueOf(type.toUpperCase());
+            }
+
+            public enum Type {
+                INTERNAL, EXTERNAL
             }
         }
     }

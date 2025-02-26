@@ -1,7 +1,6 @@
 package dev.ybrig.ck8s.cli.actions;
 
-public enum ActionType
-{
+public enum ActionType {
     UP,
     DOWN,
     DOCKER_REGISTRY,

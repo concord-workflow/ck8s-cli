@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walmartlabs.concord.cli.runner.CliImportsListener;
 import com.walmartlabs.concord.cli.runner.CliImportsNormalizer;
 import com.walmartlabs.concord.cli.runner.CliRepositoryExporter;
-import com.walmartlabs.concord.client2.*;
+import com.walmartlabs.concord.client2.ProcessEventEntry;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
@@ -26,7 +26,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
@@ -39,8 +41,7 @@ public class CodeCoverageCommand implements Callable<Integer> {
     private static final String DEFAULT_IMPORTS_SOURCE = "https://github.com";
     private static final String DEFAULT_VERSION = "main";
 
-    private static final TypeReference<List<ProcessEventEntry>> EVENTS_TYPE = new TypeReference<>()
-    {
+    private static final TypeReference<List<ProcessEventEntry>> EVENTS_TYPE = new TypeReference<>() {
     };
 
     @CommandLine.Mixin
@@ -66,7 +67,7 @@ public class CodeCoverageCommand implements Callable<Integer> {
 
         var events = collectEvents(eventsDir);
 
-        LcovReportProducer report = new LcovReportProducer();
+        var report = new LcovReportProducer();
         report.init(loadProcessDefinition(payload()));
         report.onEvents(events);
         report.produce(outputDir);
@@ -78,22 +79,8 @@ public class CodeCoverageCommand implements Callable<Integer> {
         return 0;
     }
 
-    private Ck8sPayload payload() {
-        Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
-
-        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, targetRootPath, null)
-                .includeTests(true)
-                .build();
-
-        return Ck8sPayload.builder()
-                .debug(true)
-                .arguments(Map.of())
-                .ck8sFlows(ck8sFlows)
-                .build();
-    }
-
     private static ProcessDefinition loadProcessDefinition(Ck8sPayload payload) throws Exception {
-        Path targetDir = payload.ck8sFlows().location();
+        var targetDir = payload.ck8sFlows().location();
 
         ConcordYaml concordYaml = ConcordYaml.builder()
                 .entryPoint("normalFlow")
@@ -103,10 +90,10 @@ public class CodeCoverageCommand implements Callable<Integer> {
                 .build();
         concordYaml.write(payload.ck8sFlows().location());
 
-        DependencyManager dependencyManager = new DependencyManager(getDependencyManagerConfiguration());
+        var dependencyManager = new DependencyManager(getDependencyManagerConfiguration());
 
-        Path repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".ck8s").resolve("repo-cache");
-        ImportManager importManager = new ImportManagerFactory(dependencyManager,
+        var repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".ck8s").resolve("repo-cache");
+        var importManager = new ImportManagerFactory(dependencyManager,
                 new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
                 .create();
 
@@ -115,7 +102,7 @@ public class CodeCoverageCommand implements Callable<Integer> {
             loadResult = new ProjectLoaderV2(importManager)
                     .load(targetDir, new CliImportsNormalizer(DEFAULT_IMPORTS_SOURCE, true, DEFAULT_VERSION), true ? new CliImportsListener() : null);
         } catch (ImportProcessingException e) {
-            ObjectMapper om = new ObjectMapper();
+            var om = new ObjectMapper();
             LogUtils.error("while processing import {}: {}", om.writeValueAsString(e.getImport()), e.getMessage());
             throw e;
         } catch (Exception e) {
@@ -127,8 +114,8 @@ public class CodeCoverageCommand implements Callable<Integer> {
     }
 
     private static DependencyManagerConfiguration getDependencyManagerConfiguration() {
-        Path cfgFile = new MvnJsonProvider().get();
-        Path depsCacheDir = ck8sHome().resolve("depsCache");
+        var cfgFile = new MvnJsonProvider().get();
+        var depsCacheDir = ck8sHome().resolve("depsCache");
         return DependencyManagerConfiguration.builder().from(DependencyManagerConfiguration.of(depsCacheDir, DependencyManagerRepositories.get(cfgFile)))
                 .offlineMode(false)
                 .build();
@@ -139,11 +126,25 @@ public class CodeCoverageCommand implements Callable<Integer> {
     }
 
     private static List<ProcessEventEntry> collectEvents(Path eventsDir) throws IOException {
-        try (Stream<Path> files = Files.walk(eventsDir)) {
+        try (var files = Files.walk(eventsDir)) {
             return files.filter(Files::isRegularFile)
                     .filter(file -> file.toString().endsWith(".events.json"))
                     .flatMap(file -> Mapper.jsonMapper().read(file, EVENTS_TYPE).stream())
                     .toList();
         }
+    }
+
+    private Ck8sPayload payload() {
+        var ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
+
+        var ck8sFlows = new Ck8sFlowBuilder(ck8s, targetRootPath, null)
+                .includeTests(true)
+                .build();
+
+        return Ck8sPayload.builder()
+                .debug(true)
+                .arguments(Map.of())
+                .ck8sFlows(ck8sFlows)
+                .build();
     }
 }

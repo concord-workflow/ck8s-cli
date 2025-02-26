@@ -8,8 +8,7 @@ import picocli.CommandLine;
 import java.util.Map;
 
 public class CliDefaultParamValuesProvider
-        implements CommandLine.IDefaultValueProvider
-{
+        implements CommandLine.IDefaultValueProvider {
 
     private static final Map<String, String> mapping = Map.of(
             "--target-root", "targetDir",
@@ -20,19 +19,17 @@ public class CliDefaultParamValuesProvider
     private Map<String, Object> properties;
 
     @Override
-    public String defaultValue(CommandLine.Model.ArgSpec argSpec)
-    {
+    public String defaultValue(CommandLine.Model.ArgSpec argSpec) {
         if (!argSpec.isOption()) {
             return null;
         }
 
         if (properties == null) {
-            properties = Mapper.yamlMapper().convertValue(CliConfigurationProvider.get(), new TypeReference<>()
-            {
+            properties = Mapper.yamlMapper().convertValue(CliConfigurationProvider.get(), new TypeReference<>() {
             });
         }
 
-        String propertiesPath = mapping.get(((CommandLine.Model.OptionSpec) argSpec).longestName());
+        var propertiesPath = mapping.get(((CommandLine.Model.OptionSpec) argSpec).longestName());
         if (propertiesPath == null) {
             return null;
         }

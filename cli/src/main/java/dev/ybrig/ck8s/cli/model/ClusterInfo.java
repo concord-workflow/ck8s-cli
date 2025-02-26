@@ -14,8 +14,7 @@ import javax.annotation.Nullable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(as = ImmutableClusterInfo.class)
 @JsonDeserialize(as = ImmutableClusterInfo.class)
-public interface ClusterInfo
-{
+public interface ClusterInfo {
 
     @JsonProperty("clusterName")
     String name();

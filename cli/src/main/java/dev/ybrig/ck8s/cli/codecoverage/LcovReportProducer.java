@@ -6,11 +6,14 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LcovReportProducer {
 
@@ -19,27 +22,27 @@ public class LcovReportProducer {
     private final Map<String, Stats> statsPerFile = new HashMap<>();
 
     public void init(ProcessDefinition processDefinition) {
-        for (Map.Entry<String, Flow> fd : processDefinition.flows().entrySet()) {
-            String fileName = fd.getValue().location().fileName();
+        for (var fd : processDefinition.flows().entrySet()) {
+            var fileName = fd.getValue().location().fileName();
 
-            Stats stats = statsPerFile.computeIfAbsent(fileName, k -> new Stats());
+            var stats = statsPerFile.computeIfAbsent(fileName, k -> new Stats());
             stats.init(fd.getKey(), fd.getValue().location().lineNum());
         }
     }
 
     public void onEvents(List<ProcessEventEntry> events) {
-        for (ProcessEventEntry event : events) {
+        for (var event : events) {
             if ("post".equals(ProcessEventData.phase(event))) {
                 continue;
             }
 
-            String fileName = ProcessEventData.fileName(event);
-            Integer lineNum = ProcessEventData.line(event);
+            var fileName = ProcessEventData.fileName(event);
+            var lineNum = ProcessEventData.line(event);
             if (lineNum == null) {
                 continue;
             }
 
-            Stats stats = statsPerFile.get(fileName);
+            var stats = statsPerFile.get(fileName);
             if (stats == null) {
                 log.warn("Can't find definitions for {}", fileName);
                 continue;
@@ -47,17 +50,17 @@ public class LcovReportProducer {
 
             stats.onLineExecuted(lineNum);
 
-            String flowCallName = ProcessEventData.flowCallName(event);
+            var flowCallName = ProcessEventData.flowCallName(event);
             if (flowCallName != null) {
-                Stats statsForFlow = findStatsForFlow(flowCallName);
+                var statsForFlow = findStatsForFlow(flowCallName);
                 if (statsForFlow != null) {
                     statsForFlow.onFlowCall(flowCallName);
                 }
             }
-            String processDefinitionId = ProcessEventData.processDefinitionId(event);
+            var processDefinitionId = ProcessEventData.processDefinitionId(event);
             if (processDefinitionId != null) {
                 // as we do not have call step for entry point
-                Stats statsForFlow = findStatsForFlow(processDefinitionId);
+                var statsForFlow = findStatsForFlow(processDefinitionId);
                 if (statsForFlow != null) {
                     statsForFlow.markCalled(processDefinitionId);
                 }
@@ -65,21 +68,11 @@ public class LcovReportProducer {
         }
     }
 
-    private Stats findStatsForFlow(String flow) {
-        for (Map.Entry<String, Stats> stats : statsPerFile.entrySet()) {
-            if (stats.getValue().containsFlow(flow)) {
-                return stats.getValue();
-            }
-        }
-        log.warn("Can't find stats for {} flow", flow);
-        return null;
-    }
-
     public void produce(Path baseDir) throws IOException {
-        Path reportName = baseDir.resolve("coverage.info");
+        var reportName = baseDir.resolve("coverage.info");
 
-        try (BufferedWriter writer = Files.newBufferedWriter(reportName, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            for (Map.Entry<String, Stats> statsEntry : statsPerFile.entrySet()) {
+        try (var writer = Files.newBufferedWriter(reportName, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            for (var statsEntry : statsPerFile.entrySet()) {
                 // TN (Test Name):
                 // Optional. Can be left empty or used to specify the name of the test.
                 writer.write("TN:");
@@ -90,15 +83,15 @@ public class LcovReportProducer {
                 writer.write("SF:" + statsEntry.getKey());
                 writer.newLine();
 
-                Stats stats = statsEntry.getValue();
-                for (Map.Entry<String, Integer> flowEntry : stats.flowLocationByName.entrySet()) {
+                var stats = statsEntry.getValue();
+                for (var flowEntry : stats.flowLocationByName.entrySet()) {
                     // FN (Function):
                     // The start line and name of the function in the source file.
                     writer.write(String.format("FN:%d,%s", flowEntry.getValue(), flowEntry.getKey()));
                     writer.newLine();
                 }
 
-                for (Map.Entry<String, Integer> execEntry : stats.flowExecCountByName.entrySet()) {
+                for (var execEntry : stats.flowExecCountByName.entrySet()) {
                     // FNDA (Function Data):
                     // The number of times the function was executed, followed by the function name.
                     writer.write(String.format("FNDA:%d,%s", execEntry.getValue(), execEntry.getKey()));
@@ -119,7 +112,7 @@ public class LcovReportProducer {
                 // Line coverage data
                 // DA (Data Array):
                 // Line number and the execution count for that line.
-                for (Map.Entry<Integer, Integer> e : stats.stepExecCountByLineNumber.entrySet()) {
+                for (var e : stats.stepExecCountByLineNumber.entrySet()) {
                     writer.write(String.format("DA:%d,%d", e.getKey(), e.getValue()));
                     writer.newLine();
                 }
@@ -152,6 +145,16 @@ public class LcovReportProducer {
         }
     }
 
+    private Stats findStatsForFlow(String flow) {
+        for (var stats : statsPerFile.entrySet()) {
+            if (stats.getValue().containsFlow(flow)) {
+                return stats.getValue();
+            }
+        }
+        log.warn("Can't find stats for {} flow", flow);
+        return null;
+    }
+
     private static class Stats {
 
         private final Map<String, Integer> flowLocationByName = new HashMap<>();
@@ -180,7 +183,7 @@ public class LcovReportProducer {
         public void markCalled(String flow) {
             assertContainsFlow(flow);
 
-            Integer prev = flowExecCountByName.putIfAbsent(flow, 1);
+            var prev = flowExecCountByName.putIfAbsent(flow, 1);
             if (prev == null) {
                 onLineExecuted(flowLocationByName.get(flow));
             }

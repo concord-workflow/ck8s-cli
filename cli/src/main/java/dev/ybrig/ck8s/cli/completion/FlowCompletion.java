@@ -15,26 +15,22 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FlowCompletion
-        implements Iterable<String>
-{
+        implements Iterable<String> {
 
     private final ProjectLoaderV2 projectLoader;
 
-    public FlowCompletion()
-    {
-        this.projectLoader = new ProjectLoaderV2(new NoopImportManager());
-    }
-
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         new FlowCompletion().iterator();
     }
 
+    public FlowCompletion() {
+        this.projectLoader = new ProjectLoaderV2(new NoopImportManager());
+    }
+
     @Override
-    public Iterator<String> iterator()
-    {
-        String ck8sDir = CliConfigurationProvider.get().ck8sDir();
-        String ck8sExtDir = CliConfigurationProvider.get().ck8sExtDir();
+    public Iterator<String> iterator() {
+        var ck8sDir = CliConfigurationProvider.get().ck8sDir();
+        var ck8sExtDir = CliConfigurationProvider.get().ck8sExtDir();
         if (ck8sDir == null) {
             LogUtils.warn("Can't generate flow name autocomplete. No ck8s/ck8sExt dir definition in ck8s-cli configuration.");
             return Collections.emptyIterator();
@@ -45,13 +41,11 @@ public class FlowCompletion
                 .collect(Collectors.toSet()).iterator();
     }
 
-    private Set<String> flowNames(Path concordYaml)
-    {
+    private Set<String> flowNames(Path concordYaml) {
         try {
-            ProcessDefinition processDefinition = projectLoader.loadFromFile(concordYaml).getProjectDefinition();
+            var processDefinition = projectLoader.loadFromFile(concordYaml).getProjectDefinition();
             return processDefinition.flows().keySet();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Can't parse concord yaml '" + concordYaml + "': " + e.getMessage());
         }
     }

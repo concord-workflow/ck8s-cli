@@ -18,17 +18,15 @@ import java.util.concurrent.Callable;
         helpCommand = true
 )
 public class SelfUpdateCommand
-        implements Callable<Integer>
-{
+        implements Callable<Integer> {
 
     private static final String downloadTemplate = "https://github.com/concord-workflow/ck8s-cli/releases/download/%s/ck8s-cli-%s-executable.jar";
 
     @Override
     public Integer call()
-            throws Exception
-    {
-        String currentVersion = VersionProvider.get();
-        String latestVersion = new GitHubLatestReleaseFinder().find("concord-workflow", "ck8s-cli");
+            throws Exception {
+        var currentVersion = VersionProvider.get();
+        var latestVersion = new GitHubLatestReleaseFinder().find("concord-workflow", "ck8s-cli");
 
         LogUtils.info("Current version: {}, latest version: {}", currentVersion, latestVersion);
         if (currentVersion.equals(latestVersion)) {
@@ -36,14 +34,14 @@ public class SelfUpdateCommand
             return 0;
         }
 
-        String cliPath = URLDecoder.decode(CliApp.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
+        var cliPath = URLDecoder.decode(CliApp.class.getProtectionDomain().getCodeSource().getLocation().getPath(), StandardCharsets.UTF_8);
 
         LogUtils.info("Updating '{}' to '{}' version...", cliPath, latestVersion);
 
-        URL url = new URL(String.format(downloadTemplate, latestVersion, latestVersion));
+        var url = new URL(String.format(downloadTemplate, latestVersion, latestVersion));
 
-        try (ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-                FileOutputStream fos = new FileOutputStream(cliPath)) {
+        try (var rbc = Channels.newChannel(url.openStream());
+             var fos = new FileOutputStream(cliPath)) {
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         }
         LogUtils.info("Done");

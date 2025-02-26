@@ -8,39 +8,32 @@ import picocli.CommandLine;
 @CommandLine.Command
 @SuppressWarnings("unused")
 public class FlowExecutorOptionsMixin
-        extends BaseMixin<FlowExecutorOptionsMixin>
-{
+        extends BaseMixin<FlowExecutorOptionsMixin> {
 
     private ExecutorType type = ExecutorType.REMOTE;
 
-    public ExecutorType getType()
-    {
+    public ExecutorType getType() {
         return rootMixin().type;
     }
 
     @CommandLine.Option(names = {
             "--flow-executor"}, description = "flow executor: ${COMPLETION-CANDIDATES}", completionCandidates = ExecutorTypeCompletionCandidates.class, converter = ExecutorTypeTypeConverter.class)
-    public void setType(ExecutorType type)
-    {
+    public void setType(ExecutorType type) {
         rootMixin().type = type;
     }
 
     static class ExecutorTypeCompletionCandidates
-            extends EnumCompletionCandidates<ExecutorType>
-    {
+            extends EnumCompletionCandidates<ExecutorType> {
 
-        public ExecutorTypeCompletionCandidates()
-        {
+        public ExecutorTypeCompletionCandidates() {
             super(ExecutorType.class);
         }
     }
 
     static class ExecutorTypeTypeConverter
-            extends EnumConverter<ExecutorType>
-    {
+            extends EnumConverter<ExecutorType> {
 
-        public ExecutorTypeTypeConverter()
-        {
+        public ExecutorTypeTypeConverter() {
             super(ExecutorType.class);
         }
     }

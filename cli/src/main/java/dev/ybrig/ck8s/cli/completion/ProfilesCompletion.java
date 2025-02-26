@@ -6,12 +6,10 @@ import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import java.util.Iterator;
 
 public class ProfilesCompletion
-        implements Iterable<String>
-{
+        implements Iterable<String> {
 
     @Override
-    public Iterator<String> iterator()
-    {
+    public Iterator<String> iterator() {
         return CliConfigurationProvider.get().concordProfiles().stream().map(ConcordProfile::alias).iterator();
     }
 }

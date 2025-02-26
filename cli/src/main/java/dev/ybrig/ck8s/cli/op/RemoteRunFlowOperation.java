@@ -6,22 +6,24 @@ import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
-import dev.ybrig.ck8s.cli.common.*;
+import dev.ybrig.ck8s.cli.common.Ck8sConstants;
+import dev.ybrig.ck8s.cli.common.Ck8sPath;
+import dev.ybrig.ck8s.cli.common.Ck8sUtils;
+import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
-import dev.ybrig.ck8s.cli.executor.*;
+import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
-public class RunFlowOperationV2
-        implements CliOperation {
+import static dev.ybrig.ck8s.cli.op.RunFlowOperationUtils.needsConfirmation;
 
-    private static final Set<String> flowPatternsToConfirm = Set.of("(?i).*delete.*", "(?i).*reinstall.*");
-    private static final Set<String> CONFIRM_INPUT = Set.of("y", "yes");
+public class RemoteRunFlowOperation implements CliOperation {
+
     private static final String[] FILE_IGNORE_PATTERNS = new String[]{".*\\.pdf$", ".*\\.png$", ".*\\.jpg$"};
 
     public Integer execute(CliOperationContext cliOperationContext) {
@@ -32,8 +34,6 @@ public class RunFlowOperationV2
             return -1;
         }
 
-        validateFlows();
-
         var ck8s = cliOperationContext.ck8sPath();
         var request = prepareRequest(cliApp, ck8s);
 
@@ -41,16 +41,12 @@ public class RunFlowOperationV2
         var executor = new RemoteFlowExecutorV2(profile.baseUrl(), profile.apiKey(), cliApp.getConnectTimeout(), cliApp.getReadTimeout());
 
         ConcordProcess process;
-        try (TemporaryPath archive = prepareArchiveIfRequired(cliApp, ck8s, request)) {
+        try (var archive = prepareArchiveIfRequired(cliApp, ck8s, request)) {
             process = executor.execute(request);
         }
 
-        if (process == null) {
-            return -1;
-        }
-
         if (cliApp.isStreamLogs()) {
-            ExecutorService executorService = Executors.newCachedThreadPool();
+            var executorService = Executors.newCachedThreadPool();
             try {
                 process.streamLogs(executorService);
             } finally {
@@ -63,21 +59,6 @@ public class RunFlowOperationV2
         }
 
         return 0;
-    }
-
-    private static boolean needsConfirmation(CliApp cliApp, String flow, String clientCluster) {
-        var needConfirmation = !cliApp.isSkipConfirm() && flowPatternsToConfirm.stream().anyMatch(flow::matches) ;
-
-        if (needConfirmation) {
-            var msg = String.format("Are you sure you want to execute '%s' on '%s' cluster? (y/N): ", flow, clientCluster);
-            System.out.print(msg);
-
-            try (var input = new Scanner(System.in)) {
-                return input.hasNextLine() && !CONFIRM_INPUT.contains(input.nextLine().toLowerCase());
-            }
-        }
-
-        return false;
     }
 
     private static String projectName(CliApp cliApp, Map<String, Object> clusterRequest) {
@@ -108,12 +89,12 @@ public class RunFlowOperationV2
         var projectName = projectName(cliApp, clusterRequest);
         request.put(Constants.Multipart.PROJECT_NAME, projectName);
 
-        // repo
-        request.put(Constants.Multipart.REPO_NAME, Ck8sConstants.DEFAULT_REPO_NAME);
-
         // branch
         var ck8sRef = cliApp.getCk8sRef();
         if (ck8sRef != null) {
+            // repo
+            request.put(Constants.Multipart.REPO_NAME, Ck8sConstants.DEFAULT_REPO_NAME);
+
             request.put(Constants.Request.REPO_BRANCH_OR_TAG, cliApp.getCk8sRef());
         }
 
@@ -146,7 +127,7 @@ public class RunFlowOperationV2
     }
 
     private static TemporaryPath prepareArchiveIfRequired(CliApp cliApp, Ck8sPath ck8s, Map<String, Object> request) {
-        if (cliApp.getCk8sRef() == null) {
+        if (cliApp.getCk8sRef() != null) {
             return null;
         }
 
@@ -155,8 +136,8 @@ public class RunFlowOperationV2
         return archive;
     }
 
-    private static TemporaryPath archive(Ck8sPath ck8s, boolean withTests) {
-        TemporaryPath tmp = null;
+    public static TemporaryPath archive(Ck8sPath ck8s, boolean withTests) {
+        TemporaryPath tmp;
         try {
             tmp = IOUtils.tempFile("payload", ".zip");
         } catch (IOException e) {
@@ -178,25 +159,5 @@ public class RunFlowOperationV2
         } catch (IOException e) {
             throw new RuntimeException("Error creating process archive: " + e.getMessage(), e);
         }
-    }
-
-    // TODO:
-    private static void validateFlows() {
-//        Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
-//
-//        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier, cliOperationContext.cliApp().getClusterAlias())
-//                .includeTests(cliApp.isWithTests())
-//                .build();
-//
-
-//
-//        boolean hasErrors = false;
-//        for (CheckError error : errors) {
-//            LogUtils.error("processing '" + ck8sPath.relativize(error.concordYaml()) + ": " + error.message());
-//            hasErrors = hasErrors || !errors.isEmpty();
-//        }
-//        if (hasErrors) {
-//            throw new RuntimeException("Payload has errors");
-//        }
     }
 }

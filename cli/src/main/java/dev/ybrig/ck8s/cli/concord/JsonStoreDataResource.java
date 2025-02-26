@@ -6,8 +6,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 @Path("/api/v1/org")
-public class JsonStoreDataResource
-{
+public class JsonStoreDataResource {
 
     @PUT
     @Path("/{orgName}/jsonstore/{storeName}/item/{itemPath:.*}")

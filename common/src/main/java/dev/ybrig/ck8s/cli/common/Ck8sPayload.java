@@ -11,6 +11,10 @@ import java.util.Map;
         jdkOnly = true)
 public interface Ck8sPayload {
 
+    static ImmutableCk8sPayload.Builder builder() {
+        return ImmutableCk8sPayload.builder();
+    }
+
     @Value.Default
     default boolean debug() {
         return false;
@@ -25,8 +29,4 @@ public interface Ck8sPayload {
     String project();
 
     Ck8sFlows ck8sFlows();
-
-    static ImmutableCk8sPayload.Builder builder() {
-        return ImmutableCk8sPayload.builder();
-    }
 }

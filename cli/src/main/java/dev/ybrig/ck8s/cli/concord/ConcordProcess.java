@@ -1,6 +1,6 @@
 package dev.ybrig.ck8s.cli.concord;
 
-import java.util.*;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 public abstract class ConcordProcess {

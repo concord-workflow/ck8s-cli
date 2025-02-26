@@ -4,20 +4,16 @@ import brig.ck8s.cli.assertions.CliAssertions;
 import brig.ck8s.cli.assertions.CliExecAssertion;
 import dev.ybrig.ck8s.cli.Main;
 
-public class Ck8sCliAssertions
-{
-    public static CliExecAssertion assertSuccess(String cliArgs)
-    {
+public class Ck8sCliAssertions {
+    public static CliExecAssertion assertSuccess(String cliArgs) {
         return CliAssertions.assertSuccess(() -> Main.main(parseArgs(cliArgs)));
     }
 
-    public static CliExecAssertion assertFailed(String cliArgs)
-    {
+    public static CliExecAssertion assertFailed(String cliArgs) {
         return CliAssertions.assertFailed(() -> Main.main(parseArgs(cliArgs)));
     }
 
-    public static CliExecAssertion assertRunAction(String actionName, String expected)
-    {
+    public static CliExecAssertion assertRunAction(String actionName, String expected) {
         return assertSuccess(String.format("-a %s --dry-run", actionName))
                 .assertOutContainsMatchingLine(String.format("Executing action: %s", expected));
     }

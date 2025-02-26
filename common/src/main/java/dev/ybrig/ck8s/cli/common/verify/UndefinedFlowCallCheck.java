@@ -26,24 +26,24 @@ public class UndefinedFlowCallCheck extends AbstractChecker {
             return;
         }
 
-        ProcessDefinition processDefinition = result.getProjectDefinition();
-        Map<String, Flow> flows = processDefinition.flows();
+        var processDefinition = result.getProjectDefinition();
+        var flows = processDefinition.flows();
         allFlows.addAll(flows.keySet());
 
         List<FlowCall> flowCalls = new ArrayList<>();
-        for (Map.Entry<String, Flow> e : flows.entrySet()) {
+        for (var e : flows.entrySet()) {
             collectFlowCallSteps(e.getValue().steps(), flowCalls);
         }
 
-        List<FlowCall> plainFlowCalls = flowCalls.stream().filter(f -> !isExpression(f.getFlowName())).collect(Collectors.toList());
+        var plainFlowCalls = flowCalls.stream().filter(f -> !isExpression(f.getFlowName())).collect(Collectors.toList());
         undefinedFlowCalls.put(concordYaml, plainFlowCalls);
 
-        for(Iterator<Map.Entry<Path, List<FlowCall>>> it = undefinedFlowCalls.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry<Path, List<FlowCall>> entry = it.next();
+        for (var it = undefinedFlowCalls.entrySet().iterator(); it.hasNext(); ) {
+            var entry = it.next();
 
             entry.getValue().removeIf(f -> allFlows.contains(f.getFlowName()));
 
-            if(entry.getValue().isEmpty()) {
+            if (entry.getValue().isEmpty()) {
                 it.remove();
             }
         }
@@ -51,9 +51,9 @@ public class UndefinedFlowCallCheck extends AbstractChecker {
 
     @Override
     public List<CheckError> errors() {
-        List<CheckError> errors = super.errors();
-        for (Map.Entry<Path, List<FlowCall>> e : undefinedFlowCalls.entrySet()) {
-            for (FlowCall flowCall : e.getValue()) {
+        var errors = super.errors();
+        for (var e : undefinedFlowCalls.entrySet()) {
+            for (var flowCall : e.getValue()) {
                 if (ignoreFlowNames.contains(flowCall.getFlowName())) {
                     continue;
                 }
@@ -68,7 +68,7 @@ public class UndefinedFlowCallCheck extends AbstractChecker {
             return;
         }
 
-        for (Step step : steps) {
+        for (var step : steps) {
             if (step instanceof FlowCall) {
                 flowCallSteps.add((FlowCall) step);
             } else if (step instanceof GroupOfSteps) {
@@ -83,7 +83,7 @@ public class UndefinedFlowCallCheck extends AbstractChecker {
     }
 
     private static boolean isExpression(String s) {
-        int i = s.indexOf("${");
+        var i = s.indexOf("${");
         return i >= 0 && s.indexOf("}", i) > i;
     }
 }

@@ -1,10 +1,8 @@
 package dev.ybrig.ck8s.cli.op;
 
 public class DefaultOperation
-        implements CliOperation
-{
-    public Integer execute(CliOperationContext cliOperationContext)
-    {
+        implements CliOperation {
+    public Integer execute(CliOperationContext cliOperationContext) {
         cliOperationContext.cliApp()
                 .getSpec()
                 .commandLine()

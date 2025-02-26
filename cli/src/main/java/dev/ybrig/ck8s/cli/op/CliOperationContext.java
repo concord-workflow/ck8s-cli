@@ -22,6 +22,14 @@ public final class CliOperationContext {
         this.cliApp = cliApp;
     }
 
+    public CliOperationContext(CliApp cliApp) {
+        this(new Verbosity(cliApp.getVerbosity()), cliApp);
+    }
+
+    public CliOperationContext(Verbosity verbosity, CliApp cliApp) {
+        this(getCk8sPath(verbosity, cliApp), verbosity, cliApp);
+    }
+
     public Ck8sPath ck8sPath() {
         return ck8sPath;
     }
@@ -42,17 +50,8 @@ public final class CliOperationContext {
                 "cliApp=" + cliApp + ']';
     }
 
-
-    public CliOperationContext(CliApp cliApp) {
-        this(new Verbosity(cliApp.getVerbosity()), cliApp);
-    }
-
-    public CliOperationContext(Verbosity verbosity, CliApp cliApp) {
-        this(getCk8sPath(verbosity, cliApp), verbosity, cliApp);
-    }
-
     private static Ck8sPath getCk8sPath(Verbosity verbosity, CliApp cliApp) {
-        Ck8sPath ck8s = new Ck8sPath(cliApp.getCk8sPath(), cliApp.getCk8sExtPath());
+        var ck8s = new Ck8sPath(cliApp.getCk8sPath(), cliApp.getCk8sExtPath());
         if (verbosity.verbose()) {
             LogUtils.info("Using ck8s path: {}", ck8s.ck8sDir());
             if (ck8s.ck8sExtDir() != null) {

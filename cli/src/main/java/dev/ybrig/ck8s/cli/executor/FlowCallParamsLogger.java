@@ -11,25 +11,23 @@ import java.io.Serializable;
 import java.util.Map;
 
 public class FlowCallParamsLogger
-        implements ExecutionListener
-{
+        implements ExecutionListener {
 
     @Override
-    public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd)
-    {
+    public Result beforeCommand(Runtime runtime, VM vm, State state, ThreadId threadId, Command cmd) {
         if (!(cmd instanceof FlowCallCommand)) {
             return Result.CONTINUE;
         }
 
-        FlowCall flowCall = ((FlowCallCommand) cmd).getStep();
+        var flowCall = ((FlowCallCommand) cmd).getStep();
         if (flowCall.getOptions() == null) {
             return Result.CONTINUE;
         }
 
-        Map<String, Serializable> inVars = flowCall.getOptions().input();
+        var inVars = flowCall.getOptions().input();
         if (!inVars.isEmpty()) {
-            ContextFactory contextFactory = runtime.getService(ContextFactory.class);
-            Context ctx = contextFactory.create(runtime, state, threadId, flowCall);
+            var contextFactory = runtime.getService(ContextFactory.class);
+            var ctx = contextFactory.create(runtime, state, threadId, flowCall);
 
             System.out.println("     in: " + ctx.eval(inVars, Map.class));
         }

@@ -7,15 +7,9 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
-public final class IOUtils
-{
+public final class IOUtils {
 
-    private IOUtils()
-    {
-    }
-
-    public static boolean deleteRecursively(Path p)
-    {
+    public static boolean deleteRecursively(Path p) {
         if (!Files.exists(p)) {
             return false;
         }
@@ -26,34 +20,41 @@ public final class IOUtils
                 return true;
             }
 
-            Files.walkFileTree(p, new SimpleFileVisitor<>()
-            {
+            Files.walkFileTree(p, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException
-                {
+                        throws IOException {
                     Files.delete(file);
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                        throws IOException
-                {
+                        throws IOException {
                     Files.delete(dir);
                     return FileVisitResult.CONTINUE;
                 }
             });
 
             return true;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void copy(Path src, Path dst, List<String> skipContents, CopyOption... options) throws IOException {
         _copy(src, src, dst, skipContents, options);
+    }
+
+    public static String toString(InputStream input) {
+        try {
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private IOUtils() {
     }
 
     private static void _copy(Path root, Path src, Path dst, List<String> ignorePattern, CopyOption... options) throws IOException {
@@ -73,17 +74,17 @@ public final class IOUtils
                     return FileVisitResult.CONTINUE;
                 }
 
-                Path a = file;
-                Path b = dst.resolve(src.relativize(file));
+                var a = file;
+                var b = dst.resolve(src.relativize(file));
 
-                Path parent = b.getParent();
+                var parent = b.getParent();
                 if (!Files.exists(parent)) {
                     Files.createDirectories(parent);
                 }
 
                 if (Files.isSymbolicLink(file)) {
-                    Path link = Files.readSymbolicLink(file);
-                    Path target = file.getParent().resolve(link).normalize();
+                    var link = Files.readSymbolicLink(file);
+                    var target = file.getParent().resolve(link).normalize();
 
                     if (!target.startsWith(root)) {
                         throw new IOException("Symlinks outside the base directory are not supported: " + file + " -> " + target);
@@ -103,16 +104,6 @@ public final class IOUtils
                 return FileVisitResult.CONTINUE;
             }
         });
-    }
-
-    public static String toString(InputStream input)
-    {
-        try {
-            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private static boolean anyMatch(String what, List<String> patterns) {

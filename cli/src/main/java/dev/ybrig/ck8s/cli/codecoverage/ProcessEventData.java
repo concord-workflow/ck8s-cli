@@ -14,7 +14,7 @@ public class ProcessEventData {
     }
 
     public static Integer line(ProcessEventEntry event) {
-        Number lineNum = MapUtils.get(event.getData(), "line", null, Number.class);
+        var lineNum = MapUtils.get(event.getData(), "line", null, Number.class);
         if (lineNum == null) {
             return null;
         }
@@ -22,7 +22,7 @@ public class ProcessEventData {
     }
 
     public static String flowCallName(ProcessEventEntry event) {
-        String description = MapUtils.getString(event.getData(), "description");
+        var description = MapUtils.getString(event.getData(), "description");
         if (description == null) {
             return null;
         }

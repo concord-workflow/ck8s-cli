@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -262,13 +263,17 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>uber</shadedClassifierName>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/sisu/javax.inject.Named</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>META-INF/services/com.oracle.truffle.api.TruffleLanguage$Provider</resource>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/com.oracle.truffle.api.TruffleLanguage$Provider
+                                    </resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>dev.ybrig.ck8s.cli.Main</Main-Class>
                                         <Add-Opens>java.base/java.lang java.base/java.util</Add-Opens>
@@ -293,7 +298,7 @@
                 <artifactId>really-executable-jar-maven-plugin</artifactId>
                 <version>1.4.2</version>
                 <configuration>
-                    <flags>-Xmx128m -client -Djava.net.preferIPv4Stack=true </flags>
+                    <flags>-Xmx128m -client -Djava.net.preferIPv4Stack=true</flags>
                     <classifier>uber</classifier>
                     <outputClassifier>executable</outputClassifier>
                     <allowOtherTypes>true</allowOtherTypes>

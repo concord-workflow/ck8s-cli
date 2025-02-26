@@ -12,8 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class CliCommand
-{
+public class CliCommand {
 
     private final Path workDir;
     private final List<String> args;
@@ -21,8 +20,29 @@ public class CliCommand
     private final StreamReader stdoutReader;
     private final StreamReader stderrReader;
 
-    public CliCommand(List<String> args, Path workDir, Map<String, String> envars, StreamReader stdoutReader, StreamReader stderrReader)
-    {
+    public static CliCommand withRedirectStd(List<String> args, Path workDir) {
+        return withRedirectStd(args, workDir, Collections.emptyMap());
+    }
+
+    public static CliCommand withRedirectStd(List<String> args, Path workDir, Map<String, String> env) {
+        return new CliCommand(args, workDir, env, RedirectStreamReader.toStdout(), RedirectStreamReader.toStderr());
+    }
+
+    public static CliCommand saveOut(List<String> args, Path workDir) {
+        return new CliCommand(args, workDir, Collections.emptyMap(), SaveStreamReader.instance(), SaveStreamReader.instance());
+    }
+
+    public static String grabOut(List<String> args, Path workDir)
+            throws Exception {
+        var cmd = saveOut(args, workDir);
+        var result = cmd.execute();
+        if (result.code() != 0) {
+            throw new ExecutionException(result.stderr(), null);
+        }
+        return result.stdout();
+    }
+
+    public CliCommand(List<String> args, Path workDir, Map<String, String> envars, StreamReader stdoutReader, StreamReader stderrReader) {
         this.workDir = workDir;
         this.args = args;
         this.envars = envars;
@@ -30,106 +50,69 @@ public class CliCommand
         this.stderrReader = stderrReader;
     }
 
-    public static CliCommand withRedirectStd(List<String> args, Path workDir)
-    {
-        return withRedirectStd(args, workDir, Collections.emptyMap());
-    }
-
-    public static CliCommand withRedirectStd(List<String> args, Path workDir, Map<String, String> env)
-    {
-        return new CliCommand(args, workDir, env, RedirectStreamReader.toStdout(), RedirectStreamReader.toStderr());
-    }
-
-    public static CliCommand saveOut(List<String> args, Path workDir)
-    {
-        return new CliCommand(args, workDir, Collections.emptyMap(), SaveStreamReader.instance(), SaveStreamReader.instance());
-    }
-
-    public static String grabOut(List<String> args, Path workDir)
-            throws Exception
-    {
-        CliCommand cmd = saveOut(args, workDir);
-        Result result = cmd.execute();
-        if (result.code() != 0) {
-            throw new ExecutionException(result.stderr(), null);
-        }
-        return result.stdout();
-    }
-
     public Result execute()
-            throws Exception
-    {
+            throws Exception {
         return execute(stdoutReader, stderrReader, Executors.newCachedThreadPool());
     }
 
     public Result execute(StreamReader stdoutReader, StreamReader stderrReader, ExecutorService executor)
-            throws Exception
-    {
-        ProcessBuilder pb = new ProcessBuilder(args).directory(workDir.toFile());
+            throws Exception {
+        var pb = new ProcessBuilder(args).directory(workDir.toFile());
         pb.environment().putAll(envars);
 
-        Process p = pb.start();
-        Future<String> stdout = executor.submit(() -> stdoutReader.read(p.getInputStream()));
-        Future<String> stderr = executor.submit(() -> stderrReader.read(p.getErrorStream()));
-        int code = p.waitFor();
+        var p = pb.start();
+        var stdout = executor.submit(() -> stdoutReader.read(p.getInputStream()));
+        var stderr = executor.submit(() -> stderrReader.read(p.getErrorStream()));
+        var code = p.waitFor();
         executor.shutdown();
         return new Result(code, stdout.get(), stderr.get());
     }
 
-    public interface StreamReader
-    {
+    public interface StreamReader {
 
         String read(InputStream is)
                 throws IOException;
     }
 
     public static class RedirectStreamReader
-            implements StreamReader
-    {
+            implements StreamReader {
 
         private final OutputStream outputStream;
 
-        public RedirectStreamReader(OutputStream outputStream)
-        {
-            this.outputStream = outputStream;
-        }
-
-        public static StreamReader toStdout()
-        {
+        public static StreamReader toStdout() {
             return new RedirectStreamReader(System.out);
         }
 
-        public static StreamReader toStderr()
-        {
+        public static StreamReader toStderr() {
             return new RedirectStreamReader(System.err);
+        }
+
+        public RedirectStreamReader(OutputStream outputStream) {
+            this.outputStream = outputStream;
         }
 
         @Override
         public String read(InputStream is)
-                throws IOException
-        {
+                throws IOException {
             is.transferTo(outputStream);
             return null;
         }
     }
 
     public static class SaveStreamReader
-            implements StreamReader
-    {
+            implements StreamReader {
 
         private static final StreamReader INSTANCE = new SaveStreamReader();
 
-        public static StreamReader instance()
-        {
+        public static StreamReader instance() {
             return INSTANCE;
         }
 
         @Override
         public String read(InputStream in)
-                throws IOException
-        {
-            StringBuilder sb = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                throws IOException {
+            var sb = new StringBuilder();
+            try (var reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append(System.lineSeparator());
@@ -185,5 +168,5 @@ public class CliCommand
                     "stderr=" + stderr + ']';
         }
 
-        }
+    }
 }

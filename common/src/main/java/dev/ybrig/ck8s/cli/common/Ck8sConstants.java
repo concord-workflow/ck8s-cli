@@ -12,6 +12,10 @@ public final class Ck8sConstants {
 
     public static class Arguments {
 
+        public static final String CONCORD_URL = "concordUrl";
+
+        public static final String LOCAL_CONCORD_CLI = "localConcordCli";
+
         public static final String CLUSTER_REQUEST = "clusterRequest";
 
         public static final String FLOW = "flow";

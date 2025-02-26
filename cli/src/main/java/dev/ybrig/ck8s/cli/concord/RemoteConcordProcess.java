@@ -30,7 +30,7 @@ public class RemoteConcordProcess extends ConcordProcess {
 
     @Override
     public void streamLogs(ExecutorService executor) {
-        Future<?> f = executor.submit(new ProcessLogStreamer(client, instanceId));
+        var f = executor.submit(new ProcessLogStreamer(client, instanceId));
         try {
             f.get();
         } catch (Exception e) {
@@ -40,14 +40,14 @@ public class RemoteConcordProcess extends ConcordProcess {
 
     @Override
     public void waitEnded(long waitTimeout) {
-        long started = System.currentTimeMillis();
+        var started = System.currentTimeMillis();
 
         LogUtils.info("Waiting for process to finish (timeout {} seconds)", waitTimeout / 1000);
         while (!Thread.currentThread().isInterrupted() && (started + waitTimeout > System.currentTimeMillis())) {
             try {
-                ProcessV2Api processV2Api = new ProcessV2Api(client);
-                ProcessEntry e = processV2Api.getProcess(instanceId, Collections.emptySet());
-                ProcessEntry.StatusEnum s = e.getStatus();
+                var processV2Api = new ProcessV2Api(client);
+                var e = processV2Api.getProcess(instanceId, Collections.emptySet());
+                var s = e.getStatus();
                 if (FINAL_STATUSES.contains(s)) {
                     LogUtils.info("Process {} is completed with status {}", instanceId, s);
                     break;

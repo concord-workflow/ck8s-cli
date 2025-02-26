@@ -1,23 +1,28 @@
 package dev.ybrig.ck8s.cli.forms;
 
+import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.Ck8sPathOptionsMixin;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
 import dev.ybrig.ck8s.cli.common.*;
-import dev.ybrig.ck8s.cli.common.verify.Ck8sPayloadVerifier;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
-import dev.ybrig.ck8s.cli.executor.*;
-import dev.ybrig.ck8s.cli.model.CliConfiguration;
+import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
+import dev.ybrig.ck8s.cli.op.RemoteRunFlowOperation;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.*;
-import org.eclipse.jetty.http.content.*;
+import org.eclipse.jetty.http.content.HttpContent;
+import org.eclipse.jetty.http.content.ResourceHttpContent;
+import org.eclipse.jetty.http.content.ResourceHttpContentFactory;
 import org.eclipse.jetty.proxy.ProxyHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.*;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.EventsHandler;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
@@ -28,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -38,52 +42,58 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @CommandLine.Command(name = "serve-forms",
         description = {"Serve forms"}
 )
 public class ServeFormsCommand implements Callable<Integer> {
 
+    private static final String DATA_FILE_TEMPLATE = "data = %s;";
     @CommandLine.Mixin
     Ck8sPathOptionsMixin ck8sPathOptions;
-
     @CommandLine.Option(names = {"--port"}, description = "HTTP server port")
     int port = 8000;
-
     @CommandLine.Option(names = {"--forms-dir"}, description = "Path to form")
     Path formsDir;
-
     @CommandLine.Option(required = true, names = {"-p", "--profile"}, description = "concord instance profile name")
     String profile;
-
     @CommandLine.Option(names = {"-V", "--verbose"}, description = {
             "Specify multiple -v options to increase verbosity. For example, `-V -V -V` or `-VVV`",
             "-V debug logs"})
     boolean verbose = false;
-
     @CommandLine.Option(names = {"--target-root"}, description = "path to target dir")
     Path targetRootPath = Path.of(System.getProperty("java.io.tmpdir")).resolve("ck8s-cli");
-
     @CommandLine.Option(names = {"--concord-project"}, description = "Default concord project where to start concord processes")
     String concordProject = "form-tests";
 
     @Override
     public Integer call() throws Exception {
-        CliConfiguration cfg = CliConfigurationProvider.get();
-        ConcordProfile instanceProfile = CliConfigurationProvider.getConcordProfile(profile);
+        var cfg = CliConfigurationProvider.get();
+        var instanceProfile = CliConfigurationProvider.getConcordProfile(profile);
+        var ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
+
+        var orgName = Ck8sUtils.streamClusterYaml(ck8s).map(p -> {
+                    try {
+                        var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, p);
+                        return MapUtils.getString(clusterRequest, "organization.name");
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error parsing cluster definition file " + p + ": " + e.getMessage());
+                    }
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Can't find organization.name in cluster definitions"));
 
         Map<String, Object> defaultDataJs = new HashMap<>();
         defaultDataJs.put("concordHost", instanceProfile.baseUrl());
-        defaultDataJs.put("org", "Default");
+        defaultDataJs.put("org", orgName);
         defaultDataJs.put("project", concordProject);
+        defaultDataJs.put("repo", "ck8s");
 
         if (formsDir == null) {
             formsDir = ck8sPathOptions.getCk8sPath();
 
-            CliConfiguration.Forms forms = cfg.forms();
+            var forms = cfg.forms();
             if (forms != null) {
                 formsDir = ck8sPathOptions.getCk8sPath().resolve(forms.path());
             }
@@ -100,13 +110,11 @@ public class ServeFormsCommand implements Callable<Integer> {
             LogUtils.info("forms dir: {}", formsDir);
         }
 
-        Ck8sPath ck8s = new Ck8sPath(ck8sPathOptions.getCk8sPath(), ck8sPathOptions.getCk8sExtPath());
+        var server = new Server(new InetSocketAddress("localhost", port));
 
-        Server server = new Server(new InetSocketAddress("localhost", port));
+        var contextCollection = new ContextHandlerCollection();
 
-        ContextHandlerCollection contextCollection = new ContextHandlerCollection();
-
-        ResourceHandler handler = new ResourceHandler() {
+        var handler = new ResourceHandler() {
             @Override
             protected HttpContent.Factory newHttpContentFactory() {
                 return new FormResourceHttpContentFactory(getBaseResource(), getMimeTypes(), defaultDataJs);
@@ -117,11 +125,11 @@ public class ServeFormsCommand implements Callable<Integer> {
         handler.setDirAllowed(true);
         handler.setAcceptRanges(true);
 
-        ContextHandler ch = new ContextHandler(handler, "/");
+        var ch = new ContextHandler(handler, "/");
         ch.setAliasChecks(List.of((pathInContext, resource) -> true));
         contextCollection.addHandler(ch);
 
-        ContextHandler processExecutorHandler = new ContextHandler(new ProcessExecutorHandler(ck8s, instanceProfile, targetRootPath, concordProject), "/api/ck8s/v2/process");
+        var processExecutorHandler = new ContextHandler(new ProcessExecutorHandler(ck8s, instanceProfile), "/api/ck8s/v3/process");
         processExecutorHandler.setAllowNullPathInContext(true);
         contextCollection.addHandler(processExecutorHandler);
 
@@ -147,7 +155,7 @@ public class ServeFormsCommand implements Callable<Integer> {
         ProxyHandler proxyHandler = new ProxyHandler.Forward() {
             @Override
             protected HttpURI rewriteHttpURI(org.eclipse.jetty.server.Request clientToProxyRequest) {
-                HttpURI originalUri = clientToProxyRequest.getHttpURI();
+                var originalUri = clientToProxyRequest.getHttpURI();
 
                 return HttpURI.build(originalUri)
                         .scheme(newBaseUri.getScheme())
@@ -167,6 +175,19 @@ public class ServeFormsCommand implements Callable<Integer> {
         return proxyHandler;
     }
 
+    private static Map<String, Object> readDataJs(Path p) {
+        try {
+            var content = Files.readString(p);
+            return Mapper.jsonMapper().readMap(content.substring("data = ".length()));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid data js format: " + e.getMessage());
+        }
+    }
+
+    private static String writeDataJs(Map<String, Object> data) {
+        return String.format(DATA_FILE_TEMPLATE, Mapper.jsonMapper().writeAsString(data));
+    }
+
     private static class FormResourceHttpContentFactory extends ResourceHttpContentFactory {
 
         private final Resource baseResource;
@@ -183,6 +204,8 @@ public class ServeFormsCommand implements Callable<Integer> {
         public HttpContent getContent(String pathInContext) throws IOException {
             if (pathInContext.endsWith("data.js")) {
                 return getDataJsContent(pathInContext);
+            } else if (pathInContext.matches(".*common-.*\\.js$")) {
+                return getCommonJsContent(pathInContext);
             } else if (pathInContext.endsWith("jetty-dir.css")) {
                 return getResourceContent("/webapp/jetty-dir.css", "text/css");
             } else if (pathInContext.endsWith("favicon.ico")) {
@@ -194,19 +217,28 @@ public class ServeFormsCommand implements Callable<Integer> {
 
         private HttpContent getDataJsContent(String pathInContext) {
             Map<String, Object> dataJs = new HashMap<>();
-            Resource dataJsResource = baseResource.resolve(pathInContext);
+            var dataJsResource = baseResource.resolve(pathInContext);
             if (dataJsResource != null && dataJsResource.exists()) {
                 dataJs.putAll(readDataJs(dataJsResource.getPath()));
             }
             dataJs.putAll(defaultDataJs);
 
-            String dataJsContent = writeDataJs(dataJs);
+            var dataJsContent = writeDataJs(dataJs);
 
             return new ResourceHttpContent(new InMemResource(dataJsContent.getBytes(StandardCharsets.UTF_8)), "text/javascript");
         }
 
+        private  HttpContent getCommonJsContent(String pathInContext) throws IOException {
+            var p = baseResource.resolve(Path.of(pathInContext).getFileName().toString()).getPath();
+            if (Files.notExists(p)) {
+                LogUtils.warn("Can't find common-js file: {}", p);
+                return null;
+            }
+            return new ResourceHttpContent(new InMemResource(Files.readString(p).getBytes(StandardCharsets.UTF_8)), "text/javascript");
+        }
+
         private HttpContent getResourceContent(String name, String mimeType) {
-            URL url = getClass().getResource(name);
+            var url = getClass().getResource(name);
             if (url == null) {
                 throw new IllegalStateException("Missing server resource: " + name);
             }
@@ -280,30 +312,26 @@ public class ServeFormsCommand implements Callable<Integer> {
 
         private final Ck8sPath ck8s;
         private final ConcordProfile concordProfile;
-        private final Path targetRootPath;
-        private final String project;
 
-        ProcessExecutorHandler(Ck8sPath ck8s, ConcordProfile concordProfile, Path targetRootPath, String project) {
+        ProcessExecutorHandler(Ck8sPath ck8s, ConcordProfile concordProfile) {
             this.ck8s = ck8s;
             this.concordProfile = concordProfile;
-            this.targetRootPath = targetRootPath;
-            this.project = project;
         }
 
         @Override
         public boolean handle(org.eclipse.jetty.server.Request request, Response response, Callback callback) {
-            String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
+            var contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
             if (contentType != null && contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
                 // Extract the multipart boundary.
-                String boundary = MultiPart.extractBoundary(contentType);
+                var boundary = MultiPart.extractBoundary(contentType);
 
                 // Create and configure the multipart parser.
-                MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
+                var parser = new MultiPartFormData.Parser(boundary);
                 // By default, uploaded files are stored in this directory, to
                 // avoid to read the file content (which can be large) in memory.
-                parser.setFilesDirectory(Path.of("/tmp"));
+                parser.setFilesDirectory(Path.of("/tmp/ck8s-cli/forms"));
                 // Convert the request content into parts.
-                CompletableFuture<MultiPartFormData.Parts> completableParts = parser.parse(request);
+                var completableParts = parser.parse(request);
 
                 // When all the request content has arrived, process the parts.
                 completableParts.whenComplete((parts, failure) ->
@@ -319,12 +347,15 @@ public class ServeFormsCommand implements Callable<Integer> {
                         UUID instanceId;
                         try {
                             instanceId = startProcess(parts);
+                        } catch (IllegalArgumentException e) {
+                            Response.writeError(request, response, callback, HttpStatus.BAD_REQUEST_400, "invalid request: " + e.getMessage());
+                            return;
                         } catch (Exception e) {
-                            Response.writeError(request, response, callback, e);
+                            Response.writeError(request, response, callback, HttpStatus.INTERNAL_SERVER_ERROR_500, e.getMessage());
                             return;
                         }
 
-                        MimeTypes.Type type = MimeTypes.Type.APPLICATION_JSON;
+                        var type = MimeTypes.Type.APPLICATION_JSON;
 
                         response.getHeaders().put(type.getContentTypeField(StandardCharsets.UTF_8));
                         response.setStatus(HttpStatus.OK_200);
@@ -347,90 +378,18 @@ public class ServeFormsCommand implements Callable<Integer> {
             }
         }
 
-        private UUID startProcess(MultiPartFormData.Parts parts) {
-            Map<String, Object> arguments = getArguments(parts);
-            String flow = assertString(parts, "flow");
-            String clusterAlias = assertString(parts, "clusterAlias");
-            boolean dryRunMode = dryRunMode(parts);
-
-            Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
-            Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, targetRootPath, verifier, clusterAlias)
-                    .includeTests(true)
-                    .build();
-
-            Map<String, Object> clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, clusterAlias);
-
-            Ck8sPayload payload = Ck8sPayload.builder()
-                    .debug(true)
-                    .arguments(MapUtils.merge(Map.of("clusterRequest", clusterRequest), arguments))
-                    .ck8sFlows(ck8sFlows)
-                    .project(project)
-                    .build();
-
-            // TODO: allow local concord cli...
-            RemoteFlowExecutor executor = new RemoteFlowExecutor(concordProfile.baseUrl(), concordProfile.apiKey(), 30, 30, dryRunMode);
-            ConcordProcess process = executor.execute(clusterAlias, payload, flow, activeProfiles(parts));
-            return process.instanceId();
-        }
-
-        private static Map<String, Object> getArguments(MultiPartFormData.Parts parts) {
-            MultiPart.Part argsPart = parts.getFirst("arguments");
-            if (argsPart == null) {
-                return Map.of();
-            }
-
-            return Mapper.jsonMapper().readMap(argsPart.getContentAsString(StandardCharsets.UTF_8));
-        }
-
-        private static String assertString(MultiPartFormData.Parts parts, String key) {
-            MultiPart.Part part = parts.getFirst(key);
-            if (part == null) {
-                throw new IllegalStateException("Missing required part " + key + " in request");
-            }
-            if (part.getLength() == 0) {
-                throw new IllegalStateException("Missing value for part " + key + " in request");
-            }
-            return part.getContentAsString(StandardCharsets.UTF_8);
-        }
-
-        private static List<String> activeProfiles(MultiPartFormData.Parts parts) {
-            return getStringList(parts, "activeProfiles");
-        }
-
-        private static boolean dryRunMode(MultiPartFormData.Parts parts) {
-            return getBoolean(parts, Constants.Request.DRY_RUN_MODE_KEY, false);
-        }
-
-        public static boolean getBoolean(MultiPartFormData.Parts input, String key, boolean defaultValue) {
-            String s = getString(input, key);
-            if (s == null) {
-                return defaultValue;
-            }
-            return Boolean.parseBoolean(s);
-        }
-
         private static String getString(MultiPartFormData.Parts parts, String key) {
-            MultiPart.Part part = parts.getFirst(key);
+            var part = parts.getFirst(key);
             if (part == null) {
                 return null;
             }
             return part.getContentAsString(StandardCharsets.UTF_8);
         }
 
-        private static List<String> getStringList(MultiPartFormData.Parts parts, String key) {
-            String strValue = getString(parts, key);
-            if (strValue == null) {
-                return List.of();
-            } else {
-                String[] values = strValue.split(",");
-                return Stream.of(values).map(String::trim).collect(Collectors.toList());
-            }
-        }
-
         private static void assertMandatoryParts(MultiPartFormData.Parts parts) {
-            List<String> mandatoryAttrs = List.of("org", "project", "flow", "clusterAlias");
-            for (String mandatoryAttr : mandatoryAttrs) {
-                MultiPart.Part part = parts.getFirst(mandatoryAttr);
+            var mandatoryAttrs = List.of("org", "project");
+            for (var mandatoryAttr : mandatoryAttrs) {
+                var part = parts.getFirst(mandatoryAttr);
                 if (part == null) {
                     throw new IllegalArgumentException("Missing mandatory request part: " + mandatoryAttr);
                 }
@@ -439,23 +398,81 @@ public class ServeFormsCommand implements Callable<Integer> {
                 }
             }
         }
-    }
 
-    private static Map<String, Object> readDataJs(Path p) {
-        try {
-            String content = Files.readString(p);
-            return Mapper.jsonMapper().readMap(content.substring("data = ".length()));
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid data js format: " + e.getMessage());
+        private static Map<String, Object> getMap(MultiPartFormData.Parts parts, String key) {
+            var p = parts.getFirst(key);
+            if (p == null) {
+                return Map.of();
+            }
+            return Mapper.jsonMapper().readMap(p.getContentAsString(StandardCharsets.UTF_8));
+        }
+
+        private UUID startProcess(MultiPartFormData.Parts parts) {
+            var request = prepareRequest(parts);
+
+            // TODO: allow local concord cli...
+            var executor = new RemoteFlowExecutorV2(concordProfile.baseUrl(), concordProfile.apiKey(), 30, 30);
+
+            ConcordProcess process;
+            try (var archive = prepareArchive(ck8s, request)) {
+                process = executor.execute(request);
+            }
+
+            return process.instanceId();
+        }
+
+        private static Map<String, Object> prepareRequest(MultiPartFormData.Parts parts) {
+            var request = new HashMap<String, Object>();
+
+            var keys = new String[] {
+                    Constants.Multipart.ORG_NAME,
+                    Constants.Multipart.PROJECT_NAME,
+                    Constants.Request.DEBUG_KEY
+            };
+
+            for (var key : keys) {
+                putString(key, parts, request);
+            }
+
+            var ck8sRef = getString(parts, Constants.Request.REPO_BRANCH_OR_TAG);
+            if (ck8sRef != null) {
+                request.put(Constants.Request.REPO_BRANCH_OR_TAG, ck8sRef);
+                putString(Constants.Multipart.REPO_NAME, parts, request);
+            }
+
+            var requestParams = getMap(parts, "request");
+            assertMandatoryRequestParams(requestParams);
+
+            request.put("request", requestParams);
+
+            return request;
+        }
+
+        private static void assertMandatoryRequestParams(Map<String, Object> requestParams) {
+            var args = MapUtils.getMap(requestParams, Constants.Request.ARGUMENTS_KEY, Map.of());
+
+            var mandatoryArgs = List.of(Ck8sConstants.Arguments.CLIENT_CLUSTER, Ck8sConstants.Arguments.FLOW);
+            for (var key : mandatoryArgs) {
+                var arg = args.get(key);
+                if (arg == null) {
+                    throw new IllegalArgumentException("Missing mandatory request part: request.arguments." + key);
+                }
+            }
+        }
+
+        private static void putString(String name, MultiPartFormData.Parts parts, HashMap<String, Object> request) {
+            var result = getString(parts, name);
+            if (result != null) {
+                request.put(name, result);
+            }
+        }
+
+        private static TemporaryPath prepareArchive(Ck8sPath ck8s, Map<String, Object> request) {
+            var archive = RemoteRunFlowOperation.archive(ck8s, true);
+            request.put("archive", archive.path());
+            return archive;
         }
     }
-
-    private static final String DATA_FILE_TEMPLATE = "data = %s;";
-
-    private static String writeDataJs(Map<String, Object> data) {
-        return String.format(DATA_FILE_TEMPLATE, Mapper.jsonMapper().writeAsString(data));
-    }
-
 
     private static class DebugHandler extends EventsHandler {
 
@@ -470,30 +487,16 @@ public class ServeFormsCommand implements Callable<Integer> {
             return super.handle(request, response, callback);
         }
 
-        @Override
-        protected void onResponseBegin(org.eclipse.jetty.server.Request request, int status, HttpFields headers) {
-            dumpResponseBegin(status, headers);
-
-            super.onResponseBegin(request, status, headers);
-        }
-
-        @Override
-        protected void onResponseWrite(org.eclipse.jetty.server.Request request, boolean last, ByteBuffer content) {
-            dumpResponseEnd(last, content);
-
-            super.onResponseWrite(request, last, content);
-        }
-
         private static void print(String what) {
             System.out.println(what);
         }
 
-        private static void dumpRequest(org.eclipse.jetty.server.Request request) throws IOException {
-            StringBuilder sb = new StringBuilder();
+        private static void dumpRequest(org.eclipse.jetty.server.Request request) {
+            var sb = new StringBuilder();
 
             sb.append(">>> REQUEST")
                     .append(" (thread: ").append(Thread.currentThread().getName()).append(") ")
-                    .append( ">>>\n")
+                    .append(">>>\n")
                     .append(request.getMethod())
                     .append(" ")
                     .append(request.getHttpURI())
@@ -508,11 +511,11 @@ public class ServeFormsCommand implements Callable<Integer> {
         }
 
         private static void dumpResponseBegin(int status, HttpFields headers) {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.append("<<< RESPONSE")
                     .append(" (thread: ").append(Thread.currentThread().getName()).append(") ")
-                    .append( "<<<\n")
+                    .append("<<<\n")
                     .append(status)
                     .append("\n");
 
@@ -522,7 +525,7 @@ public class ServeFormsCommand implements Callable<Integer> {
         }
 
         private static void dumpResponseEnd(boolean last, ByteBuffer content) {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.append(byteBufferToString(content));
 
@@ -535,13 +538,27 @@ public class ServeFormsCommand implements Callable<Integer> {
         }
 
         private static String byteBufferToString(ByteBuffer buffer) {
-            ByteBuffer duplicate = buffer.duplicate();
+            var duplicate = buffer.duplicate();
 
-            byte[] bytes = new byte[duplicate.remaining()];
+            var bytes = new byte[duplicate.remaining()];
 
             duplicate.get(bytes);
 
             return new String(bytes, StandardCharsets.UTF_8);
+        }
+
+        @Override
+        protected void onResponseBegin(org.eclipse.jetty.server.Request request, int status, HttpFields headers) {
+            dumpResponseBegin(status, headers);
+
+            super.onResponseBegin(request, status, headers);
+        }
+
+        @Override
+        protected void onResponseWrite(org.eclipse.jetty.server.Request request, boolean last, ByteBuffer content) {
+            dumpResponseEnd(last, content);
+
+            super.onResponseWrite(request, last, content);
         }
     }
 }

@@ -22,6 +22,7 @@ public class CliApiClientFactory {
         return new DefaultApiClientFactory(baseUrl, Duration.of(connectTimeout, ChronoUnit.SECONDS), false)
                 .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
     }
+
     private CliApiClientFactory() {
     }
 }

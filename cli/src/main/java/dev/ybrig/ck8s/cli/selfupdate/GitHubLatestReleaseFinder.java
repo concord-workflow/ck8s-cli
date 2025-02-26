@@ -19,37 +19,34 @@ import java.util.Map;
 
 import static java.lang.String.format;
 
-public class GitHubLatestReleaseFinder
-{
+public class GitHubLatestReleaseFinder {
 
     public String find(String organization, String repository)
-            throws Exception
-    {
-        String api = format("https://api.github.com/repos/%s/%s/releases", organization, repository);
+            throws Exception {
+        var api = format("https://api.github.com/repos/%s/%s/releases", organization, repository);
 
-        Builder requestBuilder = HttpRequest.newBuilder();
-        HttpRequest request = requestBuilder
+        var requestBuilder = HttpRequest.newBuilder();
+        var request = requestBuilder
                 .uri(new URI(api))
                 .version(HttpClient.Version.HTTP_2)
                 .GET()
                 .build();
-        HttpClient client = HttpClient.newBuilder()
+        var client = HttpClient.newBuilder()
                 .followRedirects(Redirect.ALWAYS)
                 .build();
-        HttpResponse<InputStream> response = client.send(request, BodyHandlers.ofInputStream());
+        var response = client.send(request, BodyHandlers.ofInputStream());
 
-        ObjectMapper mapper = new ObjectMapper();
+        var mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        List<Map<String, Object>> releases = mapper.readValue(response.body(), new TypeReference<>()
-        {
+        List<Map<String, Object>> releases = mapper.readValue(response.body(), new TypeReference<>() {
         });
         if (releases.isEmpty()) {
             return null;
         }
 
-        Map<String, Object> latest = releases.get(0);
+        var latest = releases.get(0);
         return MapUtils.getString(latest, "tag_name");
     }
 }

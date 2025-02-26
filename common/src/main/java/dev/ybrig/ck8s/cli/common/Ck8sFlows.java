@@ -10,6 +10,10 @@ import java.util.stream.Stream;
         jdkOnly = true)
 public interface Ck8sFlows {
 
+    static ImmutableCk8sFlows.Builder builder() {
+        return ImmutableCk8sFlows.builder();
+    }
+
     Path location();
 
     default Path flowsPath() {
@@ -18,9 +22,5 @@ public interface Ck8sFlows {
 
     default Stream<Path> concordYamls() {
         return Ck8sUtils.streamConcordYaml(flowsPath());
-    }
-
-    static ImmutableCk8sFlows.Builder builder() {
-        return ImmutableCk8sFlows.builder();
     }
 }

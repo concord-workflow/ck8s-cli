@@ -37,8 +37,7 @@ import static java.util.Objects.nonNull;
                 CodeCoverageCommand.class},
         defaultValueProvider = CliDefaultParamValuesProvider.class)
 public class CliApp
-        implements Callable<Integer>
-{
+        implements Callable<Integer> {
     @CommandLine.Spec
     CommandLine.Model.CommandSpec spec;
 
@@ -116,56 +115,39 @@ public class CliApp
     @CommandLine.Option(names = {"-m", "--meta"}, description = "additional process meta")
     Map<String, String> meta = new LinkedHashMap<>();
 
-    static class CliOperationArgs
-    {
-        @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
-        String flow;
+    public ExecutorType getFlowExecutorType() {
+        if (flowExecutorType == null) {
+            return null;
+        }
 
-        @CommandLine.Option(names = {
-                "-a"}, description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
-        ActionType actionType;
-
-        @CommandLine.Option(names = {"-l", "--list"}, description = "list cluster names/aliases")
-        boolean clusterList = false;
+        return flowExecutorType.getType();
     }
 
-    public FlowExecutorOptionsMixin getFlowExecutorType()
-    {
-        return flowExecutorType;
-    }
-
-    public String getFlow()
-    {
+    public String getFlow() {
         return cliOperationArgs.flow;
     }
 
-    public ActionType getActionType()
-    {
+    public ActionType getActionType() {
         return cliOperationArgs.actionType;
     }
 
-    public CommandLine.Model.CommandSpec getSpec()
-    {
+    public CommandLine.Model.CommandSpec getSpec() {
         return spec;
     }
 
-    public String getProfile()
-    {
+    public String getProfile() {
         return profile;
     }
 
-    public String getClusterAlias()
-    {
+    public String getClusterAlias() {
         return clusterAlias;
     }
 
-    public Map<String, String> getExtraVars()
-    {
+    public Map<String, String> getExtraVars() {
         return extraVars;
     }
 
-    public boolean isWithTests()
-    {
+    public boolean isWithTests() {
         return withTests;
     }
 
@@ -173,23 +155,19 @@ public class CliApp
         return secretsProvider;
     }
 
-    public Path getTargetRootPath()
-    {
+    public Path getTargetRootPath() {
         return targetRootPath;
     }
 
-    public boolean[] getVerbosity()
-    {
+    public boolean[] getVerbosity() {
         return verbosity;
     }
 
-    public Path getCk8sPath()
-    {
+    public Path getCk8sPath() {
         return ck8sPathOptions.getCk8sPath();
     }
 
-    public Path getCk8sExtPath()
-    {
+    public Path getCk8sExtPath() {
         return ck8sPathOptions.getCk8sExtPath();
     }
 
@@ -230,8 +208,7 @@ public class CliApp
     }
 
     @Override
-    public Integer call()
-    {
+    public Integer call() {
         return resolveOperation()
                 .execute(new CliOperationContext(this));
     }
@@ -248,52 +225,62 @@ public class CliApp
         return meta;
     }
 
-    private CliOperation resolveOperation()
-    {
+    private CliOperation resolveOperation() {
         if (cliOperationArgs != null) {
             if (nonNull(cliOperationArgs.actionType)) {
                 return new ScriptActionOperation();
             }
+
             if (cliOperationArgs.clusterList) {
                 return new ClusterListOperation();
             }
+
             if (nonNull(cliOperationArgs.flow)) {
                 if (clusterAlias == null) {
                     throw new CommandLine.ParameterException(new CommandLine(this), "Missing required option: '--cluster=<clusterAlias>'");
                 }
-
-                if ("cluster".equals(cliOperationArgs.flow)
-                        && "local".equals(clusterAlias)) {
-                    return new LocalClusterOperation();
+                if (getFlowExecutorType() == null) {
+                    throw new CommandLine.ParameterException(new CommandLine(this), "Missing required option: '--flow-executor=<flowExecutor>'");
                 }
 
-                if (flowExecutorType != null && flowExecutorType.getType() == ExecutorType.REMOTEV2) {
-                    return new RunFlowOperationV2();
-                }
-
-                return new RunFlowOperation();
+                return switch (getFlowExecutorType()) {
+                    case REMOTE -> new RemoteRunFlowOperation();
+                    case CONCORD_CLI -> new LocalRunFlowOperation();
+                };
             }
         }
 
         return new DefaultOperation();
     }
 
-    static class ActionTypeCompletionCandidates
-            extends EnumCompletionCandidates<ActionType>
-    {
+    public enum SecretsProvider {
+        local
+    }
 
-        public ActionTypeCompletionCandidates()
-        {
+    static class CliOperationArgs {
+        @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
+        String flow;
+
+        @CommandLine.Option(names = {
+                "-a"}, description = "actions: ${COMPLETION-CANDIDATES}", completionCandidates = ActionTypeCompletionCandidates.class, converter = ActionTypeConverter.class)
+        ActionType actionType;
+
+        @CommandLine.Option(names = {"-l", "--list"}, description = "list cluster names/aliases")
+        boolean clusterList = false;
+    }
+
+    static class ActionTypeCompletionCandidates
+            extends EnumCompletionCandidates<ActionType> {
+
+        public ActionTypeCompletionCandidates() {
             super(ActionType.class);
         }
     }
 
     static class ActionTypeConverter
-            extends EnumConverter<ActionType>
-    {
+            extends EnumConverter<ActionType> {
 
-        public ActionTypeConverter()
-        {
+        public ActionTypeConverter() {
             super(ActionType.class);
         }
     }
@@ -301,12 +288,8 @@ public class CliApp
     static class ActiveProfilesConverter implements CommandLine.ITypeConverter<List<String>> {
 
         @Override
-        public List<String> convert(String value) throws Exception {
+        public List<String> convert(String value) {
             return Arrays.asList(value.split(","));
         }
-    }
-
-    public enum SecretsProvider {
-        local
     }
 }

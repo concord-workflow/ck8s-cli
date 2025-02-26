@@ -3,7 +3,7 @@ package dev.ybrig.ck8s.cli.executor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.walmartlabs.concord.client2.*;
 import com.walmartlabs.concord.client2.impl.MultipartRequestBodyHandler;
-import dev.ybrig.ck8s.cli.common.*;
+import dev.ybrig.ck8s.cli.common.VersionProvider;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.concord.RemoteConcordProcess;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
@@ -17,7 +17,9 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RemoteFlowExecutorV2 {
@@ -42,6 +44,24 @@ public class RemoteFlowExecutorV2 {
         } catch (Exception e) {
             throw new RuntimeException("Error starting concord process: " + e.getMessage());
         }
+    }
+
+    private static String requestIdPrefix(String requestId) {
+        return "[RequestID: " + requestId + "]: ";
+    }
+
+    private static ApiClient createClient(String baseUrl, String apiKey, long connectTimeout) {
+        if (apiKey == null) {
+            throw new RuntimeException("Can't create concord client for: api key is empty");
+        }
+
+        return new DefaultApiClientFactory(baseUrl, Duration.of(connectTimeout, ChronoUnit.SECONDS), false)
+                .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
+    }
+
+    private static boolean isJsonMime(String mime) {
+        var jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
+        return mime != null && (mime.matches(jsonMime) || mime.equals("*/*"));
     }
 
     private ConcordProcess sendRequest(Map<String, Object> payload) throws ApiException {
@@ -100,10 +120,6 @@ public class RemoteFlowExecutorV2 {
         }
     }
 
-    private static String requestIdPrefix(String requestId) {
-        return "[RequestID: " + requestId + "]: ";
-    }
-
     private ApiException apiException(HttpResponse<String> response) {
         var body = response.body();
 
@@ -130,10 +146,10 @@ public class RemoteFlowExecutorV2 {
         if ("application/vnd.siesta-validation-errors-v1+json".equals(type)) {
             var l = (List<Object>) apiClient.getObjectMapper().readValue(body, List.class);
             if (!l.isEmpty()) {
-                vErrs = (Map<String,Object>) l.get(0);
+                vErrs = (Map<String, Object>) l.get(0);
             }
         } else if ("application/json".equals(type)) {
-            vErrs = (Map<String,Object>) apiClient.getObjectMapper().readValue(body, Map.class);
+            vErrs = (Map<String, Object>) apiClient.getObjectMapper().readValue(body, Map.class);
         } else {
             msg = "Server response: " + body;
         }
@@ -148,19 +164,5 @@ public class RemoteFlowExecutorV2 {
         }
 
         return msg;
-    }
-
-    private static ApiClient createClient(String baseUrl, String apiKey, long connectTimeout) {
-        if (apiKey == null) {
-            throw new RuntimeException("Can't create concord client for: api key is empty");
-        }
-
-        return new DefaultApiClientFactory(baseUrl, Duration.of(connectTimeout, ChronoUnit.SECONDS), false)
-                .create(ApiClientConfiguration.builder().apiKey(apiKey).build());
-    }
-
-    private static boolean isJsonMime(String mime) {
-        var jsonMime = "(?i)^(application/json|[^;/ \t]+/[^;/ \t]+[+]json)[ \t]*(;.*)?$";
-        return mime != null && (mime.matches(jsonMime) || mime.equals("*/*"));
     }
 }

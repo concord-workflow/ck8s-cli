@@ -12,6 +12,10 @@ import java.util.Map;
         jdkOnly = true)
 public interface ConcordYaml {
 
+    static ImmutableConcordYaml.Builder builder() {
+        return ImmutableConcordYaml.builder();
+    }
+
     @Value.Default
     default Map<String, Object> meta() {
         return Collections.emptyMap();
@@ -55,9 +59,5 @@ public interface ConcordYaml {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("configuration", configuration);
         Mapper.yamlMapper().write(location.resolve("concord.yml"), map);
-    }
-
-    static ImmutableConcordYaml.Builder builder() {
-        return ImmutableConcordYaml.builder();
     }
 }

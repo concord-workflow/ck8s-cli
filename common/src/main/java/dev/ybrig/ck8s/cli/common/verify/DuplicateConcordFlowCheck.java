@@ -19,7 +19,7 @@ public class DuplicateConcordFlowCheck extends AbstractChecker {
             return;
         }
 
-        Set<String> flows = MapUtils.getMap(concordYaml, "flows", Map.of()).keySet();
+        var flows = MapUtils.getMap(concordYaml, "flows", Map.of()).keySet();
         if (flows.isEmpty()) {
             return;
         }
@@ -29,7 +29,7 @@ public class DuplicateConcordFlowCheck extends AbstractChecker {
             maybeDuplicateFlows.retainAll(flows);
 
             if (!maybeDuplicateFlows.isEmpty()) {
-                String f = String.join(", ", maybeDuplicateFlows);
+                var f = String.join(", ", maybeDuplicateFlows);
                 addError(concordYamlPath, "Flows '" + f + "' already defined at " + e.getKey());
             }
         }

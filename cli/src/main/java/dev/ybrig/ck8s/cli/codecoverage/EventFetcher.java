@@ -20,8 +20,8 @@ public class EventFetcher {
         OffsetDateTimeParam after = null;
         UUID eventCorrelationId = null;
         String eventPhase = null;
-        boolean includeAll = false;
-        int limit = 1000;
+        var includeAll = false;
+        var limit = 1000;
 
         return api.listProcessEvents(processId, "ELEMENT", after, fromId, eventCorrelationId, eventPhase, includeAll, limit);
     }

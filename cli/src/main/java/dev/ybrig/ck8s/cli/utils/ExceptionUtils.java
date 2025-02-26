@@ -3,15 +3,9 @@ package dev.ybrig.ck8s.cli.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ExceptionUtils
-{
+public final class ExceptionUtils {
 
-    private ExceptionUtils()
-    {
-    }
-
-    public static void throwError(String msg, Throwable cause)
-    {
+    public static void throwError(String msg, Throwable cause) {
         List<String> causeErrors = new ArrayList<>();
         while (cause != null) {
             causeErrors.add(cause.getMessage());
@@ -19,5 +13,8 @@ public final class ExceptionUtils
         }
 
         throw new RuntimeException(msg + String.join(". ", causeErrors));
+    }
+
+    private ExceptionUtils() {
     }
 }

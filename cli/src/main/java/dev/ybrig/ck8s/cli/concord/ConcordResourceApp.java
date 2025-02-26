@@ -7,13 +7,11 @@ import org.glassfish.jersey.server.ServerProperties;
 import java.util.*;
 
 public class ConcordResourceApp
-        extends Application
-{
+        extends Application {
 
     private final Set<Class<?>> classes;
 
-    public ConcordResourceApp()
-    {
+    public ConcordResourceApp() {
         Set<Class<?>> resources = new HashSet<>();
         resources.add(InventoryResource.class);
         resources.add(JsonStoreDataResource.class);
@@ -23,16 +21,14 @@ public class ConcordResourceApp
     }
 
     @Override
-    public Map<String, Object> getProperties()
-    {
+    public Map<String, Object> getProperties() {
         Map<String, Object> m = new HashMap<>();
         m.put(ServerProperties.WADL_FEATURE_DISABLE, "true");
         return m;
     }
 
     @Override
-    public Set<Class<?>> getClasses()
-    {
+    public Set<Class<?>> getClasses() {
         return classes;
     }
 }

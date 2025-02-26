@@ -10,7 +10,7 @@ public class DuplicateConcordYamlCheck extends AbstractChecker {
     private final Map<String, Path> processedFiles = new HashMap<>();
 
     public void process(Path concordYaml) {
-        String fileName = concordYaml.getFileName().toString();
+        var fileName = concordYaml.getFileName().toString();
         if (processedFiles.containsKey(fileName)) {
             addError(concordYaml, "Duplicate file: " + processedFiles.get(fileName));
         }

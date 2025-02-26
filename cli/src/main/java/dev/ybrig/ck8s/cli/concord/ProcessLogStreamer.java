@@ -11,8 +11,7 @@ import java.io.InputStream;
 import java.util.*;
 
 public class ProcessLogStreamer
-        implements Runnable
-{
+        implements Runnable {
 
     private static final long ERROR_DELAY = 5000;
     private static final long REQUEST_DELAY = 3000;
@@ -31,35 +30,23 @@ public class ProcessLogStreamer
     private long rangeStart = 0L;
     private Long rangeEnd;
 
-    public ProcessLogStreamer(ApiClient client, UUID instanceId)
-    {
+    public ProcessLogStreamer(ApiClient client, UUID instanceId) {
         this.client = client;
         this.instanceId = instanceId;
     }
 
-    private static void sleep(long ms)
-    {
-        try {
-            Thread.sleep(ms);
-        }
-        catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
     @Override
-    public void run()
-    {
-        ProcessApi processApi = new ProcessApi(client);
-        ProcessV2Api processV2Api = new ProcessV2Api(client);
+    public void run() {
+        var processApi = new ProcessApi(client);
+        var processV2Api = new ProcessV2Api(client);
 
         while (!Thread.currentThread().isInterrupted()) {
-            try (InputStream is = processApi.getProcessLog(instanceId, "bytes=" + rangeStart + "-" + (rangeEnd != null ? rangeEnd : ""))) {
-                byte[] ab = is.readAllBytes();
+            try (var is = processApi.getProcessLog(instanceId, "bytes=" + rangeStart + "-" + (rangeEnd != null ? rangeEnd : ""))) {
+                var ab = is.readAllBytes();
 
                 if (ab.length > 0) {
-                    String data = new String(ab);
-                    for (String line : data.split("\n")) {
+                    var data = new String(ab);
+                    for (var line : data.split("\n")) {
                         System.out.print("[PROCESS] ");
                         System.out.println(line);
                     }
@@ -67,8 +54,8 @@ public class ProcessLogStreamer
                     rangeStart += ab.length;
                     rangeEnd = rangeStart + RANGE_INCREMENT;
                 } else {
-                    ProcessEntry e = processV2Api.getProcess(instanceId, Collections.emptySet());
-                    StatusEnum s = e.getStatus();
+                    var e = processV2Api.getProcess(instanceId, Collections.emptySet());
+                    var s = e.getStatus();
                     if (FINAL_STATUSES.contains(s)) {
                         LogUtils.info("Process {} is completed, stopping the log streaming...", instanceId);
                         break;
@@ -80,6 +67,14 @@ public class ProcessLogStreamer
                 LogUtils.info("Error while streaming the process' ({}) log: {}. Retrying in {}ms...", instanceId, e.getMessage(), ERROR_DELAY);
                 sleep(ERROR_DELAY);
             }
+        }
+    }
+
+    private static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
         }
     }
 }

@@ -9,13 +9,13 @@ import java.nio.file.Path;
         jdkOnly = true)
 public interface CheckError {
 
+    static CheckError of(Path srcConcordYaml, String message) {
+        return ImmutableCheckError.of(srcConcordYaml, message);
+    }
+
     @Value.Parameter
     Path concordYaml();
 
     @Value.Parameter
     String message();
-
-    static CheckError of(Path srcConcordYaml, String message) {
-        return ImmutableCheckError.of(srcConcordYaml, message);
-    }
 }

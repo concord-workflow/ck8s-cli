@@ -4,7 +4,6 @@ import com.walmartlabs.concord.client2.*;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
 import dev.ybrig.ck8s.cli.common.Mapper;
 import dev.ybrig.ck8s.cli.concord.CliApiClientFactory;
-import dev.ybrig.ck8s.cli.model.CliConfiguration;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import picocli.CommandLine;
@@ -36,13 +35,13 @@ public class ProcessEventsCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        ConcordProfile instanceProfile = CliConfigurationProvider.getConcordProfile(profile);
+        var instanceProfile = CliConfigurationProvider.getConcordProfile(profile);
 
-        UUID processId = UUID.fromString(instanceId);
+        var processId = UUID.fromString(instanceId);
 
-        ApiClient apiClient = CliApiClientFactory.create(instanceProfile, connectTimeout);
-        ProcessEventsApi eventsApi = new ProcessEventsApi(apiClient);
-        ProcessV2Api processApi = new ProcessV2Api(apiClient);
+        var apiClient = CliApiClientFactory.create(instanceProfile, connectTimeout);
+        var eventsApi = new ProcessEventsApi(apiClient);
+        var processApi = new ProcessV2Api(apiClient);
 
         var processEntry = processApi.getProcess(processId, Set.of(ProcessDataInclude.CHILDREN_IDS.getValue()));
         grabProcessEvents(eventsApi, processEntry.getInstanceId());
@@ -57,7 +56,7 @@ public class ProcessEventsCommand implements Callable<Integer> {
 
     private void grabProcessEvents(ProcessEventsApi api, UUID processId) throws Exception {
         List<ProcessEventEntry> allEvents = new ArrayList<>();
-        int eventsLimit = 1000;
+        var eventsLimit = 1000;
         Long fromId = null;
         while (true) {
             var events = api.listProcessEvents(processId, "ELEMENT", null, fromId, null, null, true, eventsLimit);
@@ -71,7 +70,7 @@ public class ProcessEventsCommand implements Callable<Integer> {
 
         LogUtils.info("Loaded {} events for '{}' process", allEvents.size(), processId);
 
-        Path eventsPath = eventsDir.resolve(processId + ".events.json");
+        var eventsPath = eventsDir.resolve(processId + ".events.json");
         Files.createDirectories(eventsDir);
         Mapper.jsonMapper().write(eventsPath, allEvents);
     }

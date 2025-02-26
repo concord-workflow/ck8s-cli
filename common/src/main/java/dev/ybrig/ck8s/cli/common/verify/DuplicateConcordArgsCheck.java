@@ -20,7 +20,7 @@ public class DuplicateConcordArgsCheck extends AbstractChecker {
             return;
         }
 
-        Set<String> arguments = MapUtils.getMap(concordYaml, "configuration.arguments", Map.of()).keySet();
+        var arguments = MapUtils.getMap(concordYaml, "configuration.arguments", Map.of()).keySet();
         if (arguments.isEmpty()) {
             return;
         }
@@ -30,7 +30,7 @@ public class DuplicateConcordArgsCheck extends AbstractChecker {
             maybeDuplicateArgs.retainAll(arguments);
 
             if (!maybeDuplicateArgs.isEmpty()) {
-                String args = String.join(", ", maybeDuplicateArgs);
+                var args = String.join(", ", maybeDuplicateArgs);
                 addError(concordYamlPath, "Arguments '" + args + "' already defined at " + e.getKey());
             }
         }
