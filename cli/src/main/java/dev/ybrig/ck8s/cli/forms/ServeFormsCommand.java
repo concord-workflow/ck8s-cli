@@ -1,6 +1,5 @@
 package dev.ybrig.ck8s.cli.forms;
 
-import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.Ck8sPathOptionsMixin;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
@@ -414,7 +413,7 @@ public class ServeFormsCommand implements Callable<Integer> {
             var executor = new RemoteFlowExecutorV2(concordProfile.baseUrl(), concordProfile.apiKey(), 30, 30);
 
             ConcordProcess process;
-            try (var archive = prepareArchive(ck8s, request)) {
+            try (var archive = prepareArchive(ck8s, request, getString(parts, Ck8sConstants.Arguments.CLIENT_CLUSTER))) {
                 process = executor.execute(request);
             }
 
@@ -467,8 +466,8 @@ public class ServeFormsCommand implements Callable<Integer> {
             }
         }
 
-        private static Ck8sPayloadArchiver.Archive prepareArchive(Ck8sPath ck8s, Map<String, Object> request) {
-            var archive = Ck8sPayloadArchiver.archive(ck8s);
+        private static Ck8sPayloadArchiver.Archive prepareArchive(Ck8sPath ck8s, Map<String, Object> request, String clusterAlias) {
+            var archive = Ck8sPayloadArchiver.archive(ck8s, clusterAlias);
             request.put("archive", archive.path());
             return archive;
         }

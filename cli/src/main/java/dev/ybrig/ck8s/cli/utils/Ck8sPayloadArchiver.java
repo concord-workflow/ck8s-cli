@@ -2,6 +2,9 @@ package dev.ybrig.ck8s.cli.utils;
 
 import com.walmartlabs.concord.common.IOUtils;
 import dev.ybrig.ck8s.cli.common.Ck8sPath;
+import dev.ybrig.ck8s.cli.common.Ck8sUtils;
+import dev.ybrig.ck8s.cli.common.MapUtils;
+import dev.ybrig.ck8s.cli.common.Mapper;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 import java.io.IOException;
@@ -46,7 +49,7 @@ public class Ck8sPayloadArchiver {
 
     private static final String[] FILE_IGNORE_PATTERNS = new String[]{".*\\.pdf$", ".*\\.png$", ".*\\.jpg$"};
 
-    public static Archive archive(Ck8sPath ck8s) {
+    public static Archive archive(Ck8sPath ck8s, String clusterAlias) {
         Path tmp;
         try {
             tmp = IOUtils.createTempFile("payload", ".zip");
@@ -56,12 +59,23 @@ public class Ck8sPayloadArchiver {
 
         var result = new Archive(tmp);
         try (var zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-            var concordYaml = ck8s.ck8sDir().resolve("concord.yaml");
+            var concordYaml = ck8s.ck8sDir().resolve("concord.yml");
             if (Files.notExists(concordYaml)) {
                 concordYaml = loadConcordYamlFromClasspath();
-                result.registerPathToCleanup(concordYaml);
+            } else {
+                concordYaml = IOUtils.createTempFile("concord", "yml");
+                Files.copy(ck8s.ck8sDir().resolve("concord.yml"), concordYaml, StandardCopyOption.REPLACE_EXISTING);
             }
-            IOUtils.zipFile(zip, concordYaml, "concord.yaml");
+            result.registerPathToCleanup(concordYaml);
+
+            // TODO: remove ME!!!!
+            var c = Mapper.yamlMapper().readMap(concordYaml);
+            var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, clusterAlias);
+            MapUtils.set(c, clusterRequest, "configuration.arguments.clusterRequest");
+            Mapper.yamlMapper().write(concordYaml, c);
+            //
+
+            IOUtils.zipFile(zip, concordYaml, "concord.yml");
 
             IOUtils.zip(zip, "configs/", ck8s.configs(), FILE_IGNORE_PATTERNS);
             IOUtils.zip(zip, "ck8s-components/", ck8s.ck8sComponents(), FILE_IGNORE_PATTERNS);
