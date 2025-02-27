@@ -61,6 +61,7 @@ import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
+import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver.loadConcordYamlFromClasspath;
 
 public class ConcordCliFlowExecutor {
 
@@ -284,7 +285,13 @@ public class ConcordCliFlowExecutor {
         try {
             Files.createDirectories(target);
 
-            IOUtils.copy(ck8s.ck8sDir().resolve("concord.yaml"), target.resolve("concord.yaml"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+            var concordYaml = ck8s.ck8sDir().resolve("concord.yaml");
+            if (!Files.exists(concordYaml)) {
+                concordYaml = loadConcordYamlFromClasspath();
+            }
+            IOUtils.copy(concordYaml, target.resolve("concord.yaml"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+            
+            IOUtils.copy(ck8s.configs(), target.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sComponents(), target.resolve("ck8s-components"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sComponentsTests(), target.resolve("ck8s-components-tests"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sOrgDir(), target.resolve("ck8s-orgs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);

@@ -78,7 +78,7 @@ public class Ck8sPayloadArchiver {
         }
     }
 
-    private static Path loadConcordYamlFromClasspath() throws IOException {
+    public static Path loadConcordYamlFromClasspath() throws IOException {
         var tmpFile = IOUtils.createTempFile("concord", "yaml");
 
         try(var is = Ck8sPayloadArchiver.class.getClassLoader().getResourceAsStream("dev/ybrig/ck8s/cli/concord.yaml")) {
