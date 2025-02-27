@@ -98,7 +98,18 @@ public class ConcordCliFlowExecutor {
         this.ck8s = ck8s;
         this.verbosity = verbosity;
         this.secretsProvider = secretsProvider;
-        this.profile = CliConfigurationProvider.getConcordProfile(concordProfile);
+
+        // TODO: "default" is a default value for profile, but if profile is undefined we want to use local Concord server...
+        if ("default".equals(concordProfile)) {
+            this.profile = ConcordProfile.builder()
+                    .alias("default")
+                    .baseUrl("http://localhost:8001")
+                    .apiKey("any")
+                    .build();
+        } else {
+            this.profile = CliConfigurationProvider.getConcordProfile(concordProfile);
+        }
+
         this.eventsDir = eventsDir;
         this.dryRunMode = dryRunMode;
         this.targetDir = targetDir;
