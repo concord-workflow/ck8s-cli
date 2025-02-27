@@ -11,6 +11,7 @@ configuration:
       - "privateKey"
       - "vaultPassword"
   arguments:
+    ck8sCliVersion: "1.8.5"
     flow: "ck8sProvidedVariable" # string, mandatory, ck8s flow name to execute
     clientCluster: "ck8sProvidedVariable" # string, mandatory, cluster request alias or group
     clusterRequest:  # object, mandatory, cluster request

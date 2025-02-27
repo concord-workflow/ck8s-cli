@@ -290,7 +290,7 @@ public class ConcordCliFlowExecutor {
                 concordYaml = loadConcordYamlFromClasspath();
             }
             IOUtils.copy(concordYaml, target.resolve("concord.yaml"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-            
+
             IOUtils.copy(ck8s.configs(), target.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sComponents(), target.resolve("ck8s-components"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sComponentsTests(), target.resolve("ck8s-components-tests"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
