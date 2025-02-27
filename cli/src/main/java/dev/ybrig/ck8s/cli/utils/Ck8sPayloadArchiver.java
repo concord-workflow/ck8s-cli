@@ -63,6 +63,7 @@ public class Ck8sPayloadArchiver {
             }
             IOUtils.zipFile(zip, concordYaml, "concord.yaml");
 
+            IOUtils.zip(zip, "configs/", ck8s.configs(), FILE_IGNORE_PATTERNS);
             IOUtils.zip(zip, "ck8s-components/", ck8s.ck8sComponents(), FILE_IGNORE_PATTERNS);
 
             IOUtils.zip(zip, "ck8s-components-tests/", ck8s.ck8sComponentsTests(), FILE_IGNORE_PATTERNS);
