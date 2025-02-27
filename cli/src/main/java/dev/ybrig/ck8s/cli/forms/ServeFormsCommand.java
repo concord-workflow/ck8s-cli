@@ -8,7 +8,7 @@ import dev.ybrig.ck8s.cli.common.*;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
-import dev.ybrig.ck8s.cli.op.RemoteRunFlowOperation;
+import dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.*;
@@ -467,8 +467,8 @@ public class ServeFormsCommand implements Callable<Integer> {
             }
         }
 
-        private static TemporaryPath prepareArchive(Ck8sPath ck8s, Map<String, Object> request) {
-            var archive = RemoteRunFlowOperation.archive(ck8s, true);
+        private static Ck8sPayloadArchiver.Archive prepareArchive(Ck8sPath ck8s, Map<String, Object> request) {
+            var archive = Ck8sPayloadArchiver.archive(ck8s);
             request.put("archive", archive.path());
             return archive;
         }

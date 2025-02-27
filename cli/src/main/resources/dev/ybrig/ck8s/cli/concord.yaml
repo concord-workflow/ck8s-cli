@@ -1,0 +1,33 @@
+configuration:
+  runtime: concord-v2
+  events:
+    recordEvents: true
+    recordTaskInVars: true
+    recordTaskOutVars: true
+    inVarsBlacklist:
+      - "apiKey"
+      - "apiToken"
+      - "password"
+      - "privateKey"
+      - "vaultPassword"
+  arguments:
+    flow: "ck8sProvidedVariable" # string, mandatory, ck8s flow name to execute
+    clientCluster: "ck8sProvidedVariable" # string, mandatory, cluster request alias or group
+    clusterRequest:  # object, mandatory, cluster request
+      ck8sProvidedVariable: "just for information"
+    inputArgs: # object, optional, sk8s process input arguments
+      flow: "just for information"
+  meta:
+    processType: "ck8s"
+    flow: 'n/a'
+
+resources:
+  concord:
+    - "glob:ck8s-components/**/ck8s-{*.,}concord.yaml"
+    - "glob:ck8s-components-tests/**/ck8s-{*.,}concord.yaml"
+
+flows:
+  default:
+    - call: normalFlow
+      in:
+        flow: ${flow}

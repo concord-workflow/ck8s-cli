@@ -1,8 +1,6 @@
 package dev.ybrig.ck8s.cli.op;
 
 import com.walmartlabs.concord.cli.Verbosity;
-import com.walmartlabs.concord.common.IOUtils;
-import com.walmartlabs.concord.common.TemporaryPath;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
@@ -12,10 +10,8 @@ import dev.ybrig.ck8s.cli.common.Ck8sUtils;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -23,8 +19,6 @@ import java.util.concurrent.Executors;
 import static dev.ybrig.ck8s.cli.op.RunFlowOperationUtils.needsConfirmation;
 
 public class RemoteRunFlowOperation implements CliOperation {
-
-    private static final String[] FILE_IGNORE_PATTERNS = new String[]{".*\\.pdf$", ".*\\.png$", ".*\\.jpg$"};
 
     public Integer execute(CliOperationContext cliOperationContext) {
         var cliApp = cliOperationContext.cliApp();
@@ -126,38 +120,13 @@ public class RemoteRunFlowOperation implements CliOperation {
         return request;
     }
 
-    private static TemporaryPath prepareArchiveIfRequired(CliApp cliApp, Ck8sPath ck8s, Map<String, Object> request) {
+    private static Ck8sPayloadArchiver.Archive prepareArchiveIfRequired(CliApp cliApp, Ck8sPath ck8s, Map<String, Object> request) {
         if (cliApp.getCk8sRef() != null) {
             return null;
         }
 
-        var archive = archive(ck8s, cliApp.isWithTests());
+        var archive = Ck8sPayloadArchiver.archive(ck8s);
         request.put("archive", archive.path());
         return archive;
-    }
-
-    public static TemporaryPath archive(Ck8sPath ck8s, boolean withTests) {
-        TemporaryPath tmp;
-        try {
-            tmp = IOUtils.tempFile("payload", ".zip");
-        } catch (IOException e) {
-            throw new RuntimeException("Error creating process archive file: " + e.getMessage(), e);
-        }
-
-        try (var zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp.path()))) {
-            IOUtils.zipFile(zip, ck8s.ck8sDir().resolve("concord.yaml"), "concord.yaml");
-            IOUtils.zip(zip, "ck8s-components/", ck8s.ck8sComponents(), FILE_IGNORE_PATTERNS);
-
-            if (withTests) {
-                IOUtils.zip(zip, "ck8s-components-tests/", ck8s.ck8sComponentsTests(), FILE_IGNORE_PATTERNS);
-            }
-
-            IOUtils.zip(zip, "ck8s-orgs/", ck8s.ck8sOrgDir(), FILE_IGNORE_PATTERNS);
-            IOUtils.zip(zip, "ck8s-configs/", ck8s.ck8sConfigs(), FILE_IGNORE_PATTERNS);
-
-            return tmp;
-        } catch (IOException e) {
-            throw new RuntimeException("Error creating process archive: " + e.getMessage(), e);
-        }
     }
 }
