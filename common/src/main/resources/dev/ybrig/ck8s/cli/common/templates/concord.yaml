@@ -5,6 +5,7 @@ configuration:
     recordTaskOutVars: true
     recordEvents: true
   arguments:
+    ck8sCliVersion: "1.8.5"
     concordInstanceAlias: "${System.getenv('CONCORD_INSTANCE_ALIAS')}"
     concordLogicalInstanceAlias: "${System.getenv('CONCORD_LOGICAL_INSTANCE_ALIAS')}"
     clusterRequest: <CLUSTER_REQUEST>
