@@ -87,6 +87,7 @@ public class Ck8sPayloadArchiver {
 
             return result;
         } catch (Exception e) {
+            e.printStackTrace();
             result.close();
             throw new RuntimeException("Error creating process archive: " + e.getMessage(), e);
         }

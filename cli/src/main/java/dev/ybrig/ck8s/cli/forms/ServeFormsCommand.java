@@ -74,7 +74,7 @@ public class ServeFormsCommand implements Callable<Integer> {
         var orgName = Ck8sUtils.streamClusterYaml(ck8s).map(p -> {
                     try {
                         var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, p);
-                        return MapUtils.getString(clusterRequest, "organization.name");
+                        return MapUtils.assertString(clusterRequest, "organization.name");
                     } catch (Exception e) {
                         throw new RuntimeException("Error parsing cluster definition file " + p + ": " + e.getMessage());
                     }
@@ -127,6 +127,11 @@ public class ServeFormsCommand implements Callable<Integer> {
         var ch = new ContextHandler(handler, "/");
         ch.setAliasChecks(List.of((pathInContext, resource) -> true));
         contextCollection.addHandler(ch);
+
+        var chResources = new ContextHandler(handler, "/api/plugin/repositorybrowser/v1");
+        chResources.setAllowNullPathInContext(true);
+        chResources.setAliasChecks(List.of((pathInContext, resource) -> true));
+        contextCollection.addHandler(chResources);
 
         var processExecutorHandler = new ContextHandler(new ProcessExecutorHandler(ck8s, instanceProfile), "/api/ck8s/v3/process");
         processExecutorHandler.setAllowNullPathInContext(true);
@@ -228,7 +233,12 @@ public class ServeFormsCommand implements Callable<Integer> {
         }
 
         private  HttpContent getCommonJsContent(String pathInContext) throws IOException {
-            var p = baseResource.resolve(Path.of(pathInContext).getFileName().toString()).getPath();
+            var resource = baseResource.resolve("assets/js/" + Path.of(pathInContext).getFileName());
+            if (resource == null) {
+                throw new IOException("Could not find common.js file");
+            }
+            
+            var p = resource.getPath();
             if (Files.notExists(p)) {
                 LogUtils.warn("Can't find common-js file: {}", p);
                 return null;
@@ -377,6 +387,14 @@ public class ServeFormsCommand implements Callable<Integer> {
             }
         }
 
+        private static String assertString(MultiPartFormData.Parts parts, String key) {
+            var result = getString(parts, key);
+            if (result == null) {
+                throw new IllegalArgumentException("Missing mandatory request part: " + key);
+            }
+            return result;
+        }
+
         private static String getString(MultiPartFormData.Parts parts, String key) {
             var part = parts.getFirst(key);
             if (part == null) {
@@ -412,8 +430,10 @@ public class ServeFormsCommand implements Callable<Integer> {
             // TODO: allow local concord cli...
             var executor = new RemoteFlowExecutorV2(concordProfile.baseUrl(), concordProfile.apiKey(), 30, 30);
 
+            var args = MapUtils.assertMap(request, "request.arguments");
+
             ConcordProcess process;
-            try (var archive = prepareArchive(ck8s, request, getString(parts, Ck8sConstants.Arguments.CLIENT_CLUSTER))) {
+            try (var archive = prepareArchive(ck8s, request, MapUtils.assertString(args, Ck8sConstants.Arguments.CLIENT_CLUSTER))) {
                 process = executor.execute(request);
             }
 
