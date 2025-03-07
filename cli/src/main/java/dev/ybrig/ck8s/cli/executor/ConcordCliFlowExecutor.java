@@ -243,7 +243,7 @@ public class ConcordCliFlowExecutor {
             runner.start(cfg, processDefinition, args);
         } catch (Exception e) {
             if (verbosity.verbose()) {
-                LogUtils.error("", e);
+                LogUtils.error("{}", e.getMessage(), e);
             } else {
                 LogUtils.error("{}", e.getMessage());
             }
