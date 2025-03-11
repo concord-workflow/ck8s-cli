@@ -61,7 +61,6 @@ import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
-import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver.loadConcordYamlFromClasspath;
 
 public class ConcordCliFlowExecutor {
 
@@ -153,13 +152,12 @@ public class ConcordCliFlowExecutor {
 
         var args = prepareArgs(ck8s, instanceId, overlayCfg, flowName, clusterAlias, userArguments);
 
-        Mapper.yamlMapper().write(targetDir.resolve("input.yaml"), args);
-
         if (verbosity.verbose()) {
             dumpArguments(userArguments);
         }
 
-        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo(MapUtils.assertString(args, "clusterRequest.organization.name")))
+        var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, clusterAlias);
+        ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo(MapUtils.assertString(clusterRequest, "organization.name")))
                 .instanceId(instanceId)
                 .dryRun(dryRunMode)
                 .build();
@@ -174,6 +172,11 @@ public class ConcordCliFlowExecutor {
 
         if (!verbosity.verbose()) {
             System.out.println("Dependency resolution took " + (System.currentTimeMillis() - t1) + "ms");
+        }
+
+        if (verbosity.verbose()) {
+            LogUtils.info("{}", overlayDeps);
+            LogUtils.info("{}", dependencies);
         }
 
         RunnerConfiguration runnerCfg = RunnerConfiguration.builder()
@@ -286,18 +289,13 @@ public class ConcordCliFlowExecutor {
             Files.createDirectories(target);
 
             var concordYaml = ck8s.ck8sDir().resolve("concord.yml");
-            if (!Files.exists(concordYaml)) {
-                concordYaml = loadConcordYamlFromClasspath();
+            if (Files.notExists(concordYaml)) {
+                LogUtils.error("Can't find main concord.yml at '{}'. Update your ck8s-ext local copy", concordYaml);
+                throw new RuntimeException("Can't find main concord.yml, update your ck8s-ext local copy");
             }
+
             var targetConcordYaml = target.resolve("concord.yml");
             IOUtils.copy(concordYaml, targetConcordYaml, FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-
-            // TODO: remove ME!!!!
-            var c = Mapper.yamlMapper().readMap(targetConcordYaml);
-            var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, clusterAlias);
-            MapUtils.set(c, clusterRequest, "configuration.arguments.clusterRequest");
-            Mapper.yamlMapper().write(targetConcordYaml, c);
-            //
 
             IOUtils.copy(ck8s.configs(), target.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sComponents(), target.resolve("ck8s-components"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
@@ -328,7 +326,6 @@ public class ConcordCliFlowExecutor {
                                             String flowName, String clusterAlias,
                                             Map<String, Object> userArguments) {
         var overlayArgs = MapUtils.getMap(overlayCfg, Constants.Request.ARGUMENTS_KEY, Map.of());
-        var clusterRequestArg = Map.<String, Object>of(Ck8sConstants.Arguments.CLUSTER_REQUEST, Ck8sUtils.buildClusterRequest(ck8s, clusterAlias));
 
         var defaultArgs = new LinkedHashMap<String, Object>();
         defaultArgs.put(Ck8sConstants.Arguments.CONCORD_URL, "https://concord.local.localhost");
@@ -337,7 +334,7 @@ public class ConcordCliFlowExecutor {
         defaultArgs.put(Ck8sConstants.Arguments.CLIENT_CLUSTER, clusterAlias);
         defaultArgs.put(Ck8sConstants.Arguments.INPUT_ARGS, userArguments);
 
-        var args = new LinkedHashMap<>(deepMerge(deepMerge(overlayArgs, clusterRequestArg), userArguments));
+        var args = new LinkedHashMap<>(deepMerge(overlayArgs, userArguments));
         args.putAll(defaultArgs);
 
         if (secretsProvider != null) {

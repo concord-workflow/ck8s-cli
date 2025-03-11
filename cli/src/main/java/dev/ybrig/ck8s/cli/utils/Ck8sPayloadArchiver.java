@@ -34,10 +34,6 @@ public class Ck8sPayloadArchiver {
             pathsToCleanup.forEach(Archive::cleanup);
         }
 
-        void registerPathToCleanup(Path path) {
-            pathsToCleanup.add(path);
-        }
-
         private static void cleanup(Path path) {
             try {
                 Files.deleteIfExists(path);
@@ -61,19 +57,9 @@ public class Ck8sPayloadArchiver {
         try (var zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
             var concordYaml = ck8s.ck8sDir().resolve("concord.yml");
             if (Files.notExists(concordYaml)) {
-                concordYaml = loadConcordYamlFromClasspath();
-            } else {
-                concordYaml = IOUtils.createTempFile("concord", "yml");
-                Files.copy(ck8s.ck8sDir().resolve("concord.yml"), concordYaml, StandardCopyOption.REPLACE_EXISTING);
+                LogUtils.error("Can't find main concord.yml at '{}'. Update your ck8s-ext local copy", concordYaml);
+                throw new RuntimeException("Can't find main concord.yml, update your ck8s-ext local copy");
             }
-            result.registerPathToCleanup(concordYaml);
-
-            // TODO: remove ME!!!!
-            var c = Mapper.yamlMapper().readMap(concordYaml);
-            var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, clusterAlias);
-            MapUtils.set(c, clusterRequest, "configuration.arguments.clusterRequest");
-            Mapper.yamlMapper().write(concordYaml, c);
-            //
 
             IOUtils.zipFile(zip, concordYaml, "concord.yml");
 
@@ -91,17 +77,5 @@ public class Ck8sPayloadArchiver {
             result.close();
             throw new RuntimeException("Error creating process archive: " + e.getMessage(), e);
         }
-    }
-
-    public static Path loadConcordYamlFromClasspath() throws IOException {
-        var tmpFile = IOUtils.createTempFile("concord", "yaml");
-
-        try(var is = Ck8sPayloadArchiver.class.getClassLoader().getResourceAsStream("dev/ybrig/ck8s/cli/concord.yaml")) {
-            assert is != null;
-
-            Files.copy(is, tmpFile, StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        return tmpFile;
     }
 }
