@@ -89,10 +89,10 @@ public class CliApp
     boolean withLocalDependencies = false;
 
     @CommandLine.Option(names = {"--connect-timeout"}, description = "Connection timeout")
-    long connectTimeout = 30;
+    long connectTimeout = 120;
 
     @CommandLine.Option(names = {"--read-timeout"}, description = "Read timeout")
-    long readTimeout = 30;
+    long readTimeout = 120;
 
     @CommandLine.Option(names = {"--events-dir"}, description = "Where t store events")
     Path eventsDir = null;
