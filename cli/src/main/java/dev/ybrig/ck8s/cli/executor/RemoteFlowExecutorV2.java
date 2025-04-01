@@ -66,11 +66,11 @@ public class RemoteFlowExecutorV2 {
     }
 
     private ConcordProcess sendRequest(Map<String, Object> payload) throws ApiException {
-        var entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
 
         var requestIdGlobal = UUID.randomUUID().toString();
         var retryNum = new AtomicInteger(0);
         var response = ClientUtils.withRetry(3, 15000, () -> {
+            var entity = MultipartRequestBodyHandler.handle(apiClient.getObjectMapper(), payload);
             var requestId = requestIdGlobal + "_" + retryNum.incrementAndGet();
 
             var request = apiClient.requestBuilder()
