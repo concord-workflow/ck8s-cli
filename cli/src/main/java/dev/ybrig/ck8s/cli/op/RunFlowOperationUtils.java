@@ -16,7 +16,7 @@ public final class RunFlowOperationUtils {
     private static final Set<String> CONFIRM_INPUT = Set.of("y", "yes");
 
     public static boolean needsConfirmation(CliApp cliApp, String flow, String clientCluster) {
-        var needConfirmation = !cliApp.isSkipConfirm() && FLOW_PATTERS_TO_CONFIRM.stream().anyMatch(flow::matches);
+        var needConfirmation = !cliApp.isDryRunMode() && !cliApp.isSkipConfirm() && FLOW_PATTERS_TO_CONFIRM.stream().anyMatch(flow::matches);
 
         if (needConfirmation) {
             var msg = String.format("Are you sure you want to execute '%s' on '%s' cluster? (y/N): ", flow, clientCluster);
