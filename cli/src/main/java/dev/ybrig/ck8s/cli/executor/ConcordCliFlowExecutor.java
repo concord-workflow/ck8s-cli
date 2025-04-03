@@ -162,6 +162,8 @@ public class ConcordCliFlowExecutor {
         ProcessConfiguration cfg = from(processDefinition.configuration(), processInfo(activeProfiles), projectInfo(MapUtils.assertString(args, "clusterRequest.organization.name")))
                 .instanceId(instanceId)
                 .dryRun(dryRunMode)
+                .arguments(args)
+                .debug(verbosity.verbose())
                 .build();
 
         if (!verbosity.verbose()) {
