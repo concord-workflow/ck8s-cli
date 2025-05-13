@@ -28,6 +28,7 @@ import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
 import com.walmartlabs.concord.runtime.v2.runner.EventReportingService;
 import com.walmartlabs.concord.runtime.v2.runner.InjectorFactory;
 import com.walmartlabs.concord.runtime.v2.runner.Runner;
+import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContextThreadGroup;
@@ -165,6 +166,10 @@ public class ConcordCliFlowExecutor {
                 .arguments(args)
                 .debug(verbosity.verbose())
                 .build();
+
+        ObjectMapper om = ObjectMapperProvider.getInstance();
+        args.put(Constants.Request.PROCESS_INFO_KEY, om.convertValue(cfg.processInfo(), Map.class));
+        args.put(Constants.Request.PROJECT_INFO_KEY, om.convertValue(cfg.projectInfo(), Map.class));
 
         if (!verbosity.verbose()) {
             LogUtils.info("Resolving process dependencies...");
