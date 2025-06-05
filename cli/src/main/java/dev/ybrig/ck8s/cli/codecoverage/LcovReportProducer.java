@@ -1,12 +1,10 @@
 package dev.ybrig.ck8s.cli.codecoverage;
 
 import com.walmartlabs.concord.client2.ProcessEventEntry;
-import com.walmartlabs.concord.runtime.v2.model.Flow;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

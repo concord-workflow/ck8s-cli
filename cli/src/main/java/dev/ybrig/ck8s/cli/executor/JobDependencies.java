@@ -20,7 +20,9 @@ package dev.ybrig.ck8s.cli.executor;
  * =====
  */
 
+import com.walmartlabs.concord.runtime.v2.runner.SensitiveDataHolder;
 import com.walmartlabs.concord.runtime.v2.runner.el.DefaultExpressionEvaluator;
+import com.walmartlabs.concord.runtime.v2.runner.el.resolvers.SensitiveDataProcessor;
 import com.walmartlabs.concord.runtime.v2.runner.tasks.TaskProviders;
 import com.walmartlabs.concord.runtime.v2.sdk.EvalContext;
 import com.walmartlabs.concord.runtime.v2.sdk.MapBackedVariables;
@@ -34,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -176,7 +177,7 @@ public final class JobDependencies {
             }
         }
 
-        var expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders(), List.of(), List.of());
+        var expressionEvaluator = new DefaultExpressionEvaluator(new TaskProviders(), List.of(), List.of(), new SensitiveDataProcessor(new SensitiveDataHolder()));
         var ctx = EvalContext.builder().variables(new MapBackedVariables(args)).build();
         Map<String, String> interpolated = new HashMap<>();
         for (var e : result.entrySet()) {

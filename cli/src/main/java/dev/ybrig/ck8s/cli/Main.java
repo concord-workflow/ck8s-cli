@@ -20,27 +20,12 @@ package dev.ybrig.ck8s.cli;
  * =====
  */
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
-import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
-
-import java.util.Objects;
 
 public class Main {
 
     public static void main(String[] args) {
-//        args = new String[] {"--flow-executor", "concord-cli", "-p", "ci1", "-c", "ci1", "-f", "brig2", "--secretsProvider=local", "-VVVVV"};
-
-        var context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        var configurator = new JoranConfigurator();
-        configurator.setContext(context);
-        context.reset();
-        try {
-            configurator.doConfigure(Objects.requireNonNull(Main.class.getResource("logback.xml")));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+//        args = new String[] {"--flow-executor", "concord-cli", "-p", "ci1", "-c", "ci1", "-f", "show", "--secretsProvider=local", "-VVVVV"};
 
         var cmd = new CommandLine(new CliApp())
                 .setCaseInsensitiveEnumValuesAllowed(true)
