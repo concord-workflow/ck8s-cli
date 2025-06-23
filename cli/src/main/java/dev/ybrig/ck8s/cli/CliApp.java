@@ -3,7 +3,6 @@ package dev.ybrig.ck8s.cli;
 import dev.ybrig.ck8s.cli.actions.ActionType;
 import dev.ybrig.ck8s.cli.cfg.CliDefaultParamValuesProvider;
 import dev.ybrig.ck8s.cli.completion.ClusterAliasCompletion;
-import dev.ybrig.ck8s.cli.completion.FlowCompletion;
 import dev.ybrig.ck8s.cli.completion.ProfilesCompletion;
 import dev.ybrig.ck8s.cli.concord.process.ProcessEventsCommand;
 import dev.ybrig.ck8s.cli.executor.ExecutorType;
@@ -256,7 +255,7 @@ public class CliApp
     }
 
     static class CliOperationArgs {
-        @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow", completionCandidates = FlowCompletion.class)
+        @CommandLine.Option(names = {"-f", "--flow"}, description = "run the specified Concord flow")
         String flow;
 
         @CommandLine.Option(names = {

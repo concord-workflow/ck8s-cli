@@ -15,28 +15,12 @@ public class ClusterConfiguration {
         return MapUtils.assertString(cfg, "alias");
     }
 
-    public String orgName() {
-        return MapUtils.assertString(cfg, "organization.name");
-    }
-
     public Optional<ClusterGroup> clusterGroup() {
         var groupCfg = MapUtils.getMap(cfg, "clusterGroup", null);
         if (groupCfg == null) {
             return Optional.empty();
         }
         return Optional.of(new ClusterGroup(groupCfg));
-    }
-
-    public Optional<ConcordConfiguration> concord() {
-        var concordCfg = MapUtils.getMap(cfg, "concord", null);
-        if (concordCfg == null) {
-            return Optional.empty();
-        }
-        return Optional.of(new ConcordConfiguration(concordCfg));
-    }
-
-    public Map<String, Object> asMap() {
-        return cfg;
     }
 
     public static class ClusterGroup {
@@ -53,45 +37,6 @@ public class ClusterConfiguration {
 
         public String alias() {
             return MapUtils.assertString(cfg, "alias");
-        }
-    }
-
-    public static class ConcordConfiguration {
-
-        private final Map<String, Object> cfg;
-
-        public ConcordConfiguration(Map<String, Object> cfg) {
-            this.cfg = cfg;
-        }
-
-        public boolean useOrgs() {
-            return MapUtils.getBoolean(cfg, "useOrgs", false);
-        }
-
-        public Optional<Server> server() {
-            var serverCfg = MapUtils.getMap(cfg, "server", null);
-            if (serverCfg == null) {
-                return Optional.empty();
-            }
-            return Optional.of(new Server(serverCfg));
-        }
-
-        public static class Server {
-
-            private final Map<String, Object> cfg;
-
-            public Server(Map<String, Object> cfg) {
-                this.cfg = cfg;
-            }
-
-            public Type type() {
-                var type = MapUtils.getString(cfg, "type", Type.INTERNAL.name());
-                return Type.valueOf(type.toUpperCase());
-            }
-
-            public enum Type {
-                INTERNAL, EXTERNAL
-            }
         }
     }
 }

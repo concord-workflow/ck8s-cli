@@ -1,13 +1,11 @@
 package dev.ybrig.ck8s.cli.common.verify;
 
-import dev.ybrig.ck8s.cli.common.Ck8sFlowBuilderListener;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Ck8sPayloadVerifier implements Ck8sFlowBuilderListener {
+public class Ck8sPayloadVerifier  {
 
     private final List<Ck8sPayloadChecker> checkers = Arrays.asList(
 //            new DuplicateConcordArgsCheck(), // we should ignore args with the same values...
@@ -16,7 +14,6 @@ public class Ck8sPayloadVerifier implements Ck8sFlowBuilderListener {
             new UndefinedFlowCallCheck()
     );
 
-    @Override
     public void beforeConcordYamlAdd(Path src, Path dest) {
         for (var checker : checkers) {
             checker.process(src);
