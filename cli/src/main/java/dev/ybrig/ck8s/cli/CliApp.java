@@ -2,7 +2,6 @@ package dev.ybrig.ck8s.cli;
 
 import dev.ybrig.ck8s.cli.actions.ActionType;
 import dev.ybrig.ck8s.cli.cfg.CliDefaultParamValuesProvider;
-import dev.ybrig.ck8s.cli.codecoverage.CodeCoverageCommand;
 import dev.ybrig.ck8s.cli.completion.ClusterAliasCompletion;
 import dev.ybrig.ck8s.cli.completion.FlowCompletion;
 import dev.ybrig.ck8s.cli.completion.ProfilesCompletion;
@@ -33,8 +32,7 @@ import static java.util.Objects.nonNull;
                 SelfUpdateCommand.class,
                 GenerateTokenCommand.class,
                 ServeFormsCommand.class,
-                ProcessEventsCommand.class,
-                CodeCoverageCommand.class},
+                ProcessEventsCommand.class},
         defaultValueProvider = CliDefaultParamValuesProvider.class)
 public class CliApp
         implements Callable<Integer> {
