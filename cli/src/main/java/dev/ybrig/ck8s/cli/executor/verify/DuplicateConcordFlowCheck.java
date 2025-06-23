@@ -1,4 +1,4 @@
-package dev.ybrig.ck8s.cli.common.verify;
+package dev.ybrig.ck8s.cli.executor.verify;
 
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.common.Mapper;
@@ -30,7 +30,7 @@ public class DuplicateConcordFlowCheck extends AbstractChecker {
 
             if (!maybeDuplicateFlows.isEmpty()) {
                 var f = String.join(", ", maybeDuplicateFlows);
-                addError(concordYamlPath, "Flows '" + f + "' already defined at " + e.getKey());
+                addError(concordYamlPath, "Flow '" + f + "' already defined at " + e.getKey());
             }
         }
 

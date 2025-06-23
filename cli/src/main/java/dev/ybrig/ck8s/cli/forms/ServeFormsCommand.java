@@ -1,5 +1,6 @@
 package dev.ybrig.ck8s.cli.forms;
 
+import com.walmartlabs.concord.common.IOUtils;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.Ck8sPathOptionsMixin;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
@@ -7,8 +8,9 @@ import dev.ybrig.ck8s.cli.common.*;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
-import dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver;
+import dev.ybrig.ck8s.cli.utils.Ck8sPayloadUtils;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.http.*;
 import org.eclipse.jetty.http.content.HttpContent;
@@ -133,7 +135,7 @@ public class ServeFormsCommand implements Callable<Integer> {
         chResources.setAliasChecks(List.of((pathInContext, resource) -> true));
         contextCollection.addHandler(chResources);
 
-        var processExecutorHandler = new ContextHandler(new ProcessExecutorHandler(ck8s, instanceProfile), "/api/ck8s/v3/process");
+        var processExecutorHandler = new ContextHandler(new ProcessExecutorHandler(targetRootPath, ck8s, instanceProfile), "/api/ck8s/v3/process");
         processExecutorHandler.setAllowNullPathInContext(true);
         contextCollection.addHandler(processExecutorHandler);
 
@@ -319,10 +321,12 @@ public class ServeFormsCommand implements Callable<Integer> {
 
     static class ProcessExecutorHandler extends Handler.Abstract.NonBlocking {
 
+        private final Path targetPath;
         private final Ck8sPath ck8s;
         private final ConcordProfile concordProfile;
 
-        ProcessExecutorHandler(Ck8sPath ck8s, ConcordProfile concordProfile) {
+        ProcessExecutorHandler(Path targetPath, Ck8sPath ck8s, ConcordProfile concordProfile) {
+            this.targetPath = targetPath;
             this.ck8s = ck8s;
             this.concordProfile = concordProfile;
         }
@@ -431,7 +435,7 @@ public class ServeFormsCommand implements Callable<Integer> {
             var executor = new RemoteFlowExecutorV2(concordProfile.baseUrl(), concordProfile.apiKey(), 30, 30);
 
             ConcordProcess process;
-            try (var archive = prepareArchive(ck8s, request)) {
+            try (var archive = prepareArchive(targetPath, ck8s, request)) {
                 process = executor.execute(request);
             }
 
@@ -484,8 +488,9 @@ public class ServeFormsCommand implements Callable<Integer> {
             }
         }
 
-        private static Ck8sPayloadArchiver.Archive prepareArchive(Ck8sPath ck8s, Map<String, Object> request) {
-            var archive = Ck8sPayloadArchiver.archive(ck8s);
+        private static Ck8sPayloadUtils.Archive prepareArchive(Path targetPath, Ck8sPath ck8s, Map<String, Object> request) {
+            Ck8sPayloadUtils.prepareWorkspace(ck8s, targetPath);
+            var archive = new Ck8sPayloadUtils.Archive(targetPath);
             request.put("archive", archive.path());
             return archive;
         }

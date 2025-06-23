@@ -1,10 +1,12 @@
 package dev.ybrig.ck8s.cli.op;
 
 import dev.ybrig.ck8s.cli.CliApp;
-import dev.ybrig.ck8s.cli.common.Ck8sPath;
-import dev.ybrig.ck8s.cli.common.verify.CheckError;
+import dev.ybrig.ck8s.cli.executor.verify.CheckError;
+import dev.ybrig.ck8s.cli.executor.verify.Ck8sPayloadVerifier;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -30,29 +32,29 @@ public final class RunFlowOperationUtils {
         return false;
     }
 
-    private RunFlowOperationUtils() {
+    public static void validate(Path workspaceDir) {
+        Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
+
+        try {
+            verifier.verify(workspaceDir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertNoErrors(workspaceDir, verifier.errors());
     }
 
-    private static void validate() {
-//        Ck8sPayloadVerifier verifier = new Ck8sPayloadVerifier();
-//        Ck8sPath ck8s = cliOperationContext.ck8sPath();
-//
-//        Ck8sFlows ck8sFlows = new Ck8sFlowBuilder(ck8s, cliApp.getTargetRootPath(), verifier, cliOperationContext.cliApp().getClusterAlias())
-//                .includeTests(cliApp.isWithTests())
-//                .build();
-//
-//        assertNoErrors(ck8s, verifier.errors());
-    }
-
-
-    private void assertNoErrors(Ck8sPath ck8sPath, List<CheckError> errors) {
+    private static void assertNoErrors(Path workspaceDir, List<CheckError> errors) {
         var hasErrors = false;
         for (var error : errors) {
-            LogUtils.error("processing '" + ck8sPath.relativize(error.concordYaml()) + ": " + error.message());
+            LogUtils.error("processing '" + workspaceDir.relativize(error.concordYaml()) + ": " + error.message());
             hasErrors = hasErrors || !errors.isEmpty();
         }
         if (hasErrors) {
             throw new RuntimeException("Payload has errors");
         }
+    }
+
+    private RunFlowOperationUtils() {
     }
 }

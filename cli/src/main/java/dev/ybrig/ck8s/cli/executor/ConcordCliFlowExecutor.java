@@ -46,6 +46,7 @@ import dev.ybrig.ck8s.cli.concord.CliConcordProcess;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.concord.ConcordServer;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
+import dev.ybrig.ck8s.cli.op.RunFlowOperationUtils;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
 import javax.inject.Inject;
@@ -58,7 +59,7 @@ import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
-import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver.prepareWorkspace;
+import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadUtils.prepareWorkspace;
 
 public class ConcordCliFlowExecutor {
 
@@ -133,10 +134,16 @@ public class ConcordCliFlowExecutor {
 
         // prepare payload
         prepareWorkspace(ck8s, targetDir);
+        RunFlowOperationUtils.validate(targetDir);
 
         var processDefinition = loadProcessDefinition(targetDir, verbosity.verbose());
         if (processDefinition == null) {
             return null;
+        }
+
+        var flow = ProcessDefinitionUtils.getFlow(new ProcessDefinitionV2(processDefinition), activeProfiles, flowName);
+        if (flow == null) {
+            throw new RuntimeException("Flow " + flowName + " not found");
         }
 
         // prepare configuration

@@ -1,4 +1,4 @@
-package dev.ybrig.ck8s.cli.common.verify;
+package dev.ybrig.ck8s.cli.executor.verify;
 
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.*;

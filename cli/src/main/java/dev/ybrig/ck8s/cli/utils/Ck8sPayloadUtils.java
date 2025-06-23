@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-public class Ck8sPayloadArchiver {
+public class Ck8sPayloadUtils {
 
     public static class Archive implements AutoCloseable {
 
@@ -60,7 +60,7 @@ public class Ck8sPayloadArchiver {
         }
     }
 
-    public static Archive archive(Ck8sPath ck8s) {
+    public static Archive archive(Path workspaceDir) {
         Path tmp;
         try {
             tmp = IOUtils.createTempFile("payload", ".zip");
@@ -70,17 +70,7 @@ public class Ck8sPayloadArchiver {
 
         var result = new Archive(tmp);
         try (var zip = new ZipArchiveOutputStream(Files.newOutputStream(tmp))) {
-
-            IOUtils.zipFile(zip, ck8s.concordYaml(), "concord.yml");
-
-            IOUtils.zip(zip, "configs/", ck8s.configs(), FILE_IGNORE_PATTERNS);
-            IOUtils.zip(zip, "ck8s-components/", ck8s.ck8sComponents(), FILE_IGNORE_PATTERNS);
-
-            IOUtils.zip(zip, "ck8s-components-tests/", ck8s.ck8sComponentsTests(), FILE_IGNORE_PATTERNS);
-
-            IOUtils.zip(zip, "ck8s-orgs/", ck8s.ck8sOrgDir(), FILE_IGNORE_PATTERNS);
-            IOUtils.zip(zip, "ck8s-configs/", ck8s.ck8sConfigs(), FILE_IGNORE_PATTERNS);
-
+            IOUtils.zip(zip, workspaceDir);
             return result;
         } catch (Exception e) {
             result.close();

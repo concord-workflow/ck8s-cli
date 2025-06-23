@@ -1,6 +1,12 @@
 package dev.ybrig.ck8s.cli.op;
 
 import com.walmartlabs.concord.cli.Verbosity;
+import com.walmartlabs.concord.imports.NoopImportManager;
+import com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils;
+import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
+import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
+import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
+import com.walmartlabs.concord.runtime.v2.wrapper.ProcessDefinitionV2;
 import com.walmartlabs.concord.sdk.Constants;
 import dev.ybrig.ck8s.cli.CliApp;
 import dev.ybrig.ck8s.cli.cfg.CliConfigurationProvider;
@@ -10,13 +16,16 @@ import dev.ybrig.ck8s.cli.common.Ck8sUtils;
 import dev.ybrig.ck8s.cli.common.MapUtils;
 import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
-import dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver;
+import dev.ybrig.ck8s.cli.utils.Ck8sPayloadUtils;
+import dev.ybrig.ck8s.cli.utils.LogUtils;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
 import static dev.ybrig.ck8s.cli.op.RunFlowOperationUtils.needsConfirmation;
+import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadUtils.prepareWorkspace;
 
 public class RemoteRunFlowOperation implements CliOperation {
 
@@ -28,14 +37,29 @@ public class RemoteRunFlowOperation implements CliOperation {
             return -1;
         }
 
+        // prepare payload
         var ck8s = cliOperationContext.ck8sPath();
+        var targetDir = cliApp.getTargetRootPath();
+        prepareWorkspace(ck8s, targetDir);
+
+        RunFlowOperationUtils.validate(targetDir);
+        var processDefinition = loadProcessDefinition(targetDir);
+        if (processDefinition == null) {
+            return null;
+        }
+        var flow = ProcessDefinitionUtils.getFlow(new ProcessDefinitionV2(processDefinition), cliOperationContext.cliApp().getActiveProfiles(), cliOperationContext.cliApp().getFlow());
+        if (flow == null) {
+            LogUtils.error("Flow " + cliOperationContext.cliApp().getFlow() + " not found");
+            return null;
+        }
+
         var request = prepareRequest(cliApp, ck8s);
 
         var profile = CliConfigurationProvider.getConcordProfile(cliApp.getProfile());
         var executor = new RemoteFlowExecutorV2(profile.baseUrl(), profile.apiKey(), cliApp.getConnectTimeout(), cliApp.getReadTimeout());
 
         ConcordProcess process;
-        try (var archive = prepareArchiveIfRequired(cliApp, ck8s, request)) {
+        try (var archive = prepareArchiveIfRequired(cliApp, targetDir, request)) {
             process = executor.execute(request);
         }
 
@@ -120,13 +144,26 @@ public class RemoteRunFlowOperation implements CliOperation {
         return request;
     }
 
-    private static Ck8sPayloadArchiver.Archive prepareArchiveIfRequired(CliApp cliApp, Ck8sPath ck8s, Map<String, Object> request) {
+    private static Ck8sPayloadUtils.Archive prepareArchiveIfRequired(CliApp cliApp, Path workspaceDir, Map<String, Object> request) {
         if (cliApp.getCk8sRef() != null) {
             return null;
         }
 
-        var archive = Ck8sPayloadArchiver.archive(ck8s);
+        var archive = Ck8sPayloadUtils.archive(workspaceDir);
         request.put("archive", archive.path());
         return archive;
+    }
+
+    private static ProcessDefinition loadProcessDefinition(Path workspaceDir) {
+        ProjectLoaderV2.Result loadResult;
+        try {
+            loadResult = new ProjectLoaderV2(new NoopImportManager())
+                    .load(workspaceDir, new NoopImportsNormalizer(), null);
+        } catch (Exception e) {
+            LogUtils.error("while loading {}", workspaceDir, e);
+            return null;
+        }
+
+        return loadResult.getProjectDefinition();
     }
 }

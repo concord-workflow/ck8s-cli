@@ -1,7 +1,6 @@
 package dev.ybrig.ck8s.cli.op;
 
 import com.walmartlabs.concord.cli.Verbosity;
-import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.ConcordCliFlowExecutor;
 
 import java.util.Map;

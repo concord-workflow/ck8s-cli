@@ -1,4 +1,4 @@
-package dev.ybrig.ck8s.cli.common.verify;
+package dev.ybrig.ck8s.cli.executor.verify;
 
 import java.nio.file.Path;
 import java.util.List;
