@@ -237,7 +237,7 @@ public class ServeFormsCommand implements Callable<Integer> {
             if (resource == null) {
                 throw new IOException("Could not find common.js file");
             }
-            
+
             var p = resource.getPath();
             if (Files.notExists(p)) {
                 LogUtils.warn("Can't find common-js file: {}", p);
@@ -430,10 +430,8 @@ public class ServeFormsCommand implements Callable<Integer> {
             // TODO: allow local concord cli...
             var executor = new RemoteFlowExecutorV2(concordProfile.baseUrl(), concordProfile.apiKey(), 30, 30);
 
-            var args = MapUtils.assertMap(request, "request.arguments");
-
             ConcordProcess process;
-            try (var archive = prepareArchive(ck8s, request, MapUtils.assertString(args, Ck8sConstants.Arguments.CLIENT_CLUSTER))) {
+            try (var archive = prepareArchive(ck8s, request)) {
                 process = executor.execute(request);
             }
 
@@ -486,8 +484,8 @@ public class ServeFormsCommand implements Callable<Integer> {
             }
         }
 
-        private static Ck8sPayloadArchiver.Archive prepareArchive(Ck8sPath ck8s, Map<String, Object> request, String clusterAlias) {
-            var archive = Ck8sPayloadArchiver.archive(ck8s, clusterAlias);
+        private static Ck8sPayloadArchiver.Archive prepareArchive(Ck8sPath ck8s, Map<String, Object> request) {
+            var archive = Ck8sPayloadArchiver.archive(ck8s);
             request.put("archive", archive.path());
             return archive;
         }

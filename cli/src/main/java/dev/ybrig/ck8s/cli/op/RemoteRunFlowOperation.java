@@ -125,7 +125,7 @@ public class RemoteRunFlowOperation implements CliOperation {
             return null;
         }
 
-        var archive = Ck8sPayloadArchiver.archive(ck8s, cliApp.getClusterAlias());
+        var archive = Ck8sPayloadArchiver.archive(ck8s);
         request.put("archive", archive.path());
         return archive;
     }

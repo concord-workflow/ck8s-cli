@@ -121,6 +121,10 @@ public class Ck8sPath {
         return ck8s.resolve(CONFIGS_DIR);
     }
 
+    public Path concordYaml() {
+        return ck8sDir().resolve("concord.yml");
+    }
+
     public Path relativize(Path p) {
         if (p.startsWith(ck8s)) {
             return ck8s.relativize(p);

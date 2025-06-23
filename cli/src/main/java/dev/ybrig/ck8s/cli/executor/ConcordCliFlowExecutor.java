@@ -60,7 +60,6 @@ import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
-import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver.loadConcordYamlFromClasspath;
 
 public class ConcordCliFlowExecutor {
 
@@ -136,7 +135,7 @@ public class ConcordCliFlowExecutor {
         }
 
         // prepare payload
-        prepareWorkspace(ck8s, targetDir, clusterAlias);
+        prepareWorkspace(ck8s, targetDir);
 
         var processDefinition = loadProcessDefinition(targetDir, verbosity.verbose());
         if (processDefinition == null) {
@@ -280,7 +279,7 @@ public class ConcordCliFlowExecutor {
         return loadResult.getProjectDefinition();
     }
 
-    private static void prepareWorkspace(Ck8sPath ck8s, Path target, String clusterAlias) {
+    private static void prepareWorkspace(Ck8sPath ck8s, Path target) {
         try {
             IOUtils.deleteRecursively(target);
         } catch (Exception e) {
@@ -290,20 +289,7 @@ public class ConcordCliFlowExecutor {
         try {
             Files.createDirectories(target);
 
-            var concordYaml = ck8s.ck8sDir().resolve("concord.yml");
-            if (!Files.exists(concordYaml)) {
-                concordYaml = loadConcordYamlFromClasspath();
-            }
-            var targetConcordYaml = target.resolve("concord.yml");
-            IOUtils.copy(concordYaml, targetConcordYaml, FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-
-            // TODO: remove ME!!!!
-            var c = Mapper.yamlMapper().readMap(targetConcordYaml);
-            var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, clusterAlias);
-            MapUtils.set(c, clusterRequest, "configuration.arguments.clusterRequest");
-            Mapper.yamlMapper().write(targetConcordYaml, c);
-            //
-
+            IOUtils.copy(ck8s.concordYaml(), target.resolve("concord.yml"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.configs(), target.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sComponents(), target.resolve("ck8s-components"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
             IOUtils.copy(ck8s.ck8sComponentsTests(), target.resolve("ck8s-components-tests"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
