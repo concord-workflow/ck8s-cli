@@ -51,19 +51,16 @@ import dev.ybrig.ck8s.cli.utils.LogUtils;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
+import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadArchiver.prepareWorkspace;
 
 public class ConcordCliFlowExecutor {
-
-    private static final List<String> FILE_IGNORE_PATTERNS = Arrays.asList(".*\\.pdf$", ".*\\.png$", ".*\\.jpg$");
 
     private static final String DEFAULT_IMPORTS_SOURCE = "https://github.com";
     private static final String DEFAULT_VERSION = "main";
@@ -277,27 +274,6 @@ public class ConcordCliFlowExecutor {
         }
 
         return loadResult.getProjectDefinition();
-    }
-
-    private static void prepareWorkspace(Ck8sPath ck8s, Path target) {
-        try {
-            IOUtils.deleteRecursively(target);
-        } catch (Exception e) {
-            throw new RuntimeException("Can't delete target '" + target + "': " + e.getMessage());
-        }
-
-        try {
-            Files.createDirectories(target);
-
-            IOUtils.copy(ck8s.concordYaml(), target.resolve("concord.yml"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.copy(ck8s.configs(), target.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.copy(ck8s.ck8sComponents(), target.resolve("ck8s-components"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.copy(ck8s.ck8sComponentsTests(), target.resolve("ck8s-components-tests"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.copy(ck8s.ck8sOrgDir(), target.resolve("ck8s-orgs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-            IOUtils.copy(ck8s.ck8sConfigs(), target.resolve("ck8s-configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
-        } catch (Exception e) {
-            throw new RuntimeException("Error creating process workspace: " + e.getMessage(), e);
-        }
     }
 
     private static List<String> prepareDependencies(ProcessDefinition processDefinition, Map<String, Object> overlayCfg, List<String> activeProfiles) {

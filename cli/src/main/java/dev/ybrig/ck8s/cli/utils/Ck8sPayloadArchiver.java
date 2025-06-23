@@ -7,6 +7,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class Ck8sPayloadArchiver {
 
@@ -37,6 +38,27 @@ public class Ck8sPayloadArchiver {
     }
 
     private static final String[] FILE_IGNORE_PATTERNS = new String[]{".*\\.pdf$", ".*\\.png$", ".*\\.jpg$"};
+
+    public static void prepareWorkspace(Ck8sPath ck8s, Path target) {
+        try {
+            IOUtils.deleteRecursively(target);
+        } catch (Exception e) {
+            throw new RuntimeException("Can't delete target '" + target + "': " + e.getMessage());
+        }
+
+        try {
+            Files.createDirectories(target);
+
+            dev.ybrig.ck8s.cli.common.IOUtils.copy(ck8s.concordYaml(), target.resolve("concord.yml"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+            dev.ybrig.ck8s.cli.common.IOUtils.copy(ck8s.configs(), target.resolve("configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+            dev.ybrig.ck8s.cli.common.IOUtils.copy(ck8s.ck8sComponents(), target.resolve("ck8s-components"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+            dev.ybrig.ck8s.cli.common.IOUtils.copy(ck8s.ck8sComponentsTests(), target.resolve("ck8s-components-tests"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+            dev.ybrig.ck8s.cli.common.IOUtils.copy(ck8s.ck8sOrgDir(), target.resolve("ck8s-orgs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+            dev.ybrig.ck8s.cli.common.IOUtils.copy(ck8s.ck8sConfigs(), target.resolve("ck8s-configs"), FILE_IGNORE_PATTERNS, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating process workspace: " + e.getMessage(), e);
+        }
+    }
 
     public static Archive archive(Ck8sPath ck8s) {
         Path tmp;

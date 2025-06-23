@@ -42,6 +42,10 @@ public final class IOUtils {
         }
     }
 
+    public static void copy(Path src, Path dst, String[] skipContents, CopyOption... options) throws IOException {
+        _copy(src, src, dst, List.of(skipContents), options);
+    }
+
     public static void copy(Path src, Path dst, List<String> skipContents, CopyOption... options) throws IOException {
         _copy(src, src, dst, skipContents, options);
     }
