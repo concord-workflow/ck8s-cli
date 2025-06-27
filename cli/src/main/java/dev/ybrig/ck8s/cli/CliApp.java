@@ -103,6 +103,9 @@ public class CliApp
     @CommandLine.Option(names = {"--dry-run"}, description = "Execute flows in dry run mode")
     boolean dryRunMode = false;
 
+    @CommandLine.Option(names = {"--org"}, description = "Concord org")
+    String org;
+
     @CommandLine.Option(names = {"--project"}, description = "Concord project")
     String project;
 
@@ -212,6 +215,10 @@ public class CliApp
 
     public String getProject() {
         return project;
+    }
+
+    public String getOrg() {
+        return org;
     }
 
     public String getCk8sRef() {

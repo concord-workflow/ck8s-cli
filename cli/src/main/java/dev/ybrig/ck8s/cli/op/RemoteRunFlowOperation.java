@@ -19,6 +19,7 @@ import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
 import dev.ybrig.ck8s.cli.utils.Ck8sPayloadUtils;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,17 +41,19 @@ public class RemoteRunFlowOperation implements CliOperation {
         // prepare payload
         var ck8s = cliOperationContext.ck8sPath();
         var targetDir = cliApp.getTargetRootPath();
-        prepareWorkspace(ck8s, targetDir);
+        if (cliApp.getCk8sRef() == null) {
+            prepareWorkspace(ck8s, targetDir);
 
-        RunFlowOperationUtils.validate(targetDir);
-        var processDefinition = loadProcessDefinition(targetDir);
-        if (processDefinition == null) {
-            return null;
-        }
-        var flow = ProcessDefinitionUtils.getFlow(new ProcessDefinitionV2(processDefinition), cliOperationContext.cliApp().getActiveProfiles(), cliOperationContext.cliApp().getFlow());
-        if (flow == null) {
-            LogUtils.error("Flow " + cliOperationContext.cliApp().getFlow() + " not found");
-            return null;
+            RunFlowOperationUtils.validate(targetDir);
+            var processDefinition = loadProcessDefinition(targetDir);
+            if (processDefinition == null) {
+                return null;
+            }
+            var flow = ProcessDefinitionUtils.getFlow(new ProcessDefinitionV2(processDefinition), cliOperationContext.cliApp().getActiveProfiles(), cliOperationContext.cliApp().getFlow());
+            if (flow == null) {
+                LogUtils.error("Flow " + cliOperationContext.cliApp().getFlow() + " not found");
+                return null;
+            }
         }
 
         var request = prepareRequest(cliApp, ck8s);
@@ -97,15 +100,20 @@ public class RemoteRunFlowOperation implements CliOperation {
     private static Map<String, Object> prepareRequest(CliApp cliApp, Ck8sPath ck8s) {
         var request = new HashMap<String, Object>();
 
-        var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, cliApp.getClusterAlias());
+        if (Files.notExists(ck8s.ck8sDir())) {
+            var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, cliApp.getClusterAlias());
 
-        // org
-        var orgName = MapUtils.assertString(clusterRequest, "organization.name");
-        request.put(Constants.Multipart.ORG_NAME, orgName);
+            // org
+            var orgName = MapUtils.assertString(clusterRequest, "organization.name");
+            request.put(Constants.Multipart.ORG_NAME, orgName);
 
-        //project
-        var projectName = projectName(cliApp, clusterRequest);
-        request.put(Constants.Multipart.PROJECT_NAME, projectName);
+            //project
+            var projectName = projectName(cliApp, clusterRequest);
+            request.put(Constants.Multipart.PROJECT_NAME, projectName);
+        } else {
+            request.put(Constants.Multipart.ORG_NAME, cliApp.getOrg());
+            request.put(Constants.Multipart.PROJECT_NAME, cliApp.getProject());
+        }
 
         // branch
         var ck8sRef = cliApp.getCk8sRef();

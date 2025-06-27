@@ -8,6 +8,7 @@ import java.nio.file.Path;
 @SuppressWarnings("unused")
 public class Ck8sPathOptionsMixin
         extends BaseMixin<Ck8sPathOptionsMixin> {
+
     private Path ck8sPath = Path.of(System.getProperty("user.dir"));
 
     private Path ck8sExtPath = null;
