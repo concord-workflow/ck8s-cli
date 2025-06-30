@@ -100,7 +100,7 @@ public class RemoteRunFlowOperation implements CliOperation {
     private static Map<String, Object> prepareRequest(CliApp cliApp, Ck8sPath ck8s) {
         var request = new HashMap<String, Object>();
 
-        if (Files.notExists(ck8s.ck8sDir())) {
+        if (Files.exists(ck8s.ck8sDir())) {
             var clusterRequest = Ck8sUtils.buildClusterRequest(ck8s, cliApp.getClusterAlias());
 
             // org
