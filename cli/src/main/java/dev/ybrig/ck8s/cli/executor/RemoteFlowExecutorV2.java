@@ -66,7 +66,6 @@ public class RemoteFlowExecutorV2 {
     }
 
     private ConcordProcess sendRequest(Map<String, Object> payload) throws ApiException {
-
         var requestIdGlobal = UUID.randomUUID().toString();
         var retryNum = new AtomicInteger(0);
         var response = ClientUtils.withRetry(3, 15000, () -> {
@@ -97,7 +96,7 @@ public class RemoteFlowExecutorV2 {
             } catch (ConnectException e) {
                 throw new RuntimeException(requestIdPrefix(requestId) + "Can't connect to " + apiClient.getBaseUri() + (e.getMessage() != null ? ". Error: " + e.getMessage() : ""));
             } catch (Exception e) {
-                throw new RuntimeException(requestIdPrefix(requestId) + "Error sending request: " + e.getMessage());
+                throw new RuntimeException(requestIdPrefix(requestId) + "Error sending request: " + e.getMessage(), e);
             }
 
             var code = httpResponse.statusCode();

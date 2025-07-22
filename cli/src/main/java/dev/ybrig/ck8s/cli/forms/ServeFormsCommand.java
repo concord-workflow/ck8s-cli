@@ -490,7 +490,7 @@ public class ServeFormsCommand implements Callable<Integer> {
 
         private static Ck8sPayloadUtils.Archive prepareArchive(Path targetPath, Ck8sPath ck8s, Map<String, Object> request) {
             Ck8sPayloadUtils.prepareWorkspace(ck8s, targetPath);
-            var archive = new Ck8sPayloadUtils.Archive(targetPath);
+            var archive = Ck8sPayloadUtils.archive(targetPath);
             request.put("archive", archive.path());
             return archive;
         }
