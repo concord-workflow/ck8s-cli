@@ -56,7 +56,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Stream;
 
 import static com.walmartlabs.concord.common.ConfigurationUtils.deepMerge;
 import static dev.ybrig.ck8s.cli.utils.Ck8sPayloadUtils.prepareWorkspace;
@@ -149,8 +148,6 @@ public class ConcordCliFlowExecutor {
         // prepare configuration
         var overlayCfg = ProcessDefinitionUtils.getProfilesOverlayCfg(new ProcessDefinitionV2(processDefinition), activeProfiles);
 
-        var overlayDeps = prepareDependencies(processDefinition, overlayCfg, activeProfiles);
-
         var instanceId = UUID.randomUUID();
 
         var args = prepareArgs(ck8s, instanceId, overlayCfg, flowName, clusterAlias, userArguments);
@@ -178,7 +175,7 @@ public class ConcordCliFlowExecutor {
 
         var t1 = System.currentTimeMillis();
         var dependencies = new DependencyResolver(dependencyManager, false)
-                .resolveDeps(JobDependencies.get(ck8s, overlayDeps, args));
+                .resolveDeps(JobDependencies.get(ck8s, processDefinition, overlayCfg, activeProfiles).stream().toList());
 
         if (!verbosity.verbose()) {
             System.out.println("Dependency resolution took " + (System.currentTimeMillis() - t1) + "ms");
@@ -281,19 +278,6 @@ public class ConcordCliFlowExecutor {
         }
 
         return loadResult.getProjectDefinition();
-    }
-
-    private static List<String> prepareDependencies(ProcessDefinition processDefinition, Map<String, Object> overlayCfg, List<String> activeProfiles) {
-        var deps = new ArrayList<String>(MapUtils.getList(overlayCfg, Constants.Request.DEPENDENCIES_KEY, List.of()));
-
-        // "extraDependencies" are additive: ALL extra dependencies from ALL ACTIVE profiles are added to the list
-        var extraDeps = activeProfiles.stream()
-                .flatMap(profileName -> Stream.ofNullable(processDefinition.profiles().get(profileName)))
-                .flatMap(profile -> profile.configuration().extraDependencies().stream())
-                .toList();
-        deps.addAll(extraDeps);
-
-        return deps;
     }
 
     private Map<String, Object> prepareArgs(Ck8sPath ck8s,
