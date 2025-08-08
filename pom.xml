@@ -469,7 +469,7 @@
                     <plugin>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <configuration>
-                            <skip>true</skip>
+                            <skip>false</skip>
                         </configuration>
                     </plugin>
                     <plugin>
