@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>ck8s-cli</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -326,13 +326,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <proc>proc</proc>
                 </configuration>
             </plugin>
         </plugins>

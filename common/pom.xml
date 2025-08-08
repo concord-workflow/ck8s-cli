@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>ck8s-cli-common</artifactId>
-    <packaging>takari-jar</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -98,13 +98,6 @@
             </resource>
         </resources>
         <plugins>
-            <plugin>
-                <groupId>io.takari.maven.plugins</groupId>
-                <artifactId>takari-lifecycle-plugin</artifactId>
-                <configuration>
-                    <proc>proc</proc>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 </project>

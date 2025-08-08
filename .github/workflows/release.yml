@@ -19,8 +19,8 @@ jobs:
           distribution: 'temurin'
           java-version: 17
           server-id: ossrh
-          server-username: OSSRH_USERNAME
-          server-password: OSSRH_PASSWORD
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
           gpg-private-key: ${{ secrets.OSSRH_GPG_SECRET_KEY }}
           gpg-passphrase: OSSRH_GPG_SECRET_KEY_PASSWORD
           cache: 'maven'
@@ -29,11 +29,11 @@ jobs:
         run: echo "TAG_NAME=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Deploy
-        run: ./mvnw -B clean deploy -P sign --no-transfer-progress --batch-mode
+        run: ./mvnw -B clean install org.sonatype.central:central-publishing-maven-plugin:publish -P release --no-transfer-progress --batch-mode
         env:
           OSSRH_GPG_SECRET_KEY_PASSWORD: ${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
 
       - name: Create Release
         id: create_release
