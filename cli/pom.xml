@@ -268,7 +268,7 @@
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>uber</shadedClassifierName>
+                            <shadedClassifierName>executable</shadedClassifierName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/sisu/javax.inject.Named</resource>
@@ -303,23 +303,24 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.oneops.maven.plugins</groupId>
+                <groupId>org.skife.maven</groupId>
                 <artifactId>really-executable-jar-maven-plugin</artifactId>
-                <version>1.4.2</version>
-                <configuration>
-                    <flags>-Xmx128m -client -Djava.net.preferIPv4Stack=true</flags>
-                    <classifier>uber</classifier>
-                    <outputClassifier>executable</outputClassifier>
-                    <allowOtherTypes>true</allowOtherTypes>
-                </configuration>
                 <executions>
                     <execution>
+                        <phase>package</phase>
                         <goals>
                             <goal>really-executable-jar</goal>
                         </goals>
-                        <phase>package</phase>
                     </execution>
                 </executions>
+                <configuration>
+                    <flags>-Xmx128m -client  -Djava.net.preferIPv4Stack=true</flags>
+                    <classifier>executable</classifier>
+                    <allowOtherTypes>true</allowOtherTypes>
+                    <programFile>ck8s-cli-${project.version}</programFile>
+                    <programFileType>sh</programFileType>
+                    <attachProgramFile>true</attachProgramFile>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
