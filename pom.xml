@@ -309,18 +309,6 @@
                     <version>3.11.2</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
-                    <configuration>
-                        <localCheckout>false</localCheckout>
-                        <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <goals>install</goals>
-                        <tagNameFormat>@{project.version}</tagNameFormat>
-                        <arguments>-DskipTests</arguments>
-                    </configuration>
-                </plugin>
-                <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.14.0</version>
                     <configuration>
@@ -338,8 +326,8 @@
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <goals>deploy</goals>
-                        <arguments>--batch-mode -DskipTests -Pconcord-release</arguments>
+                        <goals>install</goals>
+                        <arguments>-DskipTests --batch-mode -DskipTests -Prelease</arguments>
                     </configuration>
                 </plugin>
                 <plugin>
