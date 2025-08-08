@@ -322,9 +322,10 @@
                     <configuration>
                         <indentSize>4</indentSize>
                         <tagNameFormat>@{project.version}</tagNameFormat>
-                        <localCheckout>false</localCheckout>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <pushChanges>false</pushChanges>
+                        <pushChanges>true</pushChanges>
+                        <localCheckout>false</localCheckout>
+                        <remoteTagging>true</remoteTagging>
                         <useReleaseProfile>false</useReleaseProfile>
                         <goals>install</goals>
                         <arguments>-DskipTests --batch-mode -DskipTests -Prelease</arguments>
