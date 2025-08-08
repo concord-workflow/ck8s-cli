@@ -322,7 +322,7 @@
                     <configuration>
                         <indentSize>4</indentSize>
                         <tagNameFormat>@{project.version}</tagNameFormat>
-                        <localCheckout>true</localCheckout>
+                        <localCheckout>false</localCheckout>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
