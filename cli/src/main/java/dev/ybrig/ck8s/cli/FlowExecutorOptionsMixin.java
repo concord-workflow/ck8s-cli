@@ -10,6 +10,13 @@ import picocli.CommandLine;
 public class FlowExecutorOptionsMixin
         extends BaseMixin<FlowExecutorOptionsMixin> {
 
+    @CommandLine.Option(names = {"--local"}, description = "Execute flow locally (same as --flow-executor=concord-cli)")
+    private boolean local = false;
+
+    public boolean isLocal() {
+        return local;
+    }
+
     private ExecutorType type = ExecutorType.REMOTE;
 
     public ExecutorType getType() {
@@ -17,7 +24,7 @@ public class FlowExecutorOptionsMixin
     }
 
     @CommandLine.Option(names = {
-            "--flow-executor"}, description = "flow executor: ${COMPLETION-CANDIDATES}", completionCandidates = ExecutorTypeCompletionCandidates.class, converter = ExecutorTypeTypeConverter.class)
+            "--flow-executor"}, description = "use a specific flow executor: ${COMPLETION-CANDIDATES}", completionCandidates = ExecutorTypeCompletionCandidates.class, converter = ExecutorTypeTypeConverter.class)
     public void setType(ExecutorType type) {
         rootMixin().type = type;
     }
