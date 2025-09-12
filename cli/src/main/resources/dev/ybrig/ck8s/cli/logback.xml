@@ -2,7 +2,7 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <withJansi>false</withJansi>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %green([%thread]) %highlight(%msg%n)</pattern>
         </encoder>
     </appender>
 

@@ -4,13 +4,16 @@ import brig.ck8s.cli.assertions.CliAssertions;
 import brig.ck8s.cli.assertions.CliExecAssertion;
 import dev.ybrig.ck8s.cli.Main;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 public class Ck8sCliAssertions {
     public static CliExecAssertion assertSuccess(String cliArgs) {
-        return CliAssertions.assertSuccess(() -> Main.main(parseArgs(cliArgs)));
+        return CliAssertions.assertSuccess(() -> Main.main(prepareArgs(cliArgs)));
     }
 
     public static CliExecAssertion assertFailed(String cliArgs) {
-        return CliAssertions.assertFailed(() -> Main.main(parseArgs(cliArgs)));
+        return CliAssertions.assertFailed(() -> Main.main(prepareArgs(cliArgs)));
     }
 
     public static CliExecAssertion assertRunAction(String actionName, String expected) {
@@ -18,13 +21,13 @@ public class Ck8sCliAssertions {
                 .assertOutContainsMatchingLine(String.format("Executing action: %s", expected));
     }
 
-    private static String[] parseArgs(String cliArgs) {
+    private static String[] prepareArgs(String cliArgs) {
         String[] argsArray;
         if (cliArgs != null) {
             argsArray = cliArgs.split(" ");
         } else {
             argsArray = new String[0];
         }
-        return argsArray;
+        return Stream.concat(Stream.of("--no-color"), Arrays.stream(argsArray)).toArray(String[]::new);
     }
 }

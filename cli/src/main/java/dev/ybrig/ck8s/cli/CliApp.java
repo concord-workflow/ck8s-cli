@@ -12,6 +12,7 @@ import dev.ybrig.ck8s.cli.selfupdate.SelfUpdateCommand;
 import dev.ybrig.ck8s.cli.sso.GenerateTokenCommand;
 import dev.ybrig.ck8s.cli.utils.EnumCompletionCandidates;
 import dev.ybrig.ck8s.cli.utils.EnumConverter;
+import org.fusesource.jansi.AnsiConsole;
 import picocli.AutoComplete;
 import picocli.CommandLine;
 
@@ -46,6 +47,9 @@ public class CliApp
 
     @CommandLine.ArgGroup(exclusive = true, multiplicity = "0..1")
     CliOperationArgs cliOperationArgs;
+
+    @CommandLine.Option(names = "--no-color", description = "Do not colorize the output")
+    boolean noColor = false;
 
     @CommandLine.Option(names = {"-p", "--profile"}, description = "concord instance profile name", completionCandidates = ProfilesCompletion.class)
     String profile = "default";
@@ -213,6 +217,10 @@ public class CliApp
 
     @Override
     public Integer call() {
+        if (!noColor) {
+            AnsiConsole.systemInstall();
+        }
+
         return resolveOperation()
                 .execute(new CliOperationContext(this));
     }
