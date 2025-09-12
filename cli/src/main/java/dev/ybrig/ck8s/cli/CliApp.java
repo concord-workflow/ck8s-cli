@@ -120,6 +120,10 @@ public class CliApp
             return null;
         }
 
+        if (flowExecutorType.isLocal()) {
+            return ExecutorType.CONCORD_CLI;
+        }
+
         return flowExecutorType.getType();
     }
 
