@@ -37,7 +37,7 @@ public class Ck8sPayloadUtils {
         }
     }
 
-    private static final String[] FILE_IGNORE_PATTERNS = new String[]{".*\\.pdf$", ".*\\.png$", ".*\\.jpg$"};
+    private static final String[] FILE_IGNORE_PATTERNS = new String[]{".*\\.pdf$", "^(?!.*logo\\.png$).*\\.png$", ".*\\.jpg$"};
 
     public static void prepareWorkspace(Ck8sPath ck8s, Path target) {
         try {
