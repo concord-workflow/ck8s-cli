@@ -2,7 +2,6 @@ package dev.ybrig.ck8s.cli.op;
 
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.imports.NoopImportManager;
-import com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.NoopImportsNormalizer;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
@@ -18,6 +17,7 @@ import dev.ybrig.ck8s.cli.concord.ConcordProcess;
 import dev.ybrig.ck8s.cli.executor.RemoteFlowExecutorV2;
 import dev.ybrig.ck8s.cli.utils.Ck8sPayloadUtils;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
+import dev.ybrig.ck8s.cli.utils.ProcessDefinitionUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
