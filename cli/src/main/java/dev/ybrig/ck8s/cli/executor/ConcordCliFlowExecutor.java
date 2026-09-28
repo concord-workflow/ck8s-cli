@@ -5,12 +5,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.walmartlabs.concord.cli.CliConfig;
 import com.walmartlabs.concord.cli.Verbosity;
 import com.walmartlabs.concord.cli.runner.*;
 import com.walmartlabs.concord.client2.ApiClient;
 import com.walmartlabs.concord.client2.ApiClientConfiguration;
 import com.walmartlabs.concord.client2.ApiClientFactory;
 import com.walmartlabs.concord.common.ConfigurationUtils;
+import com.walmartlabs.concord.common.ZipService;
+import com.walmartlabs.concord.common.cfg.UnzipLimits;
 import com.walmartlabs.concord.dependencymanager.DependencyManager;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerConfiguration;
 import com.walmartlabs.concord.dependencymanager.DependencyManagerRepositories;
@@ -18,7 +21,6 @@ import com.walmartlabs.concord.imports.ImportManagerFactory;
 import com.walmartlabs.concord.imports.ImportProcessingException;
 import com.walmartlabs.concord.runtime.common.cfg.ApiConfiguration;
 import com.walmartlabs.concord.runtime.common.cfg.RunnerConfiguration;
-import com.walmartlabs.concord.runtime.model.ProcessDefinitionUtils;
 import com.walmartlabs.concord.runtime.v2.ProjectLoaderV2;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinition;
 import com.walmartlabs.concord.runtime.v2.model.ProcessDefinitionConfiguration;
@@ -29,6 +31,7 @@ import com.walmartlabs.concord.runtime.v2.runner.guice.ObjectMapperProvider;
 import com.walmartlabs.concord.runtime.v2.runner.guice.ProcessDependenciesModule;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContext;
 import com.walmartlabs.concord.runtime.v2.runner.logging.LogContextThreadGroup;
+import com.walmartlabs.concord.runtime.v2.runner.logging.LogSegmentAttributes;
 import com.walmartlabs.concord.runtime.v2.runner.logging.RunnerLogger;
 import com.walmartlabs.concord.runtime.v2.runner.logging.SimpleLogger;
 import com.walmartlabs.concord.runtime.v2.runner.remote.EventRecordingExecutionListener;
@@ -48,6 +51,7 @@ import dev.ybrig.ck8s.cli.concord.ConcordServer;
 import dev.ybrig.ck8s.cli.model.ConcordProfile;
 import dev.ybrig.ck8s.cli.op.RunFlowOperationUtils;
 import dev.ybrig.ck8s.cli.utils.LogUtils;
+import dev.ybrig.ck8s.cli.utils.ProcessDefinitionUtils;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -165,7 +169,7 @@ public class ConcordCliFlowExecutor {
                 .debug(verbosity.verbose())
                 .build();
 
-        ObjectMapper om = ObjectMapperProvider.getInstance();
+        ObjectMapper om = new ObjectMapperProvider().get();
         args.put(Constants.Request.PROCESS_INFO_KEY, om.convertValue(cfg.processInfo(), Map.class));
         args.put(Constants.Request.PROJECT_INFO_KEY, om.convertValue(cfg.projectInfo(), Map.class));
 
@@ -194,11 +198,13 @@ public class ConcordCliFlowExecutor {
 
         var secretStoreDir = ck8sHome().resolve("secrets");
         var vaultDir = ck8sHome().resolve("vaults");
+        var cliConfigOverrides = new CliConfig.Overrides(secretStoreDir, vaultDir, DEFAULT_VAULT_ID);
+        var cliConfigContext = CliConfig.load(verbosity, "default", cliConfigOverrides);
         var injector = new InjectorFactory(new WorkingDirectory(targetDir),
                 runnerCfg,
                 () -> cfg,
                 new ProcessDependenciesModule(targetDir, runnerCfg.dependencies(), cfg.debug()),
-                new CliServicesModule(secretStoreDir, targetDir, defaultTaskVars, new VaultProvider(vaultDir, DEFAULT_VAULT_ID), dependencyManager, verbosity) {
+                new CliServicesModule(cliConfigContext, targetDir, defaultTaskVars, dependencyManager, verbosity) {
                     @Override
                     protected void configure() {
                         bind(ApiClient.class).toProvider(ApiClientProvider.class);
@@ -261,7 +267,7 @@ public class ConcordCliFlowExecutor {
     private ProcessDefinition loadProcessDefinition(Path workspaceDir, boolean verbose) throws IOException {
         var repoCacheDir = Paths.get(System.getProperty("user.home")).resolve(".ck8s").resolve("repo-cache");
         var importManager = new ImportManagerFactory(dependencyManager,
-                new CliRepositoryExporter(repoCacheDir), Collections.emptySet())
+                new CliRepositoryExporter(repoCacheDir), Collections.emptySet(), new ZipService(UnzipLimits.getInstance()))
                 .create();
 
         ProjectLoaderV2.Result loadResult;
@@ -375,7 +381,7 @@ public class ConcordCliFlowExecutor {
     private static class Logger extends SimpleLogger {
 
         @Override
-        public Long createSegment(String segmentName, UUID correlationId) {
+        public Long createSegment(String segmentName, UUID correlationId, LogSegmentAttributes attributes) {
             return 0L;
         }
 

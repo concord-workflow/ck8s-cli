@@ -45,11 +45,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <concord.version>2.28.0</concord.version>
+        <concord.version>2.46.1-SNAPSHOT</concord.version>
         <concord.git.pluin.version>1.46.0</concord.git.pluin.version>
         <glassfish.el.version>3.0.1-b12</glassfish.el.version>
         <gson.version>2.10</gson.version>
-        <guice.version>5.1.0</guice.version>
+        <guice.version>6.0.0</guice.version>
         <immutables.version>2.9.3</immutables.version>
         <jackson.version>2.18.2</jackson.version>
         <jakarta.activation-api.version>2.1.0</jakarta.activation-api.version>
